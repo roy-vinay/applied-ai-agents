@@ -1,0 +1,51 @@
+name: ff01-phase2-run-models
+# Manual only: never runs on push. Asks the frozen Phase 2 questions to three local open models
+# on a free GitHub runner, then commits the saved answers. No API keys, no cost.
+on:
+  workflow_dispatch:
+    inputs:
+      models:
+        description: "Comma-separated model list"
+        default: "ollama:llama3.2:3b,ollama:qwen2.5:3b,ollama:gemma2:2b"
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    defaults:
+      run:
+        working-directory: failure-files/ff-01-unsupported-policy-claims/phase2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Ollama
+        run: curl -fsSL https://ollama.com/install.sh | sh
+      - name: Start Ollama and pull models
+        run: |
+          (ollama serve > /tmp/ollama.log 2>&1 &)
+          sleep 5
+          for spec in $(echo "${{ inputs.models }}" | tr ',' ' '); do ollama pull "${spec#ollama:}"; done
+      - name: Ask the frozen questions
+        run: |
+          python run_models.py --models "${{ inputs.models }}" --dry-run
+          python run_models.py --models "${{ inputs.models }}"
+      - name: Rule-based labels
+        run: python label.py --models "${{ inputs.models }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase2-outputs
+          path: |
+            failure-files/ff-01-unsupported-policy-claims/phase2/outputs
+            failure-files/ff-01-unsupported-policy-claims/phase2/labels
+      - name: Commit answers
+        run: |
+          git config user.name "Vinay Roy"
+          git config user.email "vroy@berkeley.edu"
+          git add outputs labels
+          git commit -m "FF-01 Phase 2: model answers and rule-based labels" || echo "nothing to commit"
+          git pull --rebase
+          git push
