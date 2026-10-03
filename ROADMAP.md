@@ -4,6 +4,8 @@ Each item is an experiment, not a feature. It states a hypothesis, measures it, 
 including when the result is unflattering. Where it applies, every experiment measures four things:
 **failure rate, false refusals, latency, and cost.**
 
+Terms like detection recall and observed failure rate are defined in [METHODS.md](METHODS.md).
+
 Statuses: **Shipped** · **Building** · **Next** · **Exploring**. Only a few items are ever marked Next.
 
 ## Production patterns
