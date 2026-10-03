@@ -50,9 +50,13 @@ The parts that keep an agent safe once real users and real money are involved.
 
 ## Failure Files
 
-Public AI incidents, turned into experiments: reproduce the failure mode in a fictional system, add
-mitigations one at a time, and measure what each one buys and costs. First up: unsupported policy claims,
-the failure behind a well-known airline chatbot case. [Method, sources, and planned files](failure-files).
+Case studies with experiments: a documented public AI incident, the failure mode behind it reproduced in a
+fictional system, and mitigations measured one at a time. [All files and method](failure-files).
+
+**[FF-01: Unsupported policy claims](failure-files/ff-01-unsupported-policy-claims)**, the failure behind
+the 2024 Air Canada chatbot case. Rule-based guards cut unsupported claims from 100% to 21%, and normalizing
+units cut wrongly blocked answers from 28% to 7%. Most of what's left are claims with no number to check,
+which rules can't verify.
 
 ## Decisions
 

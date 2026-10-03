@@ -13,3 +13,14 @@ jobs:
           python-version: "3.12"
       - run: python -m evals.run_evals
       - run: python -m benchmark.failure_matrix --check
+  ff-01:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: failure-files/ff-01-unsupported-policy-claims
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python run.py --check
