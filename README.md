@@ -52,7 +52,7 @@ The parts that keep an agent safe once real users and real money are involved.
 
 The reasoning behind the builds lives in **[ai-decision-log](https://github.com/roy-vinay/ai-decision-log)**:
 one-page memos on applied AI product choices, with the numbers, the decision, and what would change it.
-Start with [D-001: Rules, LLM, or hybrid for delivery provider selection](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-001-provider-selection-rules-llm-hybrid.md).
+Start with [D-002: How many evals are enough?](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-002-how-many-evals-are-enough.md).
 
 ## About
 
