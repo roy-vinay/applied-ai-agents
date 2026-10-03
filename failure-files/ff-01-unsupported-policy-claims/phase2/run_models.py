@@ -42,9 +42,14 @@ for spec, todo in plan:
     path = outputs_path(spec)
     path.parent.mkdir(exist_ok=True)
     for i, q in enumerate(todo, 1):
-        r = provider.answer(system, q["q"])
+        try:
+            r = provider.answer(system, q["q"])
+        except RuntimeError as e:  # skip and report; a rerun asks only what's missing
+            print(f"  {spec} {q['id']} skipped: {e}", flush=True)
+            continue
         rec = {"id": q["id"], "model": spec, "text": r.text, "cites": sorted(set(CITE.findall(r.text))),
-               "latency_s": r.latency_s, "input_tokens": r.input_tokens, "output_tokens": r.output_tokens}
+               "latency_s": r.latency_s, "input_tokens": r.input_tokens, "output_tokens": r.output_tokens,
+               "truncated": r.truncated}
         with open(path, "a") as f:
             f.write(json.dumps(rec) + "\n")
-        print(f"  {spec} {i}/{len(todo)} {q['id']} {r.latency_s}s")
+        print(f"  {spec} {i}/{len(todo)} {q['id']} {r.latency_s}s", flush=True)
