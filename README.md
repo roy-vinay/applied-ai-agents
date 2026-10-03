@@ -48,11 +48,21 @@ The parts that keep an agent safe once real users and real money are involved.
 | [School front desk](agents/school-front-desk) | Answers parents' policy questions with citations, escalates anything sensitive, and gives staff a console to see what's being asked. Bilingual, with LLM-judged evals. | [Demo](https://berryessa-ai-front-desk-unofficial.vercel.app) | Next.js, Claude |
 | [MCP chat](agents/mcp-chat) | Terminal chat app showing the Model Context Protocol end to end: an MCP client and server over stdio, with @document mentions and /commands. | | Python, MCP |
 
+## Failure Files
+
+Public AI incidents, turned into experiments: reproduce the failure mode in a fictional system, add
+mitigations one at a time, and measure what each one buys and costs. First up: unsupported policy claims,
+the failure behind a well-known airline chatbot case. [Method, sources, and planned files](failure-files).
+
 ## Decisions
 
 The reasoning behind the builds lives in **[ai-decision-log](https://github.com/roy-vinay/ai-decision-log)**:
 one-page memos on applied AI product choices, with the numbers, the decision, and what would change it.
 Start with [D-002: How many evals are enough?](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-002-how-many-evals-are-enough.md).
+
+## Roadmap
+
+What's shipped, what's next, and the hypothesis behind each: [ROADMAP.md](ROADMAP.md).
 
 ## About
 
