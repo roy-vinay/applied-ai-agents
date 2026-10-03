@@ -1,0 +1,10 @@
+{
+ "frozen_on": "2026-10-03",
+ "note": "Guards, policies, questions and prompt were frozen before any real-model answers were collected.",
+ "sha256": {
+  "guards.py": "d4c2f4c6ea3f7b49b6870f149f8b40293ed4217871f6ca07185c3a0ec6ddf382",
+  "kb.py": "d3376d7d38102180dd724c835f47b860c620db61d9a47736748e9c4a520447f2",
+  "questions.json": "3aea1425a24491a6b0bfe85185527283105b27076fb5789a93c741d7d8e0e0b4",
+  "prompt.txt": "fa55c06f31a5d97a7e10e1d5a0c93d022bbb32a4613d22ad6baddfbef09f1e5b"
+ }
+}

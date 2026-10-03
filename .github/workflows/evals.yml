@@ -24,3 +24,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: python run.py --check
+      - run: python phase2/score.py --if-present

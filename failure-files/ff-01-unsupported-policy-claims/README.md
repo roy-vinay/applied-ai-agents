@@ -88,13 +88,15 @@ every injected failure is shown when nothing checks it. The full breakdown by an
 
 ## Next: Phases 2 and 3
 
-**Phase 2, real models.** Put 100 to 250 questions to three models: answerable, unanswerable, leading,
-false-premise, and requests to reinterpret policy. Measure how often unsupported claims occur on their own,
-what form they take, and how much of that the Phase 1 guards catch.
+**Phase 2, real models** ([protocol and harness](phase2)). The guards, policies, 100 questions, and prompt
+are **frozen** before any model answers. Three small open models from three families answer locally, at no
+cost: answerable, unanswerable, leading, false-premise, and requests to bend a policy. We measure how often
+unsupported claims occur on their own, what form they take, and how much of that the frozen guards catch.
 
 **Phase 3, semantic verification.** Add a second model call that judges whether the cited policy supports
 each sentence of the answer. Compare rules only, the semantic check only, and both together, on real-model
-answers, measuring unsupported-claim rate, false refusals, cost per 100 answers, and latency.
+answers, measuring unsupported-claim rate, false refusals, cost per 100 answers, and latency. Phase 3 is
+designed only after Phase 2 results are in, so it targets the failures real models actually make.
 
 This phase also tests something harder: the verifier is a model too, and it will make its own mistakes.
 How reliably can one model judge whether another model's statement is supported by a source?
