@@ -30,7 +30,7 @@ wrong answer about health, money, or a specific child is worse than no answer.
 ## Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
   Q[Parent question] --> G[Load published policies,<br/>escalation rules, calendar]
   G --> M["Claude, forced into one tool:<br/>respond_to_parent"]
   M --> B{Specific child<br/>or sensitive topic?}
