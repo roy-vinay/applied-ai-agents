@@ -1,13 +1,15 @@
 500 trials: 354 faulty answers, 146 correct answers
 
-| Guards (each adds to the one above) | Unsupported claims shown to the customer | Correct answers wrongly blocked | Median check time |
-| --- | ---: | ---: | ---: |
-| No guards | 354/354 (100%) | 0/146 (0%) | 0 µs |
-| + Citation required | 264/354 (75%) | 0/146 (0%) | 0 µs |
-| + Citation must exist | 217/354 (61%) | 0/146 (0%) | 0 µs |
-| + Citation must match the question | 179/354 (51%) | 10/146 (7%) | 2 µs |
-| + Every number must appear in the cited policy (exact text) | 74/354 (21%) | 41/146 (28%) | 11 µs |
-| + Same check, with units normalized (24 hours = a day) | 74/354 (21%) | 10/146 (7%) | 22 µs |
+| Guards (each adds to the one above) | Injected failures not caught | Correct answers wrongly blocked |
+| --- | ---: | ---: |
+| No guards | 354/354 (100%) | 0/146 (0%) |
+| + Citation required | 264/354 (75%) | 0/146 (0%) |
+| + Citation must exist | 217/354 (61%) | 0/146 (0%) |
+| + Citation must match the question | 179/354 (51%) | 10/146 (7%) |
+| + Every number must appear in the cited policy (exact text) | 74/354 (21%) | 41/146 (28%) |
+| + Same check, with units normalized (24 hours = a day) | 74/354 (21%) | 10/146 (7%) |
+
+Final layer: detection recall 79.1%, false-positive rate 6.8%.
 
 | Answer type | Expected | Shown with all guards |
 | --- | --- | ---: |

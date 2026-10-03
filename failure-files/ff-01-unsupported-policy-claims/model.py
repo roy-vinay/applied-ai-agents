@@ -1,4 +1,4 @@
-"""A simulated support model with documented, deliberate failure behaviors.
+"""Answer generator for Phase 1: no model, just correct answers and deliberate, documented failures.
 
 Each answer is either correct (including correct paraphrases and honest abstentions) or one of
 the failure behaviors below. The experiment measures how many failures each guard layer stops

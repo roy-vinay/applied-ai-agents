@@ -54,9 +54,10 @@ Case studies with experiments: a documented public AI incident, the failure mode
 fictional system, and mitigations measured one at a time. [All files and method](failure-files).
 
 **[FF-01: Unsupported policy claims](failure-files/ff-01-unsupported-policy-claims)**, the failure behind
-the 2024 Air Canada chatbot case. Rule-based guards cut unsupported claims from 100% to 21%, and normalizing
-units cut wrongly blocked answers from 28% to 7%. Most of what's left are claims with no number to check,
-which rules can't verify.
+the 2024 Air Canada chatbot case. Phase 1 (fault injection, no model yet): rule-based guards caught 79% of
+deliberately injected failures, with a 7% false-positive rate. The finding that matters: a cited answer is
+not a grounded answer, and most failures the rules miss are wrong in meaning, not in form. Phases 2 and 3
+test real models and a semantic verifier.
 
 ## Decisions
 

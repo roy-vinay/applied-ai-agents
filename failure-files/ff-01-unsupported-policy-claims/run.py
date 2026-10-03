@@ -55,10 +55,12 @@ if __name__ == "__main__":
     good = len(ts) - bad
     rows = evaluate(ts)
     print(f"{len(ts)} trials: {bad} faulty answers, {good} correct answers\n")
-    print("| Guards (each adds to the one above) | Unsupported claims shown to the customer | Correct answers wrongly blocked | Median check time |")
-    print("| --- | ---: | ---: | ---: |")
+    print("| Guards (each adds to the one above) | Injected failures not caught | Correct answers wrongly blocked |")
+    print("| --- | ---: | ---: |")
     for r in rows:
-        print(f"| {r['layer']} | {r['leaked']}/{bad} ({r['leaked']/bad:.0%}) | {r['blocked']}/{good} ({r['blocked']/good:.0%}) | {r['us']:.0f} µs |")
+        print(f"| {r['layer']} | {r['leaked']}/{bad} ({r['leaked']/bad:.0%}) | {r['blocked']}/{good} ({r['blocked']/good:.0%}) |")
+    last = rows[-1]
+    print(f"\nFinal layer: detection recall {1 - last['leaked']/bad:.1%}, false-positive rate {last['blocked']/good:.1%}.")
     print("\n| Answer type | Expected | Shown with all guards |")
     print("| --- | --- | ---: |")
     for (kind, behavior, correct), (n, shown) in sorted(by_behavior(ts).items(), key=lambda x: (x[0][0], not x[0][2], x[0][1])):
