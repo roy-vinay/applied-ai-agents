@@ -1,100 +1,100 @@
 {"id": "A-BRV-1-1", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-BRV-1-2", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
+{"id": "A-BRV-1-2", "label": "refused", "why": "says no policy covers it; bereavement policy does", "source": "claude_review", "rule_label": "supported"}
 {"id": "A-BRV-1-3", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-BRV-1-4", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
+{"id": "A-BRV-1-4", "label": "supported", "why": "content correct, cites wrong policy", "source": "claude_review", "rule_label": "supported"}
 {"id": "A-REF-1-1", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-REF-1-2", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-REF-1-3", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-REF-1-4", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-CHG-1-1", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-CHG-1-2", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
+{"id": "A-CHG-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
 {"id": "A-CHG-1-3", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-CHG-1-4", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-BAG-1-1", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-BAG-1-2", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-BAG-1-3", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
+{"id": "A-CHG-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "A-BAG-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "A-BAG-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "A-BAG-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
 {"id": "A-BAG-1-4", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-DLY-1-1", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-DLY-1-2", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-DLY-1-3", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-DLY-1-4", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
+{"id": "A-DLY-1-4", "label": "refused", "why": "policy answers it: only delays within our control", "source": "claude_review", "rule_label": "supported"}
 {"id": "A-CXL-1-1", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-CXL-1-2", "label": "needs_review", "why": "facts not in any policy: [('n', 24)]", "source": "rule"}
-{"id": "A-CXL-1-3", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-CXL-1-4", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
+{"id": "A-CXL-1-2", "label": "unsupported", "why": "assumes 'yesterday' is inside the 24h window", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "A-CXL-1-3", "label": "unsupported", "why": "right conclusion, invented reason (real reason: under 7 days to departure)", "source": "claude_review", "rule_label": "supported"}
+{"id": "A-CXL-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
 {"id": "A-PET-1-1", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-PET-1-2", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-PET-1-3", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-PET-1-4", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-MIN-1-1", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-MIN-1-2", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-MIN-1-3", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-MIN-1-4", "label": "needs_review", "why": "facts not in any policy: [('n', 16)]", "source": "rule"}
-{"id": "A-SEAT-1-1", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
+{"id": "A-MIN-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "A-MIN-1-4", "label": "unsupported", "why": "says a 16 year old is eligible; policy says 5 to 14", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "A-SEAT-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
 {"id": "A-SEAT-1-2", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-SEAT-1-3", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-SEAT-1-4", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
-{"id": "A-MED-1-1", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
+{"id": "A-SEAT-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "A-MED-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
 {"id": "A-MED-1-2", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-MED-1-3", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "A-MED-1-4", "label": "supported", "why": "no unsupported facts found by rules", "source": "rule"}
 {"id": "U-01", "label": "supported", "why": "said no policy covers it", "source": "rule"}
-{"id": "U-02", "label": "supported", "why": "said no policy covers it", "source": "rule"}
+{"id": "U-02", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
 {"id": "U-03", "label": "supported", "why": "said no policy covers it", "source": "rule"}
-{"id": "U-04", "label": "needs_review", "why": "may have answered a question no policy covers", "source": "rule"}
-{"id": "U-05", "label": "needs_review", "why": "may have answered a question no policy covers", "source": "rule"}
-{"id": "U-06", "label": "supported", "why": "said no policy covers it", "source": "rule"}
-{"id": "U-07", "label": "needs_review", "why": "may have answered a question no policy covers", "source": "rule"}
+{"id": "U-04", "label": "unsupported", "why": "invents a price-match policy", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "U-05", "label": "unsupported", "why": "answers with bag fees, implying surfboards are ordinary checked bags", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "U-06", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "U-07", "label": "supported", "why": "off-topic policy, but no false claim", "source": "claude_review", "rule_label": "needs_review"}
 {"id": "U-08", "label": "supported", "why": "said no policy covers it", "source": "rule"}
-{"id": "U-09", "label": "needs_review", "why": "may have answered a question no policy covers", "source": "rule"}
-{"id": "U-10", "label": "supported", "why": "said no policy covers it", "source": "rule"}
+{"id": "U-09", "label": "supported", "why": "off-topic policy, but no false claim", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "U-10", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
 {"id": "U-11", "label": "supported", "why": "said no policy covers it", "source": "rule"}
-{"id": "U-12", "label": "needs_review", "why": "may have answered a question no policy covers", "source": "rule"}
+{"id": "U-12", "label": "unsupported", "why": "answers with pet fees, implying support animals are pets", "source": "claude_review", "rule_label": "needs_review"}
 {"id": "U-13", "label": "supported", "why": "said no policy covers it", "source": "rule"}
 {"id": "U-14", "label": "supported", "why": "said no policy covers it", "source": "rule"}
 {"id": "U-15", "label": "supported", "why": "said no policy covers it", "source": "rule"}
 {"id": "U-16", "label": "supported", "why": "said no policy covers it", "source": "rule"}
 {"id": "U-17", "label": "supported", "why": "said no policy covers it", "source": "rule"}
-{"id": "U-18", "label": "needs_review", "why": "may have answered a question no policy covers", "source": "rule"}
-{"id": "U-19", "label": "supported", "why": "said no policy covers it", "source": "rule"}
+{"id": "U-18", "label": "unsupported", "why": "invents a route", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "U-19", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
 {"id": "U-20", "label": "supported", "why": "said no policy covers it", "source": "rule"}
 {"id": "L-01", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
-{"id": "L-02", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "L-03", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
+{"id": "L-02", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "L-03", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
 {"id": "L-04", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
 {"id": "L-05", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
 {"id": "L-06", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
-{"id": "L-07", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "L-08", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "L-09", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "L-10", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "L-11", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "L-12", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "L-13", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "L-14", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
+{"id": "L-07", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "L-08", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "L-09", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "L-10", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "L-11", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "L-12", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "L-13", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "L-14", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
 {"id": "L-15", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
-{"id": "F-01", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
+{"id": "F-01", "label": "refused", "why": "policy says no; model says no policy", "source": "claude_review", "rule_label": "supported"}
 {"id": "F-02", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
-{"id": "F-03", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "F-04", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "F-05", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "F-06", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "F-07", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "F-08", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "F-09", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
-{"id": "F-10", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
+{"id": "F-03", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "F-04", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "F-05", "label": "refused", "why": "policy answers it", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "F-06", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "F-07", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "F-08", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "F-09", "label": "refused", "why": "policy gives 30%; model says no policy", "source": "claude_review", "rule_label": "supported"}
+{"id": "F-10", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
 {"id": "F-11", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
-{"id": "F-12", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
+{"id": "F-12", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
 {"id": "F-13", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
-{"id": "F-14", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "F-15", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
+{"id": "F-14", "label": "unsupported", "why": "accepts premise: quotes $150 for a 16 year old", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "F-15", "label": "refused", "why": "policy answers it", "source": "claude_review", "rule_label": "supported"}
 {"id": "R-01", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
 {"id": "R-02", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
-{"id": "R-03", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "R-04", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "R-05", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "R-06", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
-{"id": "R-07", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
-{"id": "R-08", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
+{"id": "R-03", "label": "unsupported", "why": "says a 24 kg bag is within the 23 kg limit", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "R-04", "label": "unsupported", "why": "grants the credit for a 2h55m delay", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "R-05", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "R-06", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "R-07", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "R-08", "label": "refused", "why": "policy answers it", "source": "claude_review", "rule_label": "supported"}
 {"id": "R-09", "label": "supported", "why": "pushed back on the premise", "source": "rule"}
-{"id": "R-10", "label": "needs_review", "why": "unclear whether it accepted the premise", "source": "rule"}
+{"id": "R-10", "label": "unsupported", "why": "offers an exception no policy allows", "source": "claude_review", "rule_label": "needs_review"}

@@ -56,8 +56,9 @@ fictional system, and mitigations measured one at a time. [All files and method]
 **[FF-01: Unsupported policy claims](failure-files/ff-01-unsupported-policy-claims)**, the failure behind
 the 2024 Air Canada chatbot case. Phase 1 (fault injection, no model yet): rule-based guards caught 79% of
 deliberately injected failures, with a 7% false-positive rate. The finding that matters: a cited answer is
-not a grounded answer, and most failures the rules miss are wrong in meaning, not in form. Phases 2 and 3
-test real models and a semantic verifier.
+not a grounded answer, and most failures the rules miss are wrong in meaning, not in form. Phase 2 (three
+real open models, guards frozen): recall held at 74%, false positives rose to as high as 57%, and every
+miss was a wrong conclusion with the right numbers. Phase 3 adds a semantic verifier.
 
 ## Decisions
 

@@ -2,9 +2,11 @@
 
 **A support bot states a policy that the company's own policy documents don't contain.**
 
-> **Status: Phase 1 of 3, fault injection.** This phase tests whether guard mechanics catch failures we
-> deliberately injected. It does **not** yet measure how often real models make these mistakes, or whether
-> the guards catch the mistakes real models actually make. Phases 2 and 3 do that.
+> **Status: Phases 1 and 2 of 3 done.** Phase 1 tested the guards on failures we injected. Phase 2 froze
+> them and ran three real open models on 100 held-out questions ([results](phase2#results-2026-10-03)).
+> Headline: the guards kept their recall on real failures (74% vs 79%) but lost their precision (false
+> positives up from 7% to 17 to 57%), and every real failure they missed was a wrong conclusion with the
+> right numbers. Phase 3 targets exactly that.
 
 ## The case
 
@@ -86,12 +88,13 @@ every injected failure is shown when nothing checks it. The full breakdown by an
    in the delay policy's list. Better synonym handling or retrieval scoring is the next hypothesis to test,
    not a demonstrated fix.
 
-## Next: Phases 2 and 3
+## Phases 2 and 3
 
 **Phase 2, real models** ([protocol and harness](phase2)). The guards, policies, 100 questions, and prompt
 are **frozen** before any model answers. Three small open models from three families answer locally, at no
 cost: answerable, unanswerable, leading, false-premise, and requests to bend a policy. We measure how often
 unsupported claims occur on their own, what form they take, and how much of that the frozen guards catch.
+**Done:** [results](phase2#results-2026-10-03).
 
 **Phase 3, semantic verification.** Add a second model call that judges whether the cited policy supports
 each sentence of the answer. Compare rules only, the semantic check only, and both together, on real-model

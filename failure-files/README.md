@@ -14,13 +14,13 @@ By [Vinay Roy](https://github.com/roy-vinay). Part of [applied-ai-agents](../REA
 **[FF-01: Unsupported policy claims](ff-01-unsupported-policy-claims)**, the failure behind the 2024 Air
 Canada chatbot case. Phase 1 (fault injection): rule-based guards caught 79% of injected failures, with a
 7% false-positive rate. The finding that matters: **a cited answer is not a grounded answer**, and most of
-what rules miss is wrong in meaning, not in form. Phase 2, frozen and ready, tests three open models.
+what rules miss is wrong in meaning, not in form. Phase 2 ran three real open models against the frozen guards: recall held (74%), precision didn't (false positives up to 57%, mostly from sloppy citations), and every miss was a wrong conclusion with the right numbers.
 
 ## The files
 
 | ID | Failure mode | The question a leader should ask | Status |
 | --- | --- | --- | --- |
-| [FF-01](ff-01-unsupported-policy-claims) | Unsupported policy claims | What stops our assistant from stating a policy that isn't in our policy documents? | Phase 1 shipped · Phase 2 frozen |
+| [FF-01](ff-01-unsupported-policy-claims) | Unsupported policy claims | What stops our assistant from stating a policy that isn't in our policy documents? | Phases 1 and 2 shipped · Phase 3 next |
 | FF-02 | Unauthorized commitments | Can a customer talk our assistant into a deal we'd have to honor? | Planned |
 | FF-03 | Behavioral policy violations | What does our assistant say when a customer tries to make it embarrass us? | Planned |
 | FF-04 | High-stakes advice outside scope | Will our assistant give legal or regulatory advice it isn't qualified to give? | Planned |

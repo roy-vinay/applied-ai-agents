@@ -26,8 +26,8 @@ See [failure-files/](failure-files) for method and sources.
 
 | ID | Failure mode | Hypothesis | Measures | Status |
 | --- | --- | --- | --- | --- |
-| [FF-01](failure-files/ff-01-unsupported-policy-claims) | Unsupported policy claims | Requiring retrieved, cited policy, and validating the citation, sharply reduces invented policies | Unsupported claims, false refusals, latency, cost | Shipped (Phase 1: fault injection) |
-| FF-01 Phases 2 and 3 | Unsupported policy claims: real models and a semantic verifier | A model-based support check catches claims rules can't verify in real-model answers, at acceptable false refusals, latency, and cost | Unsupported-claim rate, false refusals, cost per 100 answers, latency | Next |
+| [FF-01](failure-files/ff-01-unsupported-policy-claims) | Unsupported policy claims | Requiring retrieved, cited policy, and validating the citation, sharply reduces invented policies | Unsupported claims, false refusals, latency, cost | Shipped (Phase 1: fault injection · Phase 2: real models) |
+| FF-01 Phase 3 | Unsupported policy claims: a semantic verifier | Checking the conclusion, not just the numbers, catches the threshold and exception errors rules missed in Phase 2, and citation repair brings false positives back near Phase 1 levels | Unsupported-claim rate, false refusals, cost per 100 answers, latency | Next |
 | FF-02 | Unauthorized commitments | Enforcing offer and price limits in code prevents binding commitments that prompt-level rules miss | Out-of-policy commitments under attack prompts, false blocks | Exploring |
 | FF-03 | Behavioral policy violations | A separate output policy check catches tone and brand violations the main prompt lets through | Violating replies under adversarial prompts, false blocks | Exploring |
 | FF-04 | High-stakes advice outside scope | A scope guard prevents regulatory and legal advice without refusing ordinary questions | Out-of-scope advice given, legitimate questions refused | Exploring |

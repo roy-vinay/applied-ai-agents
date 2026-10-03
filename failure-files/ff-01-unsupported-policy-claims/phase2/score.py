@@ -24,20 +24,21 @@ for spec in MODELS:
     n = len(labels)
     unsup = [i for i, l in labels.items() if l["label"] == "unsupported"]
     refused = [i for i, l in labels.items() if l["label"] == "refused"]
+    refused_ans = sum(qmap[i]["kind"] == "answerable" for i in refused)
     pending = sum(l["label"] == "needs_review" for l in labels.values())
     sup_answers = [i for i, l in labels.items() if l["label"] == "supported" and outs[i]["cites"]]
     shown = lambda i: l5_facts_normalized(qmap[i]["q"], {"text": strip_cites(outs[i]["text"]), "cites": outs[i]["cites"]})
     caught = sum(not shown(i) for i in unsup)
     blocked = sum(not shown(i) for i in sup_answers)
     answerable = sum(qmap[i]["kind"] == "answerable" for i in labels)
-    rows.append((spec, n, len(unsup), len(refused), answerable, caught, blocked, len(sup_answers), pending,
+    rows.append((spec, n, len(unsup), len(refused), refused_ans, answerable, caught, blocked, len(sup_answers), pending,
                  statistics.median(o["latency_s"] for o in outs.values())))
 
 if not rows:
     print("No labeled Phase 2 answers yet.")
     sys.exit(0)
-print("| Model | Observed unsupported-claim rate | False refusals (answerable) | Frozen guards: recall on real failures | Frozen guards: false-positive rate | Median latency |")
-print("| --- | ---: | ---: | ---: | ---: | ---: |")
-for spec, n, u, r, a, c, b, s, p, lat in rows:
+print("| Model | Unsupported claims | Refused (all questions) | Refused (answerable only) | Frozen guards: recall on real failures | Frozen guards: false-positive rate | Median latency |")
+print("| --- | ---: | ---: | ---: | ---: | ---: | ---: |")
+for spec, n, u, r, ra, a, c, b, s, p, lat in rows:
     recall = f"{c}/{u} ({c/u:.0%})" if u else "n/a"
-    print(f"| {spec} | {u}/{n} ({u/n:.0%}) | {r}/{a} | {recall} | {b}/{s} ({b/s:.0%}) | {lat:.1f} s |" + (f" {p} unreviewed" if p else ""))
+    print(f"| {spec} | {u}/{n} ({u/n:.0%}) | {r}/{n} ({r/n:.0%}) | {ra}/{a} ({ra/a:.0%}) | {recall} | {b}/{s} ({b/s:.0%}) | {lat:.1f} s |" + (f" {p} unreviewed" if p else ""))
