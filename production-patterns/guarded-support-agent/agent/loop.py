@@ -54,9 +54,10 @@ class Result:
 
 
 def run_turn(user_msg: str, session: Session, backends: Backends, model=None, budget: Budget | None = None,
-             sleep=None) -> Result:
+             sleep=None, guarded: bool = True) -> Result:
+    """guarded=False runs the same loop with every guard removed, for the failure benchmark."""
     model = model or default_model()
-    budget = budget or Budget()
+    budget = budget or (Budget() if guarded else Budget(max_steps=50, max_seconds=1e9, max_tokens=10**12))
     trace_id = uuid.uuid4().hex[:8]
     trace: list[TraceStep] = []
     tools_used: list[str] = []
@@ -65,7 +66,7 @@ def run_turn(user_msg: str, session: Session, backends: Backends, model=None, bu
         trace.append(TraceStep(kind, detail, round((time.monotonic() - t0) * 1000, 1)))
 
     t0 = time.monotonic()
-    if guards.screen_input(user_msg):  # layer 1: input screening
+    if guarded and guards.screen_input(user_msg):  # layer 1: input screening
         log("input_flagged", t0, text=user_msg[:80])
         session.messages += [{"role": "user", "content": user_msg}, {"role": "assistant", "content": SAFE_REPLY, "tool_calls": []}]
         return Result(SAFE_REPLY, trace, [], flagged_injection=True)
@@ -87,20 +88,21 @@ def run_turn(user_msg: str, session: Session, backends: Backends, model=None, bu
         session.messages.append(msg)  # update
 
         if not msg["tool_calls"]:
-            reply = guards.filter_output(msg["content"])  # last checkpoint
+            reply = guards.filter_output(msg["content"]) if guarded else msg["content"]  # last checkpoint
             log("reply", time.monotonic(), text=reply[:120])
             session.messages[-1]["content"] = reply
             return Result(reply, trace, tools_used, tokens=budget.tokens)
 
         for call in msg["tool_calls"]:  # act
             t = time.monotonic()
-            decision = guards.authorize(call["name"], call["args"], tools_used, session.customer_id, order_owner)
+            decision = (guards.authorize(call["name"], call["args"], tools_used, session.customer_id, order_owner)
+                        if guarded else guards.Decision("allow"))
             if decision.verdict == "deny":
                 result = {"error": f"not allowed: {decision.reason}"}
             elif decision.verdict == "needs_human":
                 result = {"status": "pending_approval", "reason": decision.reason}
             else:
-                key = f"{trace_id}:{call['id']}" if call["name"] in WRITE_TOOLS else ""
+                key = f"{trace_id}:{call['id']}" if guarded and call["name"] in WRITE_TOOLS else ""
                 result = execute(call["name"], call["args"], backends, key, sleep=sleep)
                 if call["name"] == "order_lookup" and "customer_id" in result:
                     order_owner = result["customer_id"]

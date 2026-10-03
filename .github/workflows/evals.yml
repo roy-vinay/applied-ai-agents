@@ -12,3 +12,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m evals.run_evals
+      - run: python -m benchmark.failure_matrix --check

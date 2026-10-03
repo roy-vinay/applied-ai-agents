@@ -56,16 +56,19 @@ class RefundService:
     total_paid: float = 0.0
     fail_next: int = 0           # simulate outages before the refund happens
     lose_response_next: int = 0  # simulate the refund succeeding but the response timing out
+    ledger: list = field(default_factory=list)  # every payment actually made: (order_id, amount)
 
     def refund(self, order_id: str, amount: float, reason: str, idempotency_key: str) -> dict:
         if self.fail_next:
             self.fail_next -= 1
             raise ServiceUnavailable("payment service timed out")
-        if idempotency_key in self.processed:  # retry of a refund that already happened
+        if idempotency_key and idempotency_key in self.processed:  # retry of a refund that already happened
             return {**self.processed[idempotency_key], "replayed": True}
         self.total_paid += amount
+        self.ledger.append((order_id, amount))
         result = {"status": "refunded", "order_id": order_id, "amount": amount, "reason": reason}
-        self.processed[idempotency_key] = result
+        if idempotency_key:
+            self.processed[idempotency_key] = result
         if self.lose_response_next:
             self.lose_response_next -= 1
             raise ServiceUnavailable("response lost after refund was applied")

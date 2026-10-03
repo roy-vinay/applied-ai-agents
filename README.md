@@ -25,7 +25,21 @@ The parts that keep an agent safe once real users and real money are involved.
 
 | Project | What it shows | Stack |
 | --- | --- | --- |
-| [Guarded support agent](production-patterns/guarded-support-agent) | Authorization in code, retries with backoff, step and token budgets, idempotent writes, PII redaction, prompt-injection screening, and 12 trajectory evals in CI. Companion to [Building AI Agents That Survive Production](https://vinaysays.medium.com/building-ai-agents-that-survive-production-5bbb2257ba0a). | Python, no dependencies |
+| [Guarded support agent](production-patterns/guarded-support-agent) | Authorization in code, retries with backoff, step and token budgets, idempotent writes, PII redaction, prompt-injection screening, 12 trajectory evals, and a fault-injection benchmark, all in CI. Companion to [Building AI Agents That Survive Production](https://vinaysays.medium.com/building-ai-agents-that-survive-production-5bbb2257ba0a). | Python, no dependencies |
+
+**What the guards prevent**, measured with 100 randomized trials per failure, same agent with guards off vs on
+([method and caveats](production-patterns/guarded-support-agent#what-the-guards-actually-prevent)):
+
+| Failure | Without guards | With guards |
+| --- | ---: | ---: |
+| Duplicate payment after a lost response | 79/100 | 0/100 |
+| Refund paid on another customer's order | 47/100 | 0/100 |
+| Refund over $50 paid without approval | 25/100 | 0/100 |
+| Payment made after an injection attempt | 68/100 | 18/100 |
+| Card number shown back to the customer | 100/100 | 0/100 |
+| System prompt revealed | 100/100 | 0/100 |
+| Turn ran past 8 model calls | 100/100 | 0/100 |
+| Legitimate refund wrongly blocked (cost of guards) | 0/100 | 0/100 |
 
 ## Agents
 
