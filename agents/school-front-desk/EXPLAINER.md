@@ -1,7 +1,7 @@
 # AI Front Desk — Explainer
 
 **Live app:** https://berryessa-ai-front-desk-unofficial.vercel.app · **Operator view:** `/operator` (password-protected)
-**Source:** https://github.com/roy-vinay/challenger-agent
+**Source:** https://github.com/roy-vinay/school-chat-agent
 
 ## At a glance
 
@@ -62,7 +62,7 @@ If Claude is unconfigured or unavailable (missing/invalid key, API error, malfor
 
 ### Evaluation and delivery
 
-`npm run evals` runs seven fixed conversations against the actual production prompt and tool schema (full scenario list in the Technical appendix) — a manual pre-deploy gate today, not yet wired into CI. The project is a git repo on GitHub (`roy-vinay/challenger-agent`); Vercel is connected to it and auto-builds/deploys production on every push to `main`, replacing the earlier no-git, manual-file-upload deploy path used mid-project.
+`npm run evals` runs seven fixed conversations against the actual production prompt and tool schema (full scenario list in the Technical appendix) — a manual pre-deploy gate today, not yet wired into CI. The project is a git repo on GitHub (`roy-vinay/school-chat-agent`); Vercel is connected to it and auto-builds/deploys production on every push to `main`, replacing the earlier no-git, manual-file-upload deploy path used mid-project.
 
 ## System flow
 
@@ -169,4 +169,4 @@ we'll provide a simple meal from the campus kitchen for a $6 fee, added to your 
 - **Grounding is request-scoped, not cached:** the knowledge base, escalation rules, and calendar are sent fresh on every `/api/chat` call from the client's current state, so an operator's edit is live on the parent's very next message.
 - **Fallback is a first-class path, not an error state:** `/api/chat` always returns HTTP 200 with a real, grounded answer — from Claude when configured, from the deterministic matcher otherwise — rather than surfacing a raw failure to a parent.
 - **Why not a KV-blob store for state today:** a KV-blob approach was considered and rejected for the eventual backend migration — every write would read-and-rewrite the entire state with no real concurrency safety. Vercel Postgres + Drizzle with per-record updates is the intended replacement (see P1 above).
-- **Deploys are git-driven:** the project is on GitHub (`roy-vinay/challenger-agent`); Vercel builds and deploys production automatically on every push to `main`.
+- **Deploys are git-driven:** the project is on GitHub (`roy-vinay/school-chat-agent`); Vercel builds and deploys production automatically on every push to `main`.
