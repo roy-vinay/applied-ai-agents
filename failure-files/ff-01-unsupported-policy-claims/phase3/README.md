@@ -5,7 +5,10 @@ correct answers because of sloppy citations, and every real failure they missed 
 the wrong conclusion. Can citation repair fix the first, and a second model that checks meaning fix the
 second, without trading one problem for the other?
 
-> **Status: building.** Test questions frozen 2026-10-10. Results will be added here when the runs finish.
+> **Status: done (2026-10-10).** Headline: on held-out answers, citation repair plus a free local judge cut
+> wrongly blocked answers from 52% to 32% while catching about as many real failures (62% vs 66%). Better,
+> not solved. The judge looked much stronger on the data it was tuned on (84% caught) than on fresh data
+> (62%), and it still missed most of the threshold errors it was built for.
 
 ## What's being compared
 
@@ -45,8 +48,81 @@ dev failures until something looks good, the rule was fixed before the last atte
 prompt versions; freeze the one with the highest catch rate minus false-block rate for "Repair + judge"
 on dev.** Every version's prompt and dev results are kept in this folder.
 
-## Dev notes so far
+## Results
 
-Citation repair on the Phase 2 answers: false blocks went from 131 of 247 correct answers to 16 (53% to
-6%, back near Phase 1's 7%), while catches went from 14 of 19 to 10. Rules can check numbers; they can't
-tell "not 50%" from "yes, 50%". The judge has to cover that.
+### Test: the number that counts
+
+300 fresh answers to 100 new questions, labeled before the judge saw them: 61 unsupported, 175 supported,
+64 refused. The judge and the repair were frozen before this run.
+
+| Guard | Real failures caught | Good answers wrongly blocked |
+| --- | ---: | ---: |
+| Rules, frozen (Phase 2) | 40/61 (66%) | 91/175 (52%) |
+| Rules + citation repair | 22/61 (36%) | 25/175 (14%) |
+| Judge only | 27/61 (44%) | 36/175 (21%) |
+| **Repair + judge** | **38/61 (62%)** | **56/175 (32%)** |
+
+By answering model (repair + judge): Llama 3.2 caught 10/13, wrongly blocked 9/45. Qwen 2.5 caught 17/30,
+wrongly blocked 23/63. Gemma 2 caught 11/18, wrongly blocked 24/67.
+
+Judge cost: $0. Judge latency: median 39 seconds per answer on a free CPU-only runner.
+
+### Dev: what the same setups did on the Phase 2 answers
+
+| Guard | Caught | Wrongly blocked |
+| --- | ---: | ---: |
+| Rules, frozen | 14/19 (74%) | 131/247 (53%) |
+| Rules + citation repair | 10/19 (53%) | 16/247 (6%) |
+| Judge only (v3) | 8/19 (42%) | 72/247 (29%) |
+| Repair + judge (v3) | 16/19 (84%) | 84/247 (34%) |
+
+The three judge prompts on dev, each combined with repair: v1 caught 95% and wrongly blocked 69%; v2
+caught 58% and wrongly blocked 14%; v3 caught 84% and wrongly blocked 34%. v3 won under the rule set in
+advance (catch rate minus false-block rate: 25.5, 43.7, 50.2).
+
+### What we found
+
+1. **Better, not solved.** The best setup kept about the same catch rate as the frozen rules (62% vs 66%)
+   and cut wrongly blocked answers from about half to about a third. That's real progress, and it still
+   means one good answer in three gets stopped and more than a third of real failures get through.
+2. **The data you tune on flatters you.** The same frozen judge caught 84% of failures on the Phase 2
+   answers and 62% on fresh ones. We picked it by a rule fixed in advance, and it still dropped by more
+   than 20 points, because 19 dev failures were too few to tune on. Any guard tested only on the examples
+   it was built with should be assumed to be overstated.
+3. **A small judge is steered by wording, not understanding.** Three prompts for the same 7B model moved
+   it from catching almost everything while blocking most good answers, to blocking little while catching
+   little. Asking it to fill in fixed fields and letting code make the call worked best, but the judge's
+   operating point was set by how we phrased the question.
+4. **It missed the failures it was built for.** 13 of the 23 false-premise and bend-the-rule failures got
+   through: "your 27 kg bag is within the 23 kg limit", "exactly 8 kg meets an under-8 kg limit", "yes,
+   exactly 3 hours gets the credit". Comparing a customer's number to a policy limit is arithmetic, and a
+   small model doing it in prose gets it wrong often.
+5. **Citation repair is the cheap, reliable part.** It held up best from dev to test on precision (6% to
+   14% wrongly blocked, against 53% for the frozen rules) and costs nothing at runtime. On its own it
+   catches too little.
+6. **Refusals didn't go away.** 64 of 300 test answers refused a question the policies answer, 42 of them
+   from Llama 3.2. A guard can't fix an assistant that won't answer; that has to be measured separately,
+   and it was.
+7. **A free judge is an audit tool, not a live guard.** At about 39 seconds per answer on a CPU, it can
+   review yesterday's conversations, not stand in front of a customer.
+
+### What this points to next
+
+Split the work by what each part is good at. Pull the customer's numbers and the policy's limits out
+deterministically and compare them in code; that targets the threshold errors directly and costs nothing.
+Keep the model judge for meaning (agreeing with a false claim, inventing an option), and test whether a
+larger hosted judge, added through the same provider interface, closes the gap, with cost and latency
+reported next to it.
+
+### Labels and limits
+
+- Test labels were made by Claude (an AI model), at the author's request, for all 300 answers, before the
+  judge ran. Every label is marked `"source": "claude_review"` with the rule label and a one-line reason.
+  Labeling rules were the same as Phase 2.
+- The judge and the labeler are both models; the labels were not checked by a person.
+- The judge (Qwen 2.5 7B) shares a family with one answering model (Qwen 2.5 3B). Its catch rate on Qwen's
+  answers was the lowest of the three (57%), so there's no sign it favored its own family, but the sample
+  is small.
+- The test set produced far more failures (61) than dev (19). Its questions lean harder on arithmetic
+  against limits, so dev and test are not the same difficulty.
+- Small models, one run each at temperature 0, one fictional airline. Treat rates as directional.

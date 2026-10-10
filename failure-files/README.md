@@ -14,13 +14,15 @@ By [Vinay Roy](https://github.com/roy-vinay). Part of [applied-ai-agents](../REA
 **[FF-01: Unsupported policy claims](ff-01-unsupported-policy-claims)**, the failure behind the 2024 Air
 Canada chatbot case. Phase 1 (fault injection): rule-based guards caught 79% of injected failures, with a
 7% false-positive rate. The finding that matters: **a cited answer is not a grounded answer**, and most of
-what rules miss is wrong in meaning, not in form. Phase 2 ran three real open models against the frozen guards: recall held (74%), precision didn't (false positives up to 57%, mostly from sloppy citations), and every miss was a wrong conclusion with the right numbers.
+what rules miss is wrong in meaning, not in form. Phase 2 ran three real open models against the frozen guards: recall held (74%), precision didn't (false positives up to 57%, mostly from sloppy citations), and every miss was a wrong conclusion with the right numbers. Phase 3 tested citation repair and a free
+local judge on fresh answers: wrongly blocked answers fell from 52% to 32% at about the same catch rate,
+and the judge looked far better on the answers it was tuned on (84% caught) than on new ones (62%).
 
 ## The files
 
 | ID | Failure mode | The question a leader should ask | Status |
 | --- | --- | --- | --- |
-| [FF-01](ff-01-unsupported-policy-claims) | Unsupported policy claims | What stops our assistant from stating a policy that isn't in our policy documents? | Phases 1 and 2 shipped · Phase 3 next |
+| [FF-01](ff-01-unsupported-policy-claims) | Unsupported policy claims | What stops our assistant from stating a policy that isn't in our policy documents? | Phases 1 to 3 shipped |
 | FF-02 | Unauthorized commitments | Can a customer talk our assistant into a deal we'd have to honor? | Planned |
 | FF-03 | Behavioral policy violations | What does our assistant say when a customer tries to make it embarrass us? | Planned |
 | FF-04 | High-stakes advice outside scope | Will our assistant give legal or regulatory advice it isn't qualified to give? | Planned |

@@ -58,7 +58,9 @@ the 2024 Air Canada chatbot case. Phase 1 (fault injection, no model yet): rule-
 deliberately injected failures, with a 7% false-positive rate. The finding that matters: a cited answer is
 not a grounded answer, and most failures the rules miss are wrong in meaning, not in form. Phase 2 (three
 real open models, guards frozen): recall held at 74%, false positives rose to as high as 57%, and every
-miss was a wrong conclusion with the right numbers. Phase 3 adds a semantic verifier.
+miss was a wrong conclusion with the right numbers. Phase 3 (citation repair plus a free local judge, on
+fresh held-out answers): wrongly blocked answers fell from 52% to 32% at about the same catch rate. Better,
+not solved, and the judge was 20 points weaker on fresh data than on the data it was tuned on.
 
 ## Decisions
 

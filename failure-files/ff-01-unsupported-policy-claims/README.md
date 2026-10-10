@@ -2,11 +2,12 @@
 
 **A support bot states a policy that the company's own policy documents don't contain.**
 
-> **Status: Phases 1 and 2 of 3 done.** Phase 1 tested the guards on failures we injected. Phase 2 froze
-> them and ran three real open models on 100 held-out questions ([results](phase2#results-2026-10-03)).
-> Headline: the guards kept their recall on real failures (74% vs 79%) but lost their precision (false
-> positives up from 7% to 17 to 57%), and every real failure they missed was a wrong conclusion with the
-> right numbers. Phase 3 targets exactly that.
+> **Status: all three phases done.** Phase 1 tested the guards on failures we injected. Phase 2 froze them
+> and ran three real open models ([results](phase2#results-2026-10-03)): the guards kept their recall but
+> blocked about half of all good answers, mostly over sloppy citations. Phase 3 added citation repair and a
+> free local judge, tested on fresh held-out answers ([results](phase3#results)): wrongly blocked answers
+> fell from 52% to 32% at about the same catch rate (62%). Better, not solved, and the judge looked far
+> better on the data it was tuned on than on fresh data.
 
 ## The case
 
@@ -100,6 +101,7 @@ unsupported claims occur on their own, what form they take, and how much of that
 each sentence of the answer. Compare rules only, the semantic check only, and both together, on real-model
 answers, measuring unsupported-claim rate, false refusals, cost per 100 answers, and latency. Phase 3 is
 designed only after Phase 2 results are in, so it targets the failures real models actually make.
+**Done:** [results](phase3#results).
 
 This phase also tests something harder: the verifier is a model too, and it will make its own mistakes.
 How reliably can one model judge whether another model's statement is supported by a source?
