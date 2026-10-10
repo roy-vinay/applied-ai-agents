@@ -76,8 +76,9 @@ def table(split: str) -> bool:
 
 
 if __name__ == "__main__":
-    if "--judge-v1" in sys.argv:
-        VERSION = "judge_v1"
+    for v in ("judge_v1", "judge_v2"):  # earlier prompt versions, kept for the record
+        if f"--{v.replace('_', '-')}" in sys.argv:
+            VERSION = v
     any_ = [table(s) for s in ("dev", "test")]
     if not any(any_):
         print("No judged Phase 3 answers yet.")

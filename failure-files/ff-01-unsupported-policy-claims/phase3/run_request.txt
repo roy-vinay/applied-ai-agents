@@ -1,2 +1,2 @@
 judge-dev
-# 2026-10-10: judge v2 (a block must quote the problem sentence)
+# 2026-10-10: judge v3 (structured fields, code decides)

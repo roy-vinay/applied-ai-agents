@@ -38,6 +38,13 @@ making the assistant say no.
   are also reported per answering model.
 - **Free.** Everything runs on free GitHub runners through Ollama ([workflow](../../../.github/workflows/ff01-phase3.yml)).
 
+## Choosing the judge prompt (decided before version 3 ran)
+
+The judge is a small local model, and its behavior swung hard with wording. To avoid tuning on 19
+dev failures until something looks good, the rule was fixed before the last attempt: **at most three
+prompt versions; freeze the one with the highest catch rate minus false-block rate for "Repair + judge"
+on dev.** Every version's prompt and dev results are kept in this folder.
+
 ## Dev notes so far
 
 Citation repair on the Phase 2 answers: false blocks went from 131 of 247 correct answers to 16 (53% to

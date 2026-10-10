@@ -4,10 +4,16 @@ decides whether the policies support what the answer says and concludes.
     python judge.py --split dev --answer-models ollama:qwen2.5:3b
     python judge.py --split test           # refuses to run until the judge is frozen
 
-Two rules decide what counts as a block:
-  - A block must be grounded: the judge has to quote the problem sentence from the answer. If the quote
-    isn't actually in the answer, the block is dropped (recorded as "ungrounded_block").
-  - Fails closed: if the judge's reply can't be parsed at all, the answer is blocked.
+The judge fills in a fixed set of fields (what the customer claimed, whether the answer went along with
+it, what the answer concluded, what the policy says for this case, and any invented detail). The code,
+not the judge, turns those fields into a decision. An answer is blocked if:
+  - it agrees with a customer claim the policies don't support, or
+  - its conclusion for this customer doesn't match what the policy says, or
+  - it contains an invented detail, quoted from the answer (a quote not found in the answer is ignored).
+Fails closed: if the judge's reply can't be parsed at all, the answer is blocked.
+
+Earlier prompt versions and their dev results are kept (judge_prompt_v1.txt, judge_prompt_v2.txt,
+dev/judge_v1, dev/judge_v2).
 """
 from __future__ import annotations
 
@@ -44,7 +50,7 @@ def grounded(quote: str, answer: str) -> bool:
 
 def judge(question: str, answer: str, model: str = JUDGE_MODEL, host: str = "http://localhost:11434") -> dict:
     body = json.dumps({"model": model.split(":", 1)[1], "stream": False, "format": "json",
-                       "options": {"temperature": 0, "num_predict": 120},
+                       "options": {"temperature": 0, "num_predict": 300},
                        "messages": [{"role": "user", "content": build_prompt(question, answer)}]}).encode()
     req = urllib.request.Request(f"{host}/api/chat", data=body, headers={"Content-Type": "application/json"})
     last = None
@@ -61,17 +67,20 @@ def judge(question: str, answer: str, model: str = JUDGE_MODEL, host: str = "htt
         raise RuntimeError(f"judge failed after 3 attempts: {last}")
     raw = out["message"]["content"]
     try:
-        parsed = json.loads(raw)
-        verdict = str(parsed.get("verdict", "")).upper().split()[0] if parsed.get("verdict") else ""
-        reason = str(parsed.get("reason", ""))
-        quote = str(parsed.get("problem_sentence", ""))
+        f = {k: str(v).strip() for k, v in json.loads(raw).items()}
+        word = {k: (re.findall(r"[a-z]+", v.lower()) or [""])[0] for k, v in f.items()}
+        agrees_false = word.get("answer_agrees") == "yes" and word.get("claim_true") == "no"
+        wrong_conclusion = word.get("conclusion_ok") == "no"
+        invented = grounded(f.get("invented", ""), answer)
+        ok = "conclusion_ok" in f and "answer_agrees" in f
     except (json.JSONDecodeError, AttributeError):
-        verdict, reason, quote = "", "", ""
-    ok = verdict in ("SUPPORTED", "UNSUPPORTED")
-    ungrounded = ok and verdict == "UNSUPPORTED" and not grounded(quote, answer)
-    final = "SUPPORTED" if ungrounded else (verdict if ok else "UNSUPPORTED")
-    return {"verdict": final, "judge_said": verdict, "problem_sentence": quote, "ungrounded_block": ungrounded,
-            "reason": reason, "parse_error": not ok,
+        f, ok, agrees_false, wrong_conclusion, invented = {}, False, False, False, False
+    reasons = [r for r, hit in (("agrees with an unsupported claim", agrees_false),
+                                ("wrong conclusion for this case", wrong_conclusion),
+                                ("invented detail", invented)) if hit]
+    final = "UNSUPPORTED" if (reasons or not ok) else "SUPPORTED"
+    return {"verdict": final, "reason": "; ".join(reasons) or ("unparseable reply" if not ok else ""),
+            "fields": f, "parse_error": not ok,
             "latency_s": round(time.monotonic() - t, 2), "input_tokens": out.get("prompt_eval_count", 0),
             "output_tokens": out.get("eval_count", 0), "raw": raw}
 
