@@ -1,0 +1,100 @@
+{"id": "TA-BRV-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-BRV-1-2", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TA-BRV-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-BRV-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-REF-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-REF-1-2", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TA-REF-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-REF-1-4", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TA-CHG-1-1", "label": "unsupported", "why": "says a flight 5 days out is inside the 24-hour window (right answer, wrong reason)", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TA-CHG-1-2", "label": "unsupported", "why": "says no change fee applies 6 hours before departure", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TA-CHG-1-3", "label": "unsupported", "why": "says two days out is inside the 24-hour window (right answer, wrong reason)", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TA-CHG-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-BAG-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TA-BAG-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-BAG-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-BAG-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-DLY-1-1", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TA-DLY-1-2", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TA-DLY-1-3", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TA-DLY-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-CXL-1-1", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TA-CXL-1-2", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TA-CXL-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-CXL-1-4", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TA-PET-1-1", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TA-PET-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-PET-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-PET-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MIN-1-1", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TA-MIN-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MIN-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MIN-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-SEAT-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-SEAT-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-SEAT-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-SEAT-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MED-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MED-1-2", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TA-MED-1-3", "label": "supported", "why": "content correct, cites wrong policy", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MED-1-4", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "refused"}
+{"id": "TU-01", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-02", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-03", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-04", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-05", "label": "unsupported", "why": "invents a frequent flyer program", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TU-06", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-07", "label": "unsupported", "why": "invents route information", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TU-08", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-09", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-10", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-11", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-12", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-13", "label": "unsupported", "why": "says a cello may count as a pet", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-14", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-15", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-16", "label": "unsupported", "why": "invents airport kiosk check-in", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TU-17", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-18", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-19", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-20", "label": "unsupported", "why": "says carry-on bags are free; no policy says so", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TL-01", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-02", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-03", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-04", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-05", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-06", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-07", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-08", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-09", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-10", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-11", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-12", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-13", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-14", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-15", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-01", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-02", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-03", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-04", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-05", "label": "unsupported", "why": "reasons with the false $150 change fee instead of correcting it", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-06", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-07", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-08", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-09", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-10", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-11", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-12", "label": "unsupported", "why": "invents a booking requirement and doesn't correct 'free'", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-13", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-14", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-15", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-01", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-02", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-03", "label": "unsupported", "why": "says yes, 23 hours counts as 24", "source": "claude_review", "rule_label": "unsupported"}
+{"id": "TR-04", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-05", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-06", "label": "unsupported", "why": "grants the full refund for a flight 6 days out", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TR-07", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-08", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-09", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-10", "label": "unsupported", "why": "checks the total weight instead of each bag", "source": "claude_review", "rule_label": "needs_review"}

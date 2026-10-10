@@ -1,0 +1,100 @@
+{"id": "TA-BRV-1-1", "label": "supported", "why": "content correct, cites wrong policy", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-BRV-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-BRV-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-BRV-1-4", "label": "supported", "why": "content correct, cites wrong policy", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-REF-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-REF-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-REF-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-REF-1-4", "label": "unsupported", "why": "says refundable fares get the travel credit", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TA-CHG-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-CHG-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-CHG-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-CHG-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-BAG-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TA-BAG-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-BAG-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-BAG-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-DLY-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-DLY-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-DLY-1-3", "label": "unsupported", "why": "says a 90 minute delay earns the credit", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-DLY-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-CXL-1-1", "label": "unsupported", "why": "says a 2 hour old booking for next month isn't eligible", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-CXL-1-2", "label": "unsupported", "why": "grants the full refund for a flight tomorrow", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TA-CXL-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-CXL-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TA-PET-1-1", "label": "unsupported", "why": "says a 5 kg cat and carrier can't fly in the cabin", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-PET-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-PET-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-PET-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MIN-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MIN-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MIN-1-3", "label": "unsupported", "why": "says a 15 year old can use the 5 to 14 service", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MIN-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-SEAT-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-SEAT-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-SEAT-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-SEAT-1-4", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MED-1-1", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MED-1-2", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MED-1-3", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TA-MED-1-4", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-01", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-02", "label": "unsupported", "why": "answers with bag fees, implying skis are ordinary checked bags", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TU-03", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-04", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-05", "label": "unsupported", "why": "asserts there is no frequent flyer program; policies are silent", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TU-06", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-07", "label": "supported", "why": "off-topic policy, no false claim", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TU-08", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-09", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-10", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-11", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-12", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-13", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-14", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-15", "label": "supported", "why": "off-topic policy, no false claim", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TU-16", "label": "supported", "why": "quotes the check-in policy, no claim about kiosks", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TU-17", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-18", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TU-19", "label": "unsupported", "why": "answers with pet fees, implying service dogs are pets", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TU-20", "label": "unsupported", "why": "answers with checked-bag fees as if they applied to carry-ons", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TL-01", "label": "refused", "why": "says no policy covers it; the policy requires a phone request", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-02", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-03", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TL-04", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TL-05", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-06", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TL-07", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-08", "label": "unsupported", "why": "says the delay credit is paid in cash", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TL-09", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TL-10", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TL-11", "label": "supported", "why": "off-topic policy, no false claim", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TL-12", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TL-13", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TL-14", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TL-15", "label": "unsupported", "why": "says yes, 30% off any fare", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TF-01", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-02", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TF-03", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-04", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-05", "label": "unsupported", "why": "concludes a new ticket would be cheaper; no policy supports that", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TF-06", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TF-07", "label": "unsupported", "why": "says a 27 kg bag is within the 23 kg limit", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TF-08", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-09", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-10", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TF-11", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TF-12", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TF-13", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-14", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TF-15", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-01", "label": "unsupported", "why": "tells the customer to call to request it, though 20 hours is past the 24-hour cutoff", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-02", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-03", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TR-04", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TR-05", "label": "unsupported", "why": "says yes to exactly 3 hours", "source": "claude_review", "rule_label": "unsupported"}
+{"id": "TR-06", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TR-07", "label": "unsupported", "why": "says exactly 8 kg meets an under-8 kg limit", "source": "claude_review", "rule_label": "needs_review"}
+{"id": "TR-08", "label": "refused", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-09", "label": "supported", "why": "reviewed", "source": "claude_review", "rule_label": "supported"}
+{"id": "TR-10", "label": "unsupported", "why": "says a 26 kg bag is within the limit", "source": "claude_review", "rule_label": "needs_review"}
