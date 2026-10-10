@@ -64,12 +64,21 @@ jobs:
           else
             python -u judge.py --split "${step#judge-}" --answer-models "${{ matrix.model }}"
           fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase3-${{ matrix.step }}-${{ strategy.job-index }}
+          path: |
+            failure-files/ff-01-unsupported-policy-claims/phase3/test
+            failure-files/ff-01-unsupported-policy-claims/phase3/dev
+          if-no-files-found: warn
       - name: Commit results
         if: always()
         run: |
           git config user.name "Vinay Roy"
           git config user.email "vroy@berkeley.edu"
-          git add -A test dev 2>/dev/null || true
+          for d in test dev; do [ -d "$d" ] && git add -A "$d"; done
+          git status --short
           git commit -m "FF-01 Phase 3: ${{ matrix.step }} for ${{ matrix.model }}" || exit 0
           for i in 1 2 3 4 5 6; do git pull --rebase && git push && exit 0; sleep $((RANDOM % 30 + 5)); done
           exit 1
