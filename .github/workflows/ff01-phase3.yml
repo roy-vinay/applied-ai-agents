@@ -1,5 +1,7 @@
 name: ff01-phase3
-# Manual only. Runs on free GitHub runners with local open models: no API keys, no cost.
+# Runs on free GitHub runners with local open models: no API keys, no cost.
+# Start it from the Actions tab (pick a step), or by pushing a change to phase3/run_request.txt
+# with one step per line:
 #   answers     the three models answer the 100 frozen test questions
 #   judge-dev   the judge checks the Phase 2 answers (used to build and tune it)
 #   judge-test  the judge checks the test answers (refuses to run until the judge is frozen)
@@ -10,17 +12,33 @@ on:
         description: "answers, judge-dev, or judge-test"
         type: choice
         options: [answers, judge-dev, judge-test]
+  push:
+    branches: [main]
+    paths: ["failure-files/ff-01-unsupported-policy-claims/phase3/run_request.txt"]
 permissions:
   contents: write
-concurrency:
-  group: ff01-phase3-${{ inputs.step }}
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      steps: ${{ steps.p.outputs.steps }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: |
+          if [ -n "${{ inputs.step }}" ]; then s='["${{ inputs.step }}"]'
+          else s=$(grep -E '^(answers|judge-dev|judge-test)$' failure-files/ff-01-unsupported-policy-claims/phase3/run_request.txt | jq -R . | jq -sc .)
+          fi
+          echo "steps=$s" >> "$GITHUB_OUTPUT"; echo "$s"
   run:
+    needs: plan
+    if: needs.plan.outputs.steps != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 340
     strategy:
       fail-fast: false
       matrix:
+        step: ${{ fromJSON(needs.plan.outputs.steps) }}
         model: ["ollama:llama3.2:3b", "ollama:qwen2.5:3b", "ollama:gemma2:2b"]
     defaults:
       run:
@@ -36,14 +54,14 @@ jobs:
         run: |
           (ollama serve > /tmp/ollama.log 2>&1 &)
           sleep 5
-          if [ "${{ inputs.step }}" = "answers" ]; then m="${{ matrix.model }}"; else m="ollama:qwen2.5:7b"; fi
+          if [ "${{ matrix.step }}" = "answers" ]; then m="${{ matrix.model }}"; else m="ollama:qwen2.5:7b"; fi
           ollama pull "${m#ollama:}"
       - name: Run
         run: |
-          if [ "${{ inputs.step }}" = "answers" ]; then
+          step="${{ matrix.step }}"
+          if [ "$step" = "answers" ]; then
             python -u run_test_answers.py --models "${{ matrix.model }}"
           else
-            step="${{ inputs.step }}"
             python -u judge.py --split "${step#judge-}" --answer-models "${{ matrix.model }}"
           fi
       - name: Commit results
@@ -52,6 +70,6 @@ jobs:
           git config user.name "Vinay Roy"
           git config user.email "vroy@berkeley.edu"
           git add -A test dev 2>/dev/null || true
-          git commit -m "FF-01 Phase 3: ${{ inputs.step }} for ${{ matrix.model }}" || exit 0
-          for i in 1 2 3 4 5; do git pull --rebase && git push && exit 0; sleep $((RANDOM % 20 + 5)); done
+          git commit -m "FF-01 Phase 3: ${{ matrix.step }} for ${{ matrix.model }}" || exit 0
+          for i in 1 2 3 4 5 6; do git pull --rebase && git push && exit 0; sleep $((RANDOM % 30 + 5)); done
           exit 1
