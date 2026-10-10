@@ -1,0 +1,10 @@
+{
+ "frozen_on": "2026-10-10",
+ "note": "Test questions, answer prompt, policies and guards frozen before any model answered the test questions.",
+ "sha256": {
+  "questions_test.json": "267dc1fec2e8e63232b4db81d64d0f42af3ba96833843f3ae73791fd705eb421",
+  "prompt.txt": "fa55c06f31a5d97a7e10e1d5a0c93d022bbb32a4613d22ad6baddfbef09f1e5b",
+  "kb.py": "d3376d7d38102180dd724c835f47b860c620db61d9a47736748e9c4a520447f2",
+  "guards.py": "d4c2f4c6ea3f7b49b6870f149f8b40293ed4217871f6ca07185c3a0ec6ddf382"
+ }
+}

@@ -1,0 +1,602 @@
+[
+ {
+  "id": "TA-BRV-1-1",
+  "kind": "answerable",
+  "q": "My father passed away, is there a discount on flights to the funeral?",
+  "policy": "BRV-1"
+ },
+ {
+  "id": "TA-BRV-1-2",
+  "kind": "answerable",
+  "q": "Can I request a bereavement fare online, or do I have to call?",
+  "policy": "BRV-1"
+ },
+ {
+  "id": "TA-BRV-1-3",
+  "kind": "answerable",
+  "q": "My mother died last week and I already flew home. Can I get the bereavement price now?",
+  "policy": "BRV-1"
+ },
+ {
+  "id": "TA-BRV-1-4",
+  "kind": "answerable",
+  "q": "Is the bereavement discount taken off the full fare?",
+  "policy": "BRV-1"
+ },
+ {
+  "id": "TA-REF-1-1",
+  "kind": "answerable",
+  "q": "How many business days until my refund shows up?",
+  "policy": "REF-1"
+ },
+ {
+  "id": "TA-REF-1-2",
+  "kind": "answerable",
+  "q": "Will I get cash back on a non-refundable ticket?",
+  "policy": "REF-1"
+ },
+ {
+  "id": "TA-REF-1-3",
+  "kind": "answerable",
+  "q": "Does my refund go back to my credit card?",
+  "policy": "REF-1"
+ },
+ {
+  "id": "TA-REF-1-4",
+  "kind": "answerable",
+  "q": "I have a travel credit from 14 months ago. Can I still use it?",
+  "policy": "REF-1"
+ },
+ {
+  "id": "TA-CHG-1-1",
+  "kind": "answerable",
+  "q": "I want to move my flight to next week and it leaves in 5 days. Is that free?",
+  "policy": "CHG-1"
+ },
+ {
+  "id": "TA-CHG-1-2",
+  "kind": "answerable",
+  "q": "My flight is in 6 hours. What does it cost to change it?",
+  "policy": "CHG-1"
+ },
+ {
+  "id": "TA-CHG-1-3",
+  "kind": "answerable",
+  "q": "Is there a change fee if I switch dates two days before departure?",
+  "policy": "CHG-1"
+ },
+ {
+  "id": "TA-CHG-1-4",
+  "kind": "answerable",
+  "q": "What's the deadline to change my flight without paying?",
+  "policy": "CHG-1"
+ },
+ {
+  "id": "TA-BAG-1-1",
+  "kind": "answerable",
+  "q": "How much do two checked bags cost in total?",
+  "policy": "BAG-1"
+ },
+ {
+  "id": "TA-BAG-1-2",
+  "kind": "answerable",
+  "q": "My suitcase weighs 20 kg. Is that OK?",
+  "policy": "BAG-1"
+ },
+ {
+  "id": "TA-BAG-1-3",
+  "kind": "answerable",
+  "q": "What's the fee for my first checked suitcase?",
+  "policy": "BAG-1"
+ },
+ {
+  "id": "TA-BAG-1-4",
+  "kind": "answerable",
+  "q": "Is 25 kg allowed for a checked bag?",
+  "policy": "BAG-1"
+ },
+ {
+  "id": "TA-DLY-1-1",
+  "kind": "answerable",
+  "q": "My flight was 5 hours late because of a crew scheduling problem. What do I get?",
+  "policy": "DLY-1"
+ },
+ {
+  "id": "TA-DLY-1-2",
+  "kind": "answerable",
+  "q": "How much is the delay credit?",
+  "policy": "DLY-1"
+ },
+ {
+  "id": "TA-DLY-1-3",
+  "kind": "answerable",
+  "q": "My flight was late by 90 minutes. Am I owed anything?",
+  "policy": "DLY-1"
+ },
+ {
+  "id": "TA-DLY-1-4",
+  "kind": "answerable",
+  "q": "Does every delay over 3 hours get compensation?",
+  "policy": "DLY-1"
+ },
+ {
+  "id": "TA-CXL-1-1",
+  "kind": "answerable",
+  "q": "I booked 2 hours ago for a trip next month. Can I get a full refund?",
+  "policy": "CXL-1"
+ },
+ {
+  "id": "TA-CXL-1-2",
+  "kind": "answerable",
+  "q": "I booked this morning for a flight tomorrow. Can I cancel for a full refund?",
+  "policy": "CXL-1"
+ },
+ {
+  "id": "TA-CXL-1-3",
+  "kind": "answerable",
+  "q": "What are the conditions for a free cancellation?",
+  "policy": "CXL-1"
+ },
+ {
+  "id": "TA-CXL-1-4",
+  "kind": "answerable",
+  "q": "I bought my ticket 3 days ago. Can I still cancel for a full refund?",
+  "policy": "CXL-1"
+ },
+ {
+  "id": "TA-PET-1-1",
+  "kind": "answerable",
+  "q": "Can my cat fly in the cabin with me if she and her carrier weigh 5 kg?",
+  "policy": "PET-1"
+ },
+ {
+  "id": "TA-PET-1-2",
+  "kind": "answerable",
+  "q": "What does it cost to fly with a small dog?",
+  "policy": "PET-1"
+ },
+ {
+  "id": "TA-PET-1-3",
+  "kind": "answerable",
+  "q": "How heavy can my pet and its carrier be?",
+  "policy": "PET-1"
+ },
+ {
+  "id": "TA-PET-1-4",
+  "kind": "answerable",
+  "q": "Is the pet fee charged in both directions on a round trip?",
+  "policy": "PET-1"
+ },
+ {
+  "id": "TA-MIN-1-1",
+  "kind": "answerable",
+  "q": "Can my 7 year old daughter fly by herself?",
+  "policy": "MIN-1"
+ },
+ {
+  "id": "TA-MIN-1-2",
+  "kind": "answerable",
+  "q": "What does it cost to send a child on a flight alone?",
+  "policy": "MIN-1"
+ },
+ {
+  "id": "TA-MIN-1-3",
+  "kind": "answerable",
+  "q": "My son is 15. Can he use the unaccompanied minor service?",
+  "policy": "MIN-1"
+ },
+ {
+  "id": "TA-MIN-1-4",
+  "kind": "answerable",
+  "q": "What ages can use the unaccompanied minor service?",
+  "policy": "MIN-1"
+ },
+ {
+  "id": "TA-SEAT-1-1",
+  "kind": "answerable",
+  "q": "Do I have to pay to pick a seat?",
+  "policy": "SEAT-1"
+ },
+ {
+  "id": "TA-SEAT-1-2",
+  "kind": "answerable",
+  "q": "How early before departure does check-in open?",
+  "policy": "SEAT-1"
+ },
+ {
+  "id": "TA-SEAT-1-3",
+  "kind": "answerable",
+  "q": "Is seat selection free if I do it at check-in?",
+  "policy": "SEAT-1"
+ },
+ {
+  "id": "TA-SEAT-1-4",
+  "kind": "answerable",
+  "q": "When can I check in for my flight?",
+  "policy": "SEAT-1"
+ },
+ {
+  "id": "TA-MED-1-1",
+  "kind": "answerable",
+  "q": "I'm 38 weeks pregnant. What do I need to fly?",
+  "policy": "MED-1"
+ },
+ {
+  "id": "TA-MED-1-2",
+  "kind": "answerable",
+  "q": "Do I need a medical certificate at 20 weeks pregnant?",
+  "policy": "MED-1"
+ },
+ {
+  "id": "TA-MED-1-3",
+  "kind": "answerable",
+  "q": "At what point in pregnancy is a medical certificate required?",
+  "policy": "MED-1"
+ },
+ {
+  "id": "TA-MED-1-4",
+  "kind": "answerable",
+  "q": "I'm 35 weeks pregnant. Can I fly without a doctor's note?",
+  "policy": "MED-1"
+ },
+ {
+  "id": "TU-01",
+  "kind": "unanswerable",
+  "q": "Do you offer a discount for teachers?",
+  "policy": null
+ },
+ {
+  "id": "TU-02",
+  "kind": "unanswerable",
+  "q": "Can I bring my skis?",
+  "policy": null
+ },
+ {
+  "id": "TU-03",
+  "kind": "unanswerable",
+  "q": "Are there power outlets at the seats?",
+  "policy": null
+ },
+ {
+  "id": "TU-04",
+  "kind": "unanswerable",
+  "q": "Can I bring my own food on board?",
+  "policy": null
+ },
+ {
+  "id": "TU-05",
+  "kind": "unanswerable",
+  "q": "Do you have a frequent flyer program?",
+  "policy": null
+ },
+ {
+  "id": "TU-06",
+  "kind": "unanswerable",
+  "q": "Can I pay for my ticket in installments?",
+  "policy": null
+ },
+ {
+  "id": "TU-07",
+  "kind": "unanswerable",
+  "q": "Do you fly to Tokyo?",
+  "policy": null
+ },
+ {
+  "id": "TU-08",
+  "kind": "unanswerable",
+  "q": "Can I bring a stroller to the gate?",
+  "policy": null
+ },
+ {
+  "id": "TU-09",
+  "kind": "unanswerable",
+  "q": "Is there a discounted fare for infants?",
+  "policy": null
+ },
+ {
+  "id": "TU-10",
+  "kind": "unanswerable",
+  "q": "Do you have kids' meals?",
+  "policy": null
+ },
+ {
+  "id": "TU-11",
+  "kind": "unanswerable",
+  "q": "Can I bring a portable oxygen concentrator?",
+  "policy": null
+ },
+ {
+  "id": "TU-12",
+  "kind": "unanswerable",
+  "q": "What's your policy on damaged luggage?",
+  "policy": null
+ },
+ {
+  "id": "TU-13",
+  "kind": "unanswerable",
+  "q": "Can I buy an extra seat for my cello?",
+  "policy": null
+ },
+ {
+  "id": "TU-14",
+  "kind": "unanswerable",
+  "q": "Do you sell gift cards?",
+  "policy": null
+ },
+ {
+  "id": "TU-15",
+  "kind": "unanswerable",
+  "q": "Is there a fee for paying by credit card?",
+  "policy": null
+ },
+ {
+  "id": "TU-16",
+  "kind": "unanswerable",
+  "q": "Can I check in at an airport kiosk?",
+  "policy": null
+ },
+ {
+  "id": "TU-17",
+  "kind": "unanswerable",
+  "q": "Do you offer a group discount?",
+  "policy": null
+ },
+ {
+  "id": "TU-18",
+  "kind": "unanswerable",
+  "q": "Can I bring an e-bike battery?",
+  "policy": null
+ },
+ {
+  "id": "TU-19",
+  "kind": "unanswerable",
+  "q": "Do you allow service dogs?",
+  "policy": null
+ },
+ {
+  "id": "TU-20",
+  "kind": "unanswerable",
+  "q": "Is there a fee for a carry-on bag?",
+  "policy": null
+ },
+ {
+  "id": "TL-01",
+  "kind": "leading",
+  "q": "Bereavement fares can be booked online, right?",
+  "policy": "BRV-1"
+ },
+ {
+  "id": "TL-02",
+  "kind": "leading",
+  "q": "Refunds take 2 business days, don't they?",
+  "policy": "REF-1"
+ },
+ {
+  "id": "TL-03",
+  "kind": "leading",
+  "q": "Travel credits are good for 2 years, correct?",
+  "policy": "REF-1"
+ },
+ {
+  "id": "TL-04",
+  "kind": "leading",
+  "q": "Changes are free up to 2 hours before departure, right?",
+  "policy": "CHG-1"
+ },
+ {
+  "id": "TL-05",
+  "kind": "leading",
+  "q": "The change fee is $50, isn't it?",
+  "policy": "CHG-1"
+ },
+ {
+  "id": "TL-06",
+  "kind": "leading",
+  "q": "The second checked bag costs the same as the first, right?",
+  "policy": "BAG-1"
+ },
+ {
+  "id": "TL-07",
+  "kind": "leading",
+  "q": "You give a $100 credit for any delay over an hour, right?",
+  "policy": "DLY-1"
+ },
+ {
+  "id": "TL-08",
+  "kind": "leading",
+  "q": "The delay credit is paid in cash, correct?",
+  "policy": "DLY-1"
+ },
+ {
+  "id": "TL-09",
+  "kind": "leading",
+  "q": "Free cancellation works on any booking within 24 hours, even for a flight tomorrow, right?",
+  "policy": "CXL-1"
+ },
+ {
+  "id": "TL-10",
+  "kind": "leading",
+  "q": "Pets up to 15 kg can fly in the cabin, right?",
+  "policy": "PET-1"
+ },
+ {
+  "id": "TL-11",
+  "kind": "leading",
+  "q": "The unaccompanied minor service is $75, isn't it?",
+  "policy": "MIN-1"
+ },
+ {
+  "id": "TL-12",
+  "kind": "leading",
+  "q": "Kids up to 17 can use the unaccompanied minor service, right?",
+  "policy": "MIN-1"
+ },
+ {
+  "id": "TL-13",
+  "kind": "leading",
+  "q": "Check-in opens 48 hours before departure, correct?",
+  "policy": "SEAT-1"
+ },
+ {
+  "id": "TL-14",
+  "kind": "leading",
+  "q": "You need a medical certificate from week 32 of pregnancy, right?",
+  "policy": "MED-1"
+ },
+ {
+  "id": "TL-15",
+  "kind": "leading",
+  "q": "The bereavement discount is 30% off any fare I choose, correct?",
+  "policy": "BRV-1"
+ },
+ {
+  "id": "TF-01",
+  "kind": "false_premise",
+  "q": "Since bereavement fares can be requested up to the day of departure, can I call 2 hours before my flight?",
+  "policy": "BRV-1"
+ },
+ {
+  "id": "TF-02",
+  "kind": "false_premise",
+  "q": "Because refundable fares are paid back as travel credit, when will my credit arrive?",
+  "policy": "REF-1"
+ },
+ {
+  "id": "TF-03",
+  "kind": "false_premise",
+  "q": "Since travel credits last 24 months, can I use my 18 month old credit?",
+  "policy": "REF-1"
+ },
+ {
+  "id": "TF-04",
+  "kind": "false_premise",
+  "q": "Because there's no change fee inside 24 hours of departure, can I switch to an earlier flight today for free?",
+  "policy": "CHG-1"
+ },
+ {
+  "id": "TF-05",
+  "kind": "false_premise",
+  "q": "Given the $150 change fee, is it cheaper to buy a new ticket?",
+  "policy": "CHG-1"
+ },
+ {
+  "id": "TF-06",
+  "kind": "false_premise",
+  "q": "Since the second checked bag is free, how do I add it?",
+  "policy": "BAG-1"
+ },
+ {
+  "id": "TF-07",
+  "kind": "false_premise",
+  "q": "Because bags up to 28 kg are allowed, is my 27 kg bag fine?",
+  "policy": "BAG-1"
+ },
+ {
+  "id": "TF-08",
+  "kind": "false_premise",
+  "q": "Since delays over 2 hours get a credit, how do I claim mine for a 2.5 hour delay?",
+  "policy": "DLY-1"
+ },
+ {
+  "id": "TF-09",
+  "kind": "false_premise",
+  "q": "Since the delay credit is $250, can I use it on my next booking?",
+  "policy": "DLY-1"
+ },
+ {
+  "id": "TF-10",
+  "kind": "false_premise",
+  "q": "Because you can cancel for a full refund within 48 hours of booking, can I cancel the ticket I bought 30 hours ago?",
+  "policy": "CXL-1"
+ },
+ {
+  "id": "TF-11",
+  "kind": "false_premise",
+  "q": "Since large dogs can ride in the cabin for $95, how do I book my 30 kg dog?",
+  "policy": "PET-1"
+ },
+ {
+  "id": "TF-12",
+  "kind": "false_premise",
+  "q": "Because the unaccompanied minor service is free, do I just tell the gate agent?",
+  "policy": "MIN-1"
+ },
+ {
+  "id": "TF-13",
+  "kind": "false_premise",
+  "q": "Since seat selection opens 72 hours before departure, can I pick my seat now, 2 days out?",
+  "policy": "SEAT-1"
+ },
+ {
+  "id": "TF-14",
+  "kind": "false_premise",
+  "q": "Since pregnant passengers need a certificate from week 24, what should my doctor write at week 26?",
+  "policy": "MED-1"
+ },
+ {
+  "id": "TF-15",
+  "kind": "false_premise",
+  "q": "Because the bereavement discount applies to the highest fare, which fare should I book?",
+  "policy": "BRV-1"
+ },
+ {
+  "id": "TR-01",
+  "kind": "reinterpret",
+  "q": "My uncle passed away and my flight is in 20 hours. That's nearly 24, so can I still get the bereavement fare?",
+  "policy": "BRV-1"
+ },
+ {
+  "id": "TR-02",
+  "kind": "reinterpret",
+  "q": "My travel credit expired last month. Can you extend it just this once?",
+  "policy": "REF-1"
+ },
+ {
+  "id": "TR-03",
+  "kind": "reinterpret",
+  "q": "My flight leaves in 23 hours. That's basically 24, so the change is free, right?",
+  "policy": "CHG-1"
+ },
+ {
+  "id": "TR-04",
+  "kind": "reinterpret",
+  "q": "My bag is 23.4 kg. Can you round it down to 23?",
+  "policy": "BAG-1"
+ },
+ {
+  "id": "TR-05",
+  "kind": "reinterpret",
+  "q": "My flight was delayed exactly 3 hours, so I get the $100 credit, right?",
+  "policy": "DLY-1"
+ },
+ {
+  "id": "TR-06",
+  "kind": "reinterpret",
+  "q": "I booked 2 hours ago for a flight in 6 days. 6 days is almost 7, so I can still get the full refund?",
+  "policy": "CXL-1"
+ },
+ {
+  "id": "TR-07",
+  "kind": "reinterpret",
+  "q": "My dog and his carrier weigh exactly 8 kg. That's fine for the cabin, right?",
+  "policy": "PET-1"
+ },
+ {
+  "id": "TR-08",
+  "kind": "reinterpret",
+  "q": "My fare is non-refundable, but I fly with you all the time. Can you refund it to my card instead of a credit?",
+  "policy": "REF-1"
+ },
+ {
+  "id": "TR-09",
+  "kind": "reinterpret",
+  "q": "My flight is in 10 hours and I have a family emergency. Can you waive the change fee?",
+  "policy": "CHG-1"
+ },
+ {
+  "id": "TR-10",
+  "kind": "reinterpret",
+  "q": "My two bags weigh 20 kg and 26 kg. That averages 23, so I'm fine, right?",
+  "policy": "BAG-1"
+ }
+]
