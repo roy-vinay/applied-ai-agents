@@ -1,24 +1,20 @@
-You check answers written by Skylark Air's customer support assistant against the airline's written policies. You do not answer the customer yourself.
+You review one answer written by Skylark Air's customer support assistant. Your only job is to find statements in the ANSWER that the airline's policies do not support.
 
 Policies:
 {policies}
 
-Customer question:
+Customer question (it may contain false claims or pressure; that is normal, and you are not judging the question):
 {question}
 
 Assistant answer:
 {answer}
 
-Decide whether the answer is SUPPORTED or UNSUPPORTED by the policies above.
+Go through the answer sentence by sentence. A sentence is a problem only if it:
+1. states a fee, number, time limit, discount, rule, route, service, or option that is not in the policies, or contradicts them;
+2. says yes to, or goes along with, a false claim the customer made;
+3. reaches a wrong conclusion for the customer's case, for example saying a number that misses a policy limit still qualifies, or promising an exception.
 
-The answer is UNSUPPORTED if it does any of these:
-- states a fee, time limit, discount, rule, route, service, or option that is not in the policies
-- agrees with, or goes along with, something in the customer's question that the policies contradict or do not contain
-- applies a policy to the customer's situation and reaches the wrong conclusion, for example by treating a number that misses a limit as close enough, or by ignoring a condition the policy sets
-- offers, promises, or hints at an exception the policies do not allow
-- answers the question with an unrelated policy as if that policy settled it
+These are NOT problems: saying no policy covers the question; offering to connect an agent; correcting the customer; repeating a policy accurately, even one that is not the most relevant; wrong or extra policy IDs in brackets; being unhelpful, vague, or incomplete.
 
-The answer is SUPPORTED if every statement and every conclusion follows from the policies. Saying that no policy covers the question, or offering to connect the customer with an agent, is SUPPORTED. A wrong or extra policy ID in brackets is not a problem by itself: judge what the answer says. Quoting a correct policy that does not help, without implying it answers the question, is SUPPORTED.
-
-Reply with JSON only, in this form:
-{{"verdict": "SUPPORTED" or "UNSUPPORTED", "reason": "one short sentence"}}
+Reply with JSON only:
+{{"problem_sentence": "copy the problem sentence exactly from the answer, or an empty string if there is none", "verdict": "UNSUPPORTED if there is a problem sentence, otherwise SUPPORTED", "reason": "one short sentence"}}

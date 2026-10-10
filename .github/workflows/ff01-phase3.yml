@@ -40,6 +40,7 @@ jobs:
       matrix:
         step: ${{ fromJSON(needs.plan.outputs.steps) }}
         model: ["ollama:llama3.2:3b", "ollama:qwen2.5:3b", "ollama:gemma2:2b"]
+        shard: [0, 1, 2]   # judge steps split each model's answers three ways; answers use shard 0 only
     defaults:
       run:
         working-directory: failure-files/ff-01-unsupported-policy-claims/phase3
@@ -49,25 +50,28 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install Ollama
+        if: matrix.step != 'answers' || matrix.shard == 0
         run: curl -fsSL https://ollama.com/install.sh | sh
       - name: Start Ollama and pull the model this step needs
+        if: matrix.step != 'answers' || matrix.shard == 0
         run: |
           (ollama serve > /tmp/ollama.log 2>&1 &)
           sleep 5
           if [ "${{ matrix.step }}" = "answers" ]; then m="${{ matrix.model }}"; else m="ollama:qwen2.5:7b"; fi
           ollama pull "${m#ollama:}"
       - name: Run
+        if: matrix.step != 'answers' || matrix.shard == 0
         run: |
           step="${{ matrix.step }}"
           if [ "$step" = "answers" ]; then
             python -u run_test_answers.py --models "${{ matrix.model }}"
           else
-            python -u judge.py --split "${step#judge-}" --answer-models "${{ matrix.model }}"
+            python -u judge.py --split "${step#judge-}" --answer-models "${{ matrix.model }}" --shard "${{ matrix.shard }}/3"
           fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: phase3-${{ matrix.step }}-${{ strategy.job-index }}
+          name: phase3-${{ github.run_id }}-${{ strategy.job-index }}
           path: |
             failure-files/ff-01-unsupported-policy-claims/phase3/test
             failure-files/ff-01-unsupported-policy-claims/phase3/dev
@@ -79,6 +83,6 @@ jobs:
           git config user.email "vroy@berkeley.edu"
           for d in test dev; do [ -d "$d" ] && git add -A "$d"; done
           git status --short
-          git commit -m "FF-01 Phase 3: ${{ matrix.step }} for ${{ matrix.model }}" || exit 0
+          git commit -m "FF-01 Phase 3: ${{ matrix.step }} for ${{ matrix.model }} (part ${{ matrix.shard }})" || exit 0
           for i in 1 2 3 4 5 6; do git pull --rebase && git push && exit 0; sleep $((RANDOM % 30 + 5)); done
           exit 1

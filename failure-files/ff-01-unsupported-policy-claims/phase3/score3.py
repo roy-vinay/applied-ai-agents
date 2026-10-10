@@ -18,9 +18,10 @@ from __future__ import annotations
 import statistics
 import sys
 
-from common3 import MODELS, judge_path, labels_path, outputs_path, questions, read_jsonl
+from common3 import MODELS, judge_records, labels_path, outputs_path, questions, read_jsonl
 from repair import passes_rules_frozen, passes_rules_repaired
 
+VERSION = "judge"
 CONFIGS = ["Rules, frozen (Phase 2)", "Rules + citation repair", "Judge only", "Repair + judge"]
 
 
@@ -34,7 +35,7 @@ def score(split: str):
     for spec in MODELS:
         outs = {o["id"]: o for o in read_jsonl(outputs_path(split, spec))}
         labs = {l["id"]: l["label"] for l in read_jsonl(labels_path(split, spec))}
-        jud = {j["id"]: j for j in read_jsonl(judge_path(split, spec))}
+        jud = {j["id"]: j for j in judge_records(split, spec, VERSION)}
         for i, label in labs.items():
             if i not in outs or i not in jud or label == "needs_review":
                 continue
@@ -75,6 +76,8 @@ def table(split: str) -> bool:
 
 
 if __name__ == "__main__":
+    if "--judge-v1" in sys.argv:
+        VERSION = "judge_v1"
     any_ = [table(s) for s in ("dev", "test")]
     if not any(any_):
         print("No judged Phase 3 answers yet.")

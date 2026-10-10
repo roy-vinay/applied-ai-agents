@@ -1,3 +1,2 @@
-answers
 judge-dev
-# rerun 2026-10-10: first run did not save results
+# 2026-10-10: judge v2 (a block must quote the problem sentence)

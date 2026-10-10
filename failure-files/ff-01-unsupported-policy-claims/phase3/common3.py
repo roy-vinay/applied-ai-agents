@@ -29,7 +29,7 @@ FREEZES = {
     # frozen before any model answered the test questions
     "test": [HERE / "questions_test.json", P2 / "prompt.txt", ROOT / "kb.py", ROOT / "guards.py"],
     # frozen after tuning on dev, before the judge saw any test answer
-    "judge": [HERE / "judge.py", HERE / "judge_prompt.txt", HERE / "repair.py"],
+    "judge": [HERE / "judge.py", HERE / "judge_prompt.txt", HERE / "repair.py", HERE / "common3.py"],
 }
 
 
@@ -68,5 +68,15 @@ def labels_path(split: str, model: str) -> Path:
     return p2.labels_path(model) if split == "dev" else HERE / "test" / "labels" / slug(model)
 
 
-def judge_path(split: str, answer_model: str) -> Path:
-    return HERE / split / "judge" / slug(answer_model)
+def judge_path(split: str, answer_model: str, shard: int | None = None, version: str = "judge") -> Path:
+    name = slug(answer_model) if shard is None else slug(answer_model).replace(".jsonl", f".shard{shard}.jsonl")
+    return HERE / split / version / name
+
+
+def judge_records(split: str, answer_model: str, version: str = "judge") -> list[dict]:
+    """All judge verdicts for one answering model, across shards."""
+    stem = slug(answer_model)[:-len(".jsonl")]
+    out = []
+    for p in sorted((HERE / split / version).glob(stem + "*.jsonl")):
+        out += read_jsonl(p)
+    return out
