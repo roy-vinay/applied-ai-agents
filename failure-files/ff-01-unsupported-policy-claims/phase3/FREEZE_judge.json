@@ -1,0 +1,10 @@
+{
+ "frozen_on": "2026-10-10",
+ "note": "Judge v3 (structured fields, code decides), citation repair and helpers frozen before the judge saw any test answer. Chosen by the rule fixed in advance: highest catch rate minus false-block rate for Repair + judge on dev (v1 25.5, v2 43.7, v3 50.2).",
+ "sha256": {
+  "judge.py": "6314cebdda0147029287e02a27db938e48b8772ead426c4f558915ef1b8c83dc",
+  "judge_prompt.txt": "e80b246d7d1d772e8195432b54e5d01a2b0d38426cd890d014405a620ecdbd8c",
+  "repair.py": "2a9ef8fd026d4220fc5fa002bbec3ee7c9e889ca61ea1000b307417b491f0776",
+  "common3.py": "ac96d3df96b3497d96e4b25167c36793e9926e06fab84ed7a7ebad60656151f7"
+ }
+}

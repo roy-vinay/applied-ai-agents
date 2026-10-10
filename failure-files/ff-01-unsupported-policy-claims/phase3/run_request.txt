@@ -1,2 +1,2 @@
-judge-dev
-# 2026-10-10: judge v3 (structured fields, code decides)
+judge-test
+# 2026-10-10: frozen judge v3 on the held-out test answers
