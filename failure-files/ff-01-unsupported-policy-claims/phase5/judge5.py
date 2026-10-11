@@ -49,7 +49,11 @@ def ask_ollama(tag: str, prompt: str) -> tuple[str, dict]:
 
 def openrouter_model(candidates: list[str], key: str) -> str:
     req = urllib.request.Request("https://openrouter.ai/api/v1/models", headers={"Authorization": f"Bearer {key}"})
-    ids = {m["id"] for m in json.load(urllib.request.urlopen(req, timeout=60))["data"]}
+    data = json.load(urllib.request.urlopen(req, timeout=60))["data"]
+    ids = {m["id"] for m in data}
+    free = sorted((m["id"], m.get("context_length")) for m in data if m["id"].endswith(":free"))
+    (judge_dir("_catalog")).mkdir(parents=True, exist_ok=True)
+    (judge_dir("_catalog") / "openrouter_free_models.txt").write_text("".join(f"{i}\t{c}\n" for i, c in free))
     for c in candidates:
         if c in ids:
             return c
