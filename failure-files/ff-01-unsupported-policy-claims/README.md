@@ -9,6 +9,27 @@
 > fell from 52% to 32% at about the same catch rate (62%). Better, not solved, and the judge looked far
 > better on the data it was tuned on than on fresh data.
 
+## In plain English
+
+In 2024, Air Canada's website chatbot told a grieving customer he could claim a bereavement discount after
+his trip. The real policy said the opposite, and a tribunal made the airline pay. A company is responsible
+for what its chatbot says.
+
+FF-01 asks one question: **how do you stop a support chatbot from making up company policy?**
+
+To test it, we invented an airline, Skylark Air, with 10 short written policies (bags, refunds, delays,
+pets, and so on), and built a **guard**: a checker that reads every chatbot answer before the customer sees
+it and blocks anything the policies don't support. Each phase tests the guard against something harder.
+
+| Phase | What we did | What we learned | Details |
+| --- | --- | --- | --- |
+| 1. Planted mistakes | Wrote wrong answers on purpose and checked whether the guard caught them | It caught 79% and wrongly blocked 7% of good answers. A cited answer isn't the same as a correct one | [Phase 1](#phase-1-fault-injection) |
+| 2. Real chatbots | Froze the guard, then had three free AI models answer 100 customer questions (300 answers) | It still caught most made-up answers, but blocked about half of the good ones, mostly over sloppy policy citations. Every miss had the right numbers and the wrong conclusion | [Phase 2](phase2#results-2026-10-03) |
+| 3. Fixing it | Cleaned up citations and added a second AI as a judge, then tested on 100 brand-new questions | Wrongly blocked answers fell from about half to about a third, at the same catch rate. Better, not solved. The judge was weak at simple comparisons like "27 kg vs a 23 kg limit" | [Phase 3](phase3#results) |
+| 4. Numbers in code | Next: let plain code check number comparisons and keep the AI judge for meaning | Not run yet | [Roadmap](../../ROADMAP.md) |
+
+Everything runs on free tools: open models on free GitHub runners, no paid API calls.
+
 ## The case
 
 In *Moffatt v. Air Canada* (2024 BCCRT 149), a customer booking travel after a family death asked the
