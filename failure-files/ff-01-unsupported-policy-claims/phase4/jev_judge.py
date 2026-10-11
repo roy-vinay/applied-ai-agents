@@ -88,10 +88,19 @@ def call(question: str, answer: str, key: str) -> dict:
             "served_by": out.get("model"), "provider": out.get("provider")}
 
 
+def fail(msg: str) -> None:
+    """Record the error where it can be read later (GitHub annotation and a committed log), then stop."""
+    OUT.mkdir(exist_ok=True)
+    with open(OUT / "errors.log", "a") as f:
+        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {msg}\n")
+    print(f"::error::{msg}", flush=True)
+    raise SystemExit(1)
+
+
 def run(split: str, limit: int | None, tag: str) -> None:
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
-        raise SystemExit("OPENROUTER_API_KEY is not set")
+        fail("OPENROUTER_API_KEY is not set or is empty in this run")
     qmap = {q["id"]: q for q in questions(split)}
     for spec in MODELS:
         path = OUT / tag / slug(spec)
@@ -103,9 +112,12 @@ def run(split: str, limit: int | None, tag: str) -> None:
         print(f"{spec}: {len(todo)} to judge, spent so far ${spent():.4f}", flush=True)
         for o in todo:
             if spent() >= BUDGET_USD:
-                raise SystemExit(f"stopping: spend ${spent():.4f} reached the ${BUDGET_USD} budget")
-            rec = {"id": o["id"], "answer_model": spec, "judge_model": MODEL,
-                   **call(qmap[o["id"]]["q"], o["text"], key)}
+                fail(f"stopping: spend ${spent():.4f} reached the ${BUDGET_USD} budget")
+            try:
+                rec = {"id": o["id"], "answer_model": spec, "judge_model": MODEL,
+                       **call(qmap[o["id"]]["q"], o["text"], key)}
+            except RuntimeError as e:
+                fail(f"{o['id']}: {e}")
             add_spend(rec["cost_usd"])
             with open(path, "a") as f:
                 f.write(json.dumps(rec) + "\n")
