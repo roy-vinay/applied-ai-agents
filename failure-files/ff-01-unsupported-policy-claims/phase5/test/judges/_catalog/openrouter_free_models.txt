@@ -1,0 +1,15 @@
+apodex/apodex-1.1-mini:free	262144
+cohere/north-mini-code:free	256000
+dots-studio/dots-3-note-preview:free	512000
+google/gemma-4-26b-a4b-it:free	262144
+google/gemma-4-31b-it:free	262144
+liquid/lfm-2.5-2.6b:free	65536
+nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free	256000
+nvidia/nemotron-3-super-120b-a12b:free	262144
+nvidia/nemotron-3-ultra-550b-a55b:free	1000000
+nvidia/nemotron-3.5-content-safety:free	128000
+nvidia/nemotron-3.5-lightning:free	1000000
+poolside/laguna-s-2.1:free	262144
+poolside/laguna-xs-2.1:free	262144
+thinkingmachines/inkling-small:free	1048576
+thinkingmachines/inkling:free	1048576
