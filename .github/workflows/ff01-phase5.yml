@@ -70,7 +70,7 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        judge: [gpt-oss-120b, llama3.3-70b]
+        judge: [gemma4-31b, nemotron3-super-120b, nemotron3-ultra-550b]
     defaults:
       run:
         working-directory: failure-files/ff-01-unsupported-policy-claims/phase5

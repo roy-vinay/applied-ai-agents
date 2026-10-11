@@ -21,9 +21,10 @@ LOCAL = {
     "ministral3-3b": ["ministral-3:3b", "ministral3:3b", "ministral-3"],
 }
 HOSTED = {
-    # exact ids first, then a pattern for the closest free version OpenRouter lists right now
-    "gpt-oss-120b": ["openai/gpt-oss-120b:free", r"gpt-oss-120b.*:free$", r"gpt-oss.*:free$"],
-    "llama3.3-70b": ["meta-llama/llama-3.3-70b-instruct:free", r"llama-3\.3-70b.*:free$", r"llama.*70b.*:free$"],
+    # OpenRouter's free list on 2026-10-11 had no free gpt-oss-120b or Llama 3.3 70B, so these replace them.
+    "gemma4-31b": ["google/gemma-4-31b-it:free"],
+    "nemotron3-super-120b": ["nvidia/nemotron-3-super-120b-a12b:free"],
+    "nemotron3-ultra-550b": ["nvidia/nemotron-3-ultra-550b-a55b:free"],
 }
 
 

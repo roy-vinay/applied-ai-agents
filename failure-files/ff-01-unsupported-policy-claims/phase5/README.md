@@ -18,12 +18,14 @@ do they get to Jev, the purpose-built judge from Phase 4?
 | Phi-4-mini | Microsoft | 3.8B | Locally, free GitHub runner |
 | Phi-4 | Microsoft | 14B | Locally, free GitHub runner |
 | Ministral 3 3B | Mistral | 3B | Locally, free GitHub runner |
-| gpt-oss-120b | OpenAI (open weights) | 120B | OpenRouter's free version |
-| Llama 3.3 70B | Meta | 70B | OpenRouter's free version |
+| Gemma 4 31B | Google | 31B | OpenRouter's free version |
+| Nemotron 3 Super | NVIDIA | 120B (12B active) | OpenRouter's free version |
+| Nemotron 3 Ultra | NVIDIA | 550B (55B active) | OpenRouter's free version |
 
 Local judges must fit a free runner (no graphics card, 16 GB of memory), so about 14B parameters at most.
-The two large models are too big for that, so they run through OpenRouter's free versions, which cost
-nothing but limit requests per day.
+The three large models are too big for that, so they run through OpenRouter's free versions, which cost
+nothing but limit requests per day. The plan named gpt-oss-120b and Llama 3.3 70B, but neither had a free
+version on OpenRouter on October 11, 2026, so the largest free general models listed that day replace them.
 
 ## Protocol
 
