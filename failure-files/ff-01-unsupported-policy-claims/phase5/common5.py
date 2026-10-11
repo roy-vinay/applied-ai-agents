@@ -21,8 +21,9 @@ LOCAL = {
     "ministral3-3b": ["ministral-3:3b", "ministral3:3b", "ministral-3"],
 }
 HOSTED = {
-    "gpt-oss-120b": ["openai/gpt-oss-120b:free"],
-    "llama3.3-70b": ["meta-llama/llama-3.3-70b-instruct:free"],
+    # exact ids first, then a pattern for the closest free version OpenRouter lists right now
+    "gpt-oss-120b": ["openai/gpt-oss-120b:free", r"gpt-oss-120b.*:free$", r"gpt-oss.*:free$"],
+    "llama3.3-70b": ["meta-llama/llama-3.3-70b-instruct:free", r"llama-3\.3-70b.*:free$", r"llama.*70b.*:free$"],
 }
 
 

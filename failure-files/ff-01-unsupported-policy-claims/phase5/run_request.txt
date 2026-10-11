@@ -1,2 +1,2 @@
-local
+local:gemma4-12b
 hosted

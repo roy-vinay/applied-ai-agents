@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import time
 import urllib.error
@@ -57,6 +58,9 @@ def openrouter_model(candidates: list[str], key: str) -> str:
     for c in candidates:
         if c in ids:
             return c
+        hits = sorted(i for i in ids if re.search(c, i))
+        if hits:
+            return hits[0]
     raise SystemExit(f"::error::none of {candidates} is listed on OpenRouter right now")
 
 
