@@ -28,3 +28,14 @@ jobs:
       - run: python phase3/score3.py --if-present
       - run: python phase4/score4.py --if-present
       - run: python phase5/check_decide.py && python phase5/score5.py --if-present
+  ff-05:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: failure-files/ff-05-rules-in-the-prompt
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python score.py --check
