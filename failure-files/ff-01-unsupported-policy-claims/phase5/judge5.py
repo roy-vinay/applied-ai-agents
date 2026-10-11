@@ -115,7 +115,13 @@ if __name__ == "__main__":
         for o in todo:
             prompt = build_prompt(qmap[o["id"]]["q"], o["text"])
             t = time.monotonic()
-            raw, meta = ask_openrouter(model, prompt, key) if hosted else ask_ollama(model, prompt)
+            try:
+                raw, meta = ask_openrouter(model, prompt, key) if hosted else ask_ollama(model, prompt)
+            except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as e:
+                # the model crashed or hung on this answer: record it, count it as a block (fails closed)
+                raw, meta = f"ERROR: {str(e)[:300]}", {"error": True}
+                print(f"::warning::{a.judge} failed on {o['id']}: {str(e)[:200]}", flush=True)
+                subprocess.run(["bash", "-c", "tail -5 /tmp/ollama.log; (pgrep ollama >/dev/null) || (OLLAMA_CONTEXT_LENGTH=4096 ollama serve > /tmp/ollama.log 2>&1 &); sleep 8"])
             rec = {"id": o["id"], "answer_model": spec, "judge": a.judge, "judge_model": model,
                    **decide(raw, o["text"]), "latency_s": round(time.monotonic() - t, 2), "raw": raw[:1500], **meta}
             with open(path, "a") as f:
