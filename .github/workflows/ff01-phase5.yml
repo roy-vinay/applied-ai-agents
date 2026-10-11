@@ -1,0 +1,87 @@
+name: ff01-phase5
+# Phase 5: 2026 free models as judges on the 300 Phase 3 test answers. All $0:
+#   local  - small models through Ollama on free runners (each model x answering model x 3 parts)
+#   hosted - OpenRouter ":free" models; the script stops if any call is charged
+# Start by pushing phase5/run_request.txt with "local" and/or "hosted" on their own lines.
+on:
+  push:
+    branches: [main]
+    paths: ["failure-files/ff-01-unsupported-policy-claims/phase5/run_request.txt"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      local: ${{ steps.p.outputs.local }}
+      hosted: ${{ steps.p.outputs.hosted }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: |
+          f=failure-files/ff-01-unsupported-policy-claims/phase5/run_request.txt
+          grep -qx local "$f" && echo "local=true" >> "$GITHUB_OUTPUT" || echo "local=false" >> "$GITHUB_OUTPUT"
+          grep -qx hosted "$f" && echo "hosted=true" >> "$GITHUB_OUTPUT" || echo "hosted=false" >> "$GITHUB_OUTPUT"
+  local:
+    needs: plan
+    if: needs.plan.outputs.local == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        judge: [gemma4-12b, gemma4-e4b, qwen3.5-9b, phi4-mini, phi4-14b, ministral3-3b]
+        model: ["ollama:llama3.2:3b", "ollama:qwen2.5:3b", "ollama:gemma2:2b"]
+        shard: [0, 1, 2]
+    defaults:
+      run:
+        working-directory: failure-files/ff-01-unsupported-policy-claims/phase5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: curl -fsSL https://ollama.com/install.sh | sh
+      - run: (ollama serve > /tmp/ollama.log 2>&1 &) && sleep 5
+      - run: python -u judge5.py --judge ${{ matrix.judge }} --answer-models "${{ matrix.model }}" --shard ${{ matrix.shard }}/3
+      - name: Commit results
+        if: always()
+        run: |
+          git config user.name "Vinay Roy"
+          git config user.email "vroy@berkeley.edu"
+          [ -d test ] && git add -A test
+          git commit -m "FF-01 Phase 5: ${{ matrix.judge }} on ${{ matrix.model }} (part ${{ matrix.shard }})" || exit 0
+          for i in $(seq 1 12); do git pull --rebase && git push && exit 0; sleep $((RANDOM % 40 + 10)); done
+          exit 1
+  hosted:
+    needs: plan
+    if: needs.plan.outputs.hosted == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        judge: [gpt-oss-120b, llama3.3-70b]
+    defaults:
+      run:
+        working-directory: failure-files/ff-01-unsupported-policy-claims/phase5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: python -u judge5.py --judge ${{ matrix.judge }}
+      - name: Commit results
+        if: always()
+        run: |
+          git config user.name "Vinay Roy"
+          git config user.email "vroy@berkeley.edu"
+          [ -d test ] && git add -A test
+          git commit -m "FF-01 Phase 5: ${{ matrix.judge }} (free, hosted)" || exit 0
+          for i in $(seq 1 12); do git pull --rebase && git push && exit 0; sleep $((RANDOM % 40 + 10)); done
+          exit 1
