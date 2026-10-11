@@ -47,6 +47,7 @@ def score(split: str) -> bool:
                ("Repair + number check + Qwen judge", lambda r: r["rep"] or r["num"] or r["qwen"])]
     if have_jev:
         configs += [("Jev judge alone", lambda r: r["jev"]),
+                    ("Number check + Jev judge", lambda r: r["num"] or r["jev"]),
                     ("Repair + number check + Jev judge", lambda r: r["rep"] or r["num"] or r["jev"])]
     U = [r for r in rows if r["label"] == "unsupported"]
     S = [r for r in rows if r["label"] == "supported"]

@@ -2,12 +2,13 @@
 
 **A support bot states a policy that the company's own policy documents don't contain.**
 
-> **Status: all three phases done.** Phase 1 tested the guards on failures we injected. Phase 2 froze them
+> **Status: four phases done.** Phase 1 tested the guards on failures we injected. Phase 2 froze them
 > and ran three real open models ([results](phase2#results-2026-10-03)): the guards kept their recall but
 > blocked about half of all good answers, mostly over sloppy citations. Phase 3 added citation repair and a
 > free local judge, tested on fresh held-out answers ([results](phase3#results)): wrongly blocked answers
-> fell from 52% to 32% at about the same catch rate (62%). Better, not solved, and the judge looked far
-> better on the data it was tuned on than on fresh data.
+> fell from 52% to 32% at about the same catch rate (62%). Phase 4 added a number check in code and
+> TypeSafe's Jev 1.13 as judge ([results](phase4#results)): Jev alone caught 80% and wrongly blocked 6%,
+> for about 2 cents across 600 answers.
 
 ## In plain English
 
@@ -26,7 +27,7 @@ it and blocks anything the policies don't support. Each phase tests the guard ag
 | 1. Planted mistakes | Wrote wrong answers on purpose and checked whether the guard caught them | It caught 79% and wrongly blocked 7% of good answers. A cited answer isn't the same as a correct one | [Phase 1](#phase-1-fault-injection) |
 | 2. Real chatbots | Froze the guard, then had three free AI models answer 100 customer questions (300 answers) | It still caught most made-up answers, but blocked about half of the good ones, mostly over sloppy policy citations. Every miss had the right numbers and the wrong conclusion | [Phase 2](phase2#results-2026-10-03) |
 | 3. Fixing it | Cleaned up citations and added a second AI as a judge, then tested on 100 brand-new questions | Wrongly blocked answers fell from about half to about a third, at the same catch rate. Better, not solved. The judge was weak at simple comparisons like "27 kg vs a 23 kg limit" | [Phase 3](phase3#results) |
-| 4. Numbers in code | Next: let plain code check number comparisons and keep the AI judge for meaning | Not run yet | [Roadmap](../../ROADMAP.md) |
+| 4. Numbers in code, a better judge | Added a code check for number comparisons, and tried Jev 1.13, a model built for yes/no and pick-one decisions, as the judge | Jev alone caught 80% of real failures and wrongly blocked 6% of good answers, for about 2 cents in total. The code check never blocked a good answer, but Jev already caught everything it did | [Phase 4](phase4#results) |
 
 Everything runs on free tools: open models on free GitHub runners, no paid API calls.
 

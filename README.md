@@ -59,7 +59,9 @@ not a grounded answer, and most failures the rules miss are wrong in meaning, no
 real open models, guards frozen): recall held at 74%, false positives rose to as high as 57%, and every
 miss was a wrong conclusion with the right numbers. Phase 3 (citation repair plus a free local judge, on
 fresh held-out answers): wrongly blocked answers fell from 52% to 32% at about the same catch rate. Better,
-not solved, and the judge was 20 points weaker on fresh data than on the data it was tuned on.
+not solved, and the judge was 20 points weaker on fresh data than on the data it was tuned on. Phase 4
+(a number check in code, and TypeSafe's Jev 1.13 as judge): Jev alone caught 80% and wrongly blocked 6%,
+for about 2 cents across 600 answers.
 
 ## Decisions
 
