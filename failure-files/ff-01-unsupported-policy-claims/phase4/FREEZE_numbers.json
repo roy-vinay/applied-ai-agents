@@ -1,0 +1,7 @@
+{
+ "frozen_on": "2026-10-11",
+ "note": "Number check frozen after tuning on dev (Phase 2 answers) only, before scoring test. Caveat: the author had read the test answers while labeling them in Phase 3.",
+ "sha256": {
+  "numbers_check.py": "d04674f09cb8029d9ed4776a712ca14dbb7fc73d80974c291ccf89ae1426e0ab"
+ }
+}

@@ -1,0 +1,45 @@
+name: ff01-phase4
+# Runs the Jev judge through OpenRouter. Paid, so it is capped twice: the API key has a $1 limit set in
+# OpenRouter, and jev_judge.py stops itself at $0.90 using the running total in phase4/jev/spend.json.
+# Start it by pushing phase4/run_request.txt with one step per line: pilot, jev-dev, jev-test.
+on:
+  push:
+    branches: [main]
+    paths: ["failure-files/ff-01-unsupported-policy-claims/phase4/run_request.txt"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ff01-phase4
+jobs:
+  jev:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: failure-files/ff-01-unsupported-policy-claims/phase4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run the requested steps
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          for step in $(grep -E '^(pilot|jev-dev|jev-test)$' run_request.txt); do
+            case "$step" in
+              pilot) python -u jev_judge.py --pilot ;;
+              jev-dev) python -u jev_judge.py --split dev ;;
+              jev-test) python -u jev_judge.py --split test ;;
+            esac
+          done
+      - name: Commit results
+        if: always()
+        run: |
+          git config user.name "Vinay Roy"
+          git config user.email "vroy@berkeley.edu"
+          [ -d jev ] && git add -A jev
+          git commit -m "FF-01 Phase 4: Jev results" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase && git push && exit 0; sleep 10; done
+          exit 1

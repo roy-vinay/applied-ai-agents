@@ -26,3 +26,4 @@ jobs:
       - run: python run.py --check
       - run: python phase2/score.py --if-present
       - run: python phase3/score3.py --if-present
+      - run: python phase4/score4.py --if-present
