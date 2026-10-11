@@ -1,1 +1,2 @@
-hosted
+local:gemma4-12b
+# retry with a 4,096-token context window

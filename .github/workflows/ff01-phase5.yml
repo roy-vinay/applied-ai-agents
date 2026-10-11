@@ -50,7 +50,9 @@ jobs:
         with:
           python-version: "3.12"
       - run: curl -fsSL https://ollama.com/install.sh | sh
-      - run: (ollama serve > /tmp/ollama.log 2>&1 &) && sleep 5
+      # cap the context window: the prompt is about 1,000 tokens, and a large default window can exhaust
+      # a free runner's memory (Gemma 4 12B was killed this way)
+      - run: (OLLAMA_CONTEXT_LENGTH=4096 ollama serve > /tmp/ollama.log 2>&1 &) && sleep 5
       - run: python -u judge5.py --judge ${{ matrix.judge }} --answer-models "${{ matrix.model }}" --shard ${{ matrix.shard }}/3
       - name: Commit results
         if: always()
