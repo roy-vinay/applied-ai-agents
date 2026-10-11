@@ -1,2 +1,2 @@
-pilot
-# retry on the decisions endpoint
+jev-dev
+jev-test
