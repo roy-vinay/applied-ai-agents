@@ -45,7 +45,6 @@ The parts that keep an agent safe once real users and real money are involved.
 
 | Project | What it does | Live | Stack |
 | --- | --- | --- | --- |
-| [School front desk](agents/school-front-desk) | Answers parents' policy questions with citations, escalates anything sensitive, and gives staff a console to see what's being asked. Bilingual, with LLM-judged evals. | [Demo](https://berryessa-ai-front-desk-unofficial.vercel.app) | Next.js, Claude |
 | [MCP chat](agents/mcp-chat) | Terminal chat app showing the Model Context Protocol end to end: an MCP client and server over stdio, with @document mentions and /commands. | | Python, MCP |
 
 ## Failure Files
