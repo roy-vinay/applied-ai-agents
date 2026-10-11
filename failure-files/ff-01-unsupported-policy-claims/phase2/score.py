@@ -37,7 +37,7 @@ for spec in MODELS:
 if not rows:
     print("No labeled Phase 2 answers yet.")
     sys.exit(0)
-print("| Model | Unsupported claims | Refused (all questions) | Refused (answerable only) | Frozen guards: recall on real failures | Frozen guards: false-positive rate | Median latency |")
+print("| Model | Made something up | Refused (all questions) | Refused (answerable only) | Frozen guard: failures caught | Frozen guard: good cited answers wrongly blocked | Median latency |")
 print("| --- | ---: | ---: | ---: | ---: | ---: | ---: |")
 for spec, n, u, r, ra, a, c, b, s, p, lat in rows:
     recall = f"{c}/{u} ({c/u:.0%})" if u else "n/a"

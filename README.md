@@ -52,16 +52,10 @@ The parts that keep an agent safe once real users and real money are involved.
 Case studies with experiments: a documented public AI incident, the failure mode behind it reproduced in a
 fictional system, and mitigations measured one at a time. [All files and method](failure-files).
 
-**[FF-01: Unsupported policy claims](failure-files/ff-01-unsupported-policy-claims)**, the failure behind
-the 2024 Air Canada chatbot case. Phase 1 (fault injection, no model yet): rule-based guards caught 79% of
-deliberately injected failures, with a 7% false-positive rate. The finding that matters: a cited answer is
-not a grounded answer, and most failures the rules miss are wrong in meaning, not in form. Phase 2 (three
-real open models, guards frozen): recall held at 74%, false positives rose to as high as 57%, and every
-miss was a wrong conclusion with the right numbers. Phase 3 (citation repair plus a free local judge, on
-fresh held-out answers): wrongly blocked answers fell from 52% to 32% at about the same catch rate. Better,
-not solved, and the judge was 20 points weaker on fresh data than on the data it was tuned on. Phase 4
-(a number check in code, and TypeSafe's Jev 1.13 as judge): Jev alone caught 80% and wrongly blocked 6%,
-for about 2 cents across 600 answers.
+**[FF-01: Can you stop a support chatbot from making up policy?](failure-files/ff-01-unsupported-policy-claims)**
+The failure behind the 2024 Air Canada chatbot case, tested in four phases. Rules alone either missed too
+much or blocked too many good answers; a small model built for yes/no decisions caught 80% of real
+failures and wrongly blocked 6%, for about 2 cents across 600 answers.
 
 ## Decisions
 

@@ -11,14 +11,10 @@ By [Vinay Roy](https://github.com/roy-vinay). Part of [applied-ai-agents](../REA
 
 ## Latest
 
-**[FF-01: Unsupported policy claims](ff-01-unsupported-policy-claims)**, the failure behind the 2024 Air
-Canada chatbot case. Phase 1 (fault injection): rule-based guards caught 79% of injected failures, with a
-7% false-positive rate. The finding that matters: **a cited answer is not a grounded answer**, and most of
-what rules miss is wrong in meaning, not in form. Phase 2 ran three real open models against the frozen guards: recall held (74%), precision didn't (false positives up to 57%, mostly from sloppy citations), and every miss was a wrong conclusion with the right numbers. Phase 3 tested citation repair and a free
-local judge on fresh answers: wrongly blocked answers fell from 52% to 32% at about the same catch rate,
-and the judge looked far better on the answers it was tuned on (84% caught) than on new ones (62%).
-Phase 4 tried a number check in code and TypeSafe's Jev 1.13 as judge: Jev alone caught 80% and wrongly
-blocked 6%, for about 2 cents across 600 answers.
+**[FF-01: Can you stop a support chatbot from making up policy?](ff-01-unsupported-policy-claims)** The
+failure behind the 2024 Air Canada chatbot case, tested in four phases on a fictional airline. Rules alone
+either missed too much or blocked too many good answers. A small model built for yes/no decisions caught
+80% of real failures and wrongly blocked 6% of good answers, for about 2 cents across 600 answers.
 
 ## The files
 

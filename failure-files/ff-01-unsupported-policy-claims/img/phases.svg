@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400" width="760" height="400" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" role="img" aria-labelledby="t d">
+<title id="t">FF-01: real failures caught vs good answers wrongly blocked, by phase</title>
+<desc id="d">Phase 1: 79% caught, 7% wrongly blocked. Phase 2: 74% caught, 53% wrongly blocked. Phase 3: 62% caught, 32% wrongly blocked. Phase 4: 80% caught, 6% wrongly blocked.</desc>
+<style>
+.bg{fill:#fcfcfb}.ink{fill:#0b0b0b}.ink2{fill:#52514e}.muted{fill:#898781}.grid{stroke:#e1e0d9}.base{stroke:#c3c2b7}
+.s1{fill:#2a78d6}.s2{fill:#eb6834}
+@media (prefers-color-scheme: dark){.bg{fill:#1a1a19}.ink{fill:#f0efec}.ink2{fill:#c3c2b7}.grid{stroke:#2c2c2a}.base{stroke:#383835}.s1{fill:#3987e5}.s2{fill:#d95926}}
+</style>
+<rect class="bg" width="760" height="400" rx="8"/>
+<text class="ink" x="56" y="26" font-size="16" font-weight="600">Catch more failures, block fewer good answers</text>
+<rect class="s1" x="56" y="38" width="12" height="12" rx="2"/><text class="ink2" x="74" y="48" font-size="13">Real failures caught</text>
+<rect class="s2" x="226" y="38" width="12" height="12" rx="2"/><text class="ink2" x="244" y="48" font-size="13">Good answers wrongly blocked</text>
+<line class="base" x1="56" x2="736" y1="304.0" y2="304.0" stroke-width="1"/>
+<text class="muted" x="48" y="308.0" font-size="12" text-anchor="end">0%</text>
+<line class="grid" x1="56" x2="736" y1="244.0" y2="244.0" stroke-width="1"/>
+<text class="muted" x="48" y="248.0" font-size="12" text-anchor="end">25%</text>
+<line class="grid" x1="56" x2="736" y1="184.0" y2="184.0" stroke-width="1"/>
+<text class="muted" x="48" y="188.0" font-size="12" text-anchor="end">50%</text>
+<line class="grid" x1="56" x2="736" y1="124.0" y2="124.0" stroke-width="1"/>
+<text class="muted" x="48" y="128.0" font-size="12" text-anchor="end">75%</text>
+<line class="grid" x1="56" x2="736" y1="64.0" y2="64.0" stroke-width="1"/>
+<text class="muted" x="48" y="68.0" font-size="12" text-anchor="end">100%</text>
+<path class="s1" d="M106.0,304.0 V118.4 Q106.0,114.4 110.0,114.4 H136.0 Q140.0,114.4 140.0,118.4 V304.0 Z"/>
+<path class="s2" d="M142.0,304.0 V291.2 Q142.0,287.2 146.0,287.2 H172.0 Q176.0,287.2 176.0,291.2 V304.0 Z"/>
+<text class="ink" x="123.0" y="108.4" font-size="13" font-weight="600" text-anchor="middle">79%</text>
+<text class="ink" x="159.0" y="281.2" font-size="13" font-weight="600" text-anchor="middle">7%</text>
+<text class="ink" x="141.0" y="326.0" font-size="13" font-weight="600" text-anchor="middle">1. Planted mistakes</text>
+<text class="ink2" x="141.0" y="343.0" font-size="12" text-anchor="middle">rules</text>
+<path class="s1" d="M276.0,304.0 V130.4 Q276.0,126.4 280.0,126.4 H306.0 Q310.0,126.4 310.0,130.4 V304.0 Z"/>
+<path class="s2" d="M312.0,304.0 V180.8 Q312.0,176.8 316.0,176.8 H342.0 Q346.0,176.8 346.0,180.8 V304.0 Z"/>
+<text class="ink" x="293.0" y="120.4" font-size="13" font-weight="600" text-anchor="middle">74%</text>
+<text class="ink" x="329.0" y="170.8" font-size="13" font-weight="600" text-anchor="middle">53%</text>
+<text class="ink" x="311.0" y="326.0" font-size="13" font-weight="600" text-anchor="middle">2. Real chatbots</text>
+<text class="ink2" x="311.0" y="343.0" font-size="12" text-anchor="middle">same rules</text>
+<path class="s1" d="M446.0,304.0 V159.2 Q446.0,155.2 450.0,155.2 H476.0 Q480.0,155.2 480.0,159.2 V304.0 Z"/>
+<path class="s2" d="M482.0,304.0 V231.2 Q482.0,227.2 486.0,227.2 H512.0 Q516.0,227.2 516.0,231.2 V304.0 Z"/>
+<text class="ink" x="463.0" y="149.2" font-size="13" font-weight="600" text-anchor="middle">62%</text>
+<text class="ink" x="499.0" y="221.2" font-size="13" font-weight="600" text-anchor="middle">32%</text>
+<text class="ink" x="481.0" y="326.0" font-size="13" font-weight="600" text-anchor="middle">3. Citation fix</text>
+<text class="ink2" x="481.0" y="343.0" font-size="12" text-anchor="middle">+ free AI judge</text>
+<path class="s1" d="M616.0,304.0 V116.0 Q616.0,112.0 620.0,112.0 H646.0 Q650.0,112.0 650.0,116.0 V304.0 Z"/>
+<path class="s2" d="M652.0,304.0 V293.6 Q652.0,289.6 656.0,289.6 H682.0 Q686.0,289.6 686.0,293.6 V304.0 Z"/>
+<text class="ink" x="633.0" y="106.0" font-size="13" font-weight="600" text-anchor="middle">80%</text>
+<text class="ink" x="669.0" y="283.6" font-size="13" font-weight="600" text-anchor="middle">6%</text>
+<text class="ink" x="651.0" y="326.0" font-size="13" font-weight="600" text-anchor="middle">4. Jev judge</text>
+<text class="ink2" x="651.0" y="343.0" font-size="12" text-anchor="middle">purpose-built</text>
+<text class="muted" x="56" y="386" font-size="11">Phase 1: planted mistakes. Phase 2: 300 real answers. Phases 3 and 4: 300 fresh answers the guards were never tuned on.</text>
+</svg>

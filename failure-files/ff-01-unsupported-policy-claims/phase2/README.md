@@ -1,7 +1,13 @@
-# FF-01 Phase 2: real models
+# FF-01 Phase 2: real chatbots
 
-**Question:** do the Phase 1 guards, built against failures we wrote, catch the unsupported claims real
-models actually make, and at what false-positive rate?
+[← FF-01 overview](..) · [Phase 1](../phase1) · **Phase 2** · [Phase 3](../phase3) · [Phase 4](../phase4)
+
+**Question:** the Phase 1 guard was built against mistakes we wrote ourselves. Does it still catch the
+mistakes real chatbots make, and how many good answers does it wrongly block?
+
+> **In short:** it still caught 74% of the answers that made things up, but wrongly blocked 53% of the good
+> ones, mostly over sloppy policy citations. Every failure it missed had the right numbers and the wrong
+> conclusion.
 
 ## Protocol
 
@@ -43,14 +49,16 @@ python3 score.py
 
 300 answers: 100 frozen questions, three models, one run each at temperature 0, on a free GitHub runner (CPU only).
 
-| Model | Unsupported claims | Refused (all questions) | Refused (answerable only) | Frozen guards: recall on real failures | Frozen guards: false-positive rate | Median latency |
+| Model | Made something up | Refused (all questions) | Refused (answerable only) | Frozen guard: failures caught | Frozen guard: good cited answers wrongly blocked | Median latency |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Llama 3.2 3B | 2/100 (2%) | 27/100 (27%) | 16/40 (40%) | 2/2 (100%) | 4/24 (17%) | 4.2 s |
 | Qwen 2.5 3B | 6/100 (6%) | 0/100 (0%) | 0/40 (0%) | 5/6 (83%) | 54/94 (57%) | 3.6 s |
 | Gemma 2 2B | 11/100 (11%) | 7/100 (7%) | 2/40 (5%) | 7/11 (64%) | 22/78 (28%) | 13.5 s |
 
-False-positive rate is measured on supported answers that carry a citation, since only those reach the
-fact checks.
+**About the "wrongly blocked" column.** This table counts only good answers that carry a citation, since
+those are the ones that reach the number checks, and it shows each model separately. The overview and
+Phases 3 and 4 count every good answer, all models together: on that basis the frozen guard wrongly blocked
+131 of 247 good answers (53%), because a good answer with no citation is blocked too.
 
 ### What we found
 
@@ -64,21 +72,22 @@ fact checks.
    40 answerable questions with "I don't have a policy that covers this" when one did. A low
    unsupported-claim rate on its own is not a good assistant. It can just be an assistant that escalates
    everything.
-4. **The frozen guards kept their recall.** They caught 14 of 19 real failures (74%), close to Phase 1's
+4. **The frozen guard still caught most failures.** They caught 14 of 19 real failures (74%), close to Phase 1's
    79% on injected ones. All 5 misses contained no wrong number: a wrong yes/no on a threshold, an exception,
    "pets travel free". That is the gap Phase 1 predicted: wrong in meaning, not in form.
-5. **They lost their precision.** False positives went from 7% in Phase 1 to 17%, 28%, and 57%. Mostly not
+5. **It blocked far more good answers.** Wrongly blocked good answers went from 7% in Phase 1 to 17%, 28%,
+   and 57% by model. Mostly not
    because the facts were wrong, but because the citations were sloppy. 69 of the 80 correct answers the
    guards blocked failed the "citation must match the question" rule: Qwen tagged policies unrelated to the
    question onto good answers, and Gemma added "[BAG-1]" to almost everything. Rules tuned on clean,
-   simulated output carried their recall over to real models, not their precision.
+   simulated output kept catching failures on real models, but stopped letting good answers through.
 
 ### What this changes for Phase 3
 
 - Check the **conclusion**, not just the numbers: a semantic check aimed at threshold and exception
   reasoning, where every miss came from.
-- **Repair or re-score citations** before the relevance rule fires, and measure whether that brings false
-  positives back near Phase 1 levels.
+- **Repair or re-score citations** before the relevance rule fires, and measure whether that brings wrongly
+  blocked answers back near Phase 1 levels.
 - Report **refusals next to invented claims** for every configuration, so a guard can't look good by making
   the assistant say no.
 

@@ -1,15 +1,15 @@
-500 trials: 354 faulty answers, 146 correct answers
+500 trials: 354 planted mistakes, 146 correct answers
 
-| Guards (each adds to the one above) | Injected failures not caught | Correct answers wrongly blocked |
+| Guard (each layer adds to the one above) | Failures caught | Good answers wrongly blocked |
 | --- | ---: | ---: |
-| No guards | 354/354 (100%) | 0/146 (0%) |
-| + Citation required | 264/354 (75%) | 0/146 (0%) |
-| + Citation must exist | 217/354 (61%) | 0/146 (0%) |
-| + Citation must match the question | 179/354 (51%) | 10/146 (7%) |
-| + Every number must appear in the cited policy (exact text) | 74/354 (21%) | 41/146 (28%) |
-| + Same check, with units normalized (24 hours = a day) | 74/354 (21%) | 10/146 (7%) |
+| No guards | 0/354 (0%) | 0/146 (0%) |
+| + Citation required | 90/354 (25%) | 0/146 (0%) |
+| + Citation must exist | 137/354 (39%) | 0/146 (0%) |
+| + Citation must match the question | 175/354 (49%) | 10/146 (7%) |
+| + Every number must appear in the cited policy (exact text) | 280/354 (79%) | 41/146 (28%) |
+| + Same check, with units normalized (24 hours = a day) | 280/354 (79%) | 10/146 (7%) |
 
-Final layer: detection recall 79.1%, false-positive rate 6.8%.
+Final layer: 79.1% of planted mistakes caught, 6.8% of good answers wrongly blocked.
 
 | Answer type | Expected | Shown with all guards |
 | --- | --- | ---: |

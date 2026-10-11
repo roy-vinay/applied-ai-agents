@@ -1,4 +1,6 @@
-# FF-01 Phase 3: a semantic check, tested on held-out answers
+# FF-01 Phase 3: fix the citations, add an AI judge
+
+[← FF-01 overview](..) · [Phase 1](../phase1) · [Phase 2](../phase2) · **Phase 3** · [Phase 4](../phase4)
 
 **Question:** Phase 2 found two problems with the rule-based guards on real models. They blocked many
 correct answers because of sloppy citations, and every real failure they missed had the right numbers but
@@ -97,7 +99,7 @@ advance (catch rate minus false-block rate: 25.5, 43.7, 50.2).
    through: "your 27 kg bag is within the 23 kg limit", "exactly 8 kg meets an under-8 kg limit", "yes,
    exactly 3 hours gets the credit". Comparing a customer's number to a policy limit is arithmetic, and a
    small model doing it in prose gets it wrong often.
-5. **Citation repair is the cheap, reliable part.** It held up best from dev to test on precision (6% to
+5. **Citation repair is the cheap, reliable part.** It held up best from dev to test on wrongly blocked answers (6% to
    14% wrongly blocked, against 53% for the frozen rules) and costs nothing at runtime. On its own it
    catches too little.
 6. **Refusals didn't go away.** 64 of 300 test answers refused a question the policies answer, 42 of them

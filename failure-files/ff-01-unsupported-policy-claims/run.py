@@ -54,13 +54,13 @@ if __name__ == "__main__":
     bad = sum(1 for t in ts if not t[4])
     good = len(ts) - bad
     rows = evaluate(ts)
-    print(f"{len(ts)} trials: {bad} faulty answers, {good} correct answers\n")
-    print("| Guards (each adds to the one above) | Injected failures not caught | Correct answers wrongly blocked |")
+    print(f"{len(ts)} trials: {bad} planted mistakes, {good} correct answers\n")
+    print("| Guard (each layer adds to the one above) | Failures caught | Good answers wrongly blocked |")
     print("| --- | ---: | ---: |")
     for r in rows:
-        print(f"| {r['layer']} | {r['leaked']}/{bad} ({r['leaked']/bad:.0%}) | {r['blocked']}/{good} ({r['blocked']/good:.0%}) |")
+        print(f"| {r['layer']} | {bad - r['leaked']}/{bad} ({(bad - r['leaked'])/bad:.0%}) | {r['blocked']}/{good} ({r['blocked']/good:.0%}) |")
     last = rows[-1]
-    print(f"\nFinal layer: detection recall {1 - last['leaked']/bad:.1%}, false-positive rate {last['blocked']/good:.1%}.")
+    print(f"\nFinal layer: {1 - last['leaked']/bad:.1%} of planted mistakes caught, {last['blocked']/good:.1%} of good answers wrongly blocked.")
     print("\n| Answer type | Expected | Shown with all guards |")
     print("| --- | --- | ---: |")
     for (kind, behavior, correct), (n, shown) in sorted(by_behavior(ts).items(), key=lambda x: (x[0][0], not x[0][2], x[0][1])):

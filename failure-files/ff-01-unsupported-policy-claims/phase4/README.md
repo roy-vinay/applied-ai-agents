@@ -1,4 +1,6 @@
-# FF-01 Phase 4: numbers in code, meaning in a model
+# FF-01 Phase 4: numbers in code, and a purpose-built judge
+
+[← FF-01 overview](..) · [Phase 1](../phase1) · [Phase 2](../phase2) · [Phase 3](../phase3) · **Phase 4**
 
 **Question:** Phase 3's judge, a small local model, missed most failures that come down to comparing a
 customer's number with a policy limit ("your 27 kg bag is within the 23 kg limit"). Does checking those
