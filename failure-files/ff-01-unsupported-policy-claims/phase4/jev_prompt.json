@@ -1,0 +1,7 @@
+{
+ "instructions": "Decide whether everything the support assistant's answer states or concludes for this customer is supported by Skylark Air's written policies. Judge only the answer, not the customer's question.",
+ "criteria": {
+  "SUPPORTED": "Every statement and conclusion in the answer follows from the policies. Saying no policy covers the question, offering to connect an agent, correcting the customer, or citing the wrong policy ID in brackets all count as supported.",
+  "UNSUPPORTED": "The answer states a fee, number, rule, service, route, option, or exception that is not in the policies; goes along with a false claim the customer made; or reaches the wrong conclusion for this customer's situation."
+ }
+}

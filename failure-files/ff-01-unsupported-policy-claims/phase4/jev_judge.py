@@ -1,8 +1,10 @@
 """Judge each answer with TypeSafe's Jev 1.13 through OpenRouter, with a hard spending stop.
 
-Jev is a structured decision model: it picks from a fixed set of answers instead of writing text, so the
-request asks for exactly one of SUPPORTED or UNSUPPORTED. The prompt (jev_prompt.txt) is fixed before the
-pilot and not tuned afterwards; the pilot only checks that the call works and what it costs.
+Jev is a structured decision model: it picks from a fixed set of answers instead of writing text. It is
+called through OpenRouter's decisions endpoint (/api/alpha/decisions; the chat endpoint rejects it) with
+one "choice" question, SUPPORTED or UNSUPPORTED, defined in jev_prompt.json. The policies, the customer's
+question and the answer go in as the state. The prompt is fixed before the pilot and not tuned afterwards;
+the pilot only checks that the call works and what it costs.
 
     python jev_judge.py --pilot             # 10 dev answers, to check format and cost
     python jev_judge.py --split dev         # all Phase 2 answers
@@ -29,10 +31,7 @@ BUDGET_USD = 0.90
 HERE = Path(__file__).parent
 OUT = HERE / "jev"
 SPEND = OUT / "spend.json"
-PROMPT = (HERE / "jev_prompt.txt").read_text()
-SCHEMA = {"type": "json_schema", "json_schema": {"name": "verdict", "strict": True, "schema": {
-    "type": "object", "additionalProperties": False, "required": ["verdict"],
-    "properties": {"verdict": {"type": "string", "enum": ["SUPPORTED", "UNSUPPORTED"]}}}}}
+QUESTION = json.loads((HERE / "jev_prompt.json").read_text())
 
 
 def spent() -> float:
@@ -48,11 +47,11 @@ def add_spend(usd: float) -> None:
 
 
 def call(question: str, answer: str, key: str) -> dict:
-    policies = "\n".join(f"[{pid}] {p['text']}" for pid, p in POLICIES.items())
-    body = {"model": MODEL, "temperature": 0, "max_tokens": 20, "response_format": SCHEMA,
-            "usage": {"include": True},
-            "messages": [{"role": "user", "content": PROMPT.format(policies=policies, question=question, answer=answer)}]}
-    req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions", data=json.dumps(body).encode(),
+    body = {"model": MODEL,
+            "state": {"policies": {pid: p["text"] for pid, p in POLICIES.items()},
+                      "customer_question": question, "assistant_answer": answer},
+            "questions": {"verdict": {"type": "choice", **QUESTION}}}
+    req = urllib.request.Request("https://openrouter.ai/api/alpha/decisions", data=json.dumps(body).encode(),
                                  headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
                                           "X-Title": "FF-01 Phase 4"})
     last = None
@@ -74,27 +73,15 @@ def call(question: str, answer: str, key: str) -> dict:
     usage = out.get("usage") or {}
     cost = usage.get("cost")
     if cost is None:
-        cost = usage.get("prompt_tokens", 0) * PRICE_IN_PER_TOKEN
-    content = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
-    verdict = ""
-    try:
-        verdict = str(json.loads(content).get("verdict", "")).upper()
-    except (json.JSONDecodeError, AttributeError):
-        m = re.search(r"\b(UNSUPPORTED|SUPPORTED)\b", content.upper())
-        verdict = m.group(1) if m else ""
+        cost = (usage.get("input_tokens") or 0) * PRICE_IN_PER_TOKEN
+    ans = (out.get("answers") or {}).get("verdict") or {}
+    verdict = str(ans.get("choice", "")).upper()
     ok = verdict in ("SUPPORTED", "UNSUPPORTED")
-    return {"verdict": verdict if ok else "UNSUPPORTED", "parse_error": not ok, "raw": content[:300],
-            "cost_usd": cost, "prompt_tokens": usage.get("prompt_tokens"), "latency_s": round(time.monotonic() - t, 2),
+    return {"verdict": verdict if ok else "UNSUPPORTED", "parse_error": not ok,
+            "probabilities": ans.get("probabilities"), "confidence": ans.get("confidence"),
+            "raw": None if ok else json.dumps(out)[:400],
+            "cost_usd": cost, "input_tokens": usage.get("input_tokens"), "latency_s": round(time.monotonic() - t, 2),
             "served_by": out.get("model"), "provider": out.get("provider")}
-
-
-def fail(msg: str) -> None:
-    """Record the error where it can be read later (GitHub annotation and a committed log), then stop."""
-    OUT.mkdir(exist_ok=True)
-    with open(OUT / "errors.log", "a") as f:
-        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {msg}\n")
-    print(f"::error::{msg}", flush=True)
-    raise SystemExit(1)
 
 
 def run(split: str, limit: int | None, tag: str) -> None:

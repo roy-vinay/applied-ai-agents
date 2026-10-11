@@ -14,9 +14,9 @@ purpose-built judge model (TypeSafe's Jev 1.13) do better than a general one?
   booked), the code works out what the policy gives this customer. It then reads the answer's conclusion
   with a short list of phrases, and blocks the answer if it says the opposite. If it can't parse
   something, it stays out of the way. No model, no cost, instant.
-- **Jev judge** ([`jev_judge.py`](jev_judge.py), [`jev_prompt.txt`](jev_prompt.txt)). Jev is a structured
+- **Jev judge** ([`jev_judge.py`](jev_judge.py), [`jev_prompt.json`](jev_prompt.json)). Jev is a structured
   decision model: it picks from fixed answers rather than writing text. It's asked one question per answer
-  (SUPPORTED or UNSUPPORTED) through OpenRouter, model `typesafe/jev-1.13`. Not `typesafe/jev-router`,
+  (SUPPORTED or UNSUPPORTED) through OpenRouter's decisions endpoint, model `typesafe/jev-1.13`. Not `typesafe/jev-router`,
   which forwards requests to other models.
 
 ## Protocol
