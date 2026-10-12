@@ -11,6 +11,11 @@ By [Vinay Roy](https://github.com/roy-vinay). Part of [applied-ai-agents](../REA
 
 ## Latest
 
+**[FF-05: What does telling an AI agent the rules actually buy you?](ff-05-rules-in-the-prompt)** The
+lesson of the 2025 Replit database deletion, tested on a data bot. With the rules in its prompt, neither of
+two open models broke one. Without them, the larger model handed over customer emails on every try, and
+both dumped a 2-million-row table. Neither tried to delete data, with or without the rules.
+
 **[FF-01: Can you stop a support chatbot from making up policy?](ff-01-unsupported-policy-claims)** The
 failure behind the 2024 Air Canada chatbot case, tested in four phases on a fictional airline. Rules alone
 either missed too much or blocked too many good answers. A small model built for yes/no decisions caught
@@ -24,6 +29,7 @@ either missed too much or blocked too many good answers. A small model built for
 | FF-02 | Unauthorized commitments | Can a customer talk our assistant into a deal we'd have to honor? | Planned |
 | FF-03 | Behavioral policy violations | What does our assistant say when a customer tries to make it embarrass us? | Planned |
 | FF-04 | High-stakes advice outside scope | Will our assistant give legal or regulatory advice it isn't qualified to give? | Planned |
+| [FF-05](ff-05-rules-in-the-prompt) | Rules that live only in the prompt | Which of our agent's rules exist only in its instructions, and what happens when it doesn't follow them? | Phase 2 shipped |
 
 ## How each file works
 
@@ -40,7 +46,7 @@ either missed too much or blocked too many good answers. A small model built for
 > not reproduce, or make claims about, the organization's production architecture, prompts, models, or
 > safeguards. All systems, data, and policies in this folder are fictional.
 
-## Sources for planned files
+## Sources
 
 | ID | Source incident |
 | --- | --- |
@@ -48,6 +54,7 @@ either missed too much or blocked too many good answers. A small model built for
 | FF-02 | Users prompted a car dealership's chatbot into "agreeing" to sell a vehicle for $1 (2023). [AI Incident Database](https://incidentdatabase.ai/entities/chevrolet-of-watsonville) |
 | FF-03 | A parcel delivery company's chatbot was prompted into swearing and criticizing the company (2024). [AI Incident Database](https://incidentdatabase.ai/reports/3616) |
 | FF-04 | A city government's business chatbot gave answers that would have broken the law (2024). [The Markup](https://themarkup.org/news/2024/03/29/nycs-ai-chatbot-tells-businesses-to-break-the-law) |
+| FF-05 | An AI coding agent deleted a production database during a code freeze, despite instructions not to make changes (2025). [AI Incident Database](https://incidentdatabase.ai/cite/1152/) · [eWeek](https://www.eweek.com/news/replit-ai-coding-assistant-failure/) |
 
 ## Follow along
 

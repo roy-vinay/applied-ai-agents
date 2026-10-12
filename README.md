@@ -57,6 +57,10 @@ The failure behind the 2024 Air Canada chatbot case, tested in four phases. Rule
 much or blocked too many good answers; a small model built for yes/no decisions caught 80% of real
 failures and wrongly blocked 6%, for about 2 cents across 600 answers.
 
+**[FF-05: What does telling an AI agent the rules actually buy you?](failure-files/ff-05-rules-in-the-prompt)**
+The lesson of the 2025 Replit database deletion, tested on a data bot. Without its rules, the larger model
+handed over customer emails on every try; with them, no model broke one.
+
 ## Decisions
 
 The reasoning behind the builds lives in **[ai-decision-log](https://github.com/roy-vinay/ai-decision-log)**:

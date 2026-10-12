@@ -30,6 +30,7 @@ See [failure-files/](failure-files) for method and sources.
 | FF-02 | Unauthorized commitments | Enforcing offer and price limits in code prevents binding commitments that prompt-level rules miss | Out-of-policy commitments under attack prompts, false blocks | Exploring |
 | FF-03 | Behavioral policy violations | A separate output policy check catches tone and brand violations the main prompt lets through | Violating replies under adversarial prompts, false blocks | Exploring |
 | FF-04 | High-stakes advice outside scope | A scope guard prevents regulatory and legal advice without refusing ordinary questions | Out-of-scope advice given, legitimate questions refused | Exploring |
+| [FF-05](failure-files/ff-05-rules-in-the-prompt) | Rules that live only in the prompt | Stating access and cost rules in the prompt prevents most violations on ordinary-looking requests; destructive requests are refused either way | Rule breaks with and without the rules in the prompt, abstention, accuracy | Shipped (Phase 2: real models, prompt ablation) |
 
 ## Benchmarks
 
