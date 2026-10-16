@@ -606,9 +606,24 @@ test("pages: fit the window by default, and two pages side by side like a book",
   assert.deepEqual(two.current, ["Page 1", "Page 2"]);
   await p.evaluate(() => (window as any).mdPageStep(1));
   assert.equal(await p.evaluate(() => (window as any).mdPagesState().current), 3);
+  // → and ← turn to the next and previous pair.
+  await p.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+  await p.keyboard.press("ArrowRight");
+  assert.equal(await p.evaluate(() => (window as any).mdPagesState().current), 5);
+  await p.keyboard.press("ArrowLeft");
+  await p.keyboard.press("ArrowLeft");
+  assert.equal(await p.evaluate(() => (window as any).mdPagesState().current), 1);
   await p.evaluate(() => (window as any).mdPagesSpread(false));
+  // One page at a time: → moves one page.
+  await p.keyboard.press("ArrowRight");
+  assert.equal(await p.evaluate(() => (window as any).mdPagesState().current), 2);
   assert.equal(await p.evaluate(() => (window as any).mdPagesState().spread), false);
   const log = await p.evaluate(() => (window as any).mdTestLog.filter((m: any) => m.action === "layout").map((m: any) => m.spread));
   assert.deepEqual(log, [true, false]);
+  // Typing in the find bar still moves the cursor, not the page.
+  await p.evaluate(() => (window as any).mdFindOpen());
+  await p.keyboard.type("ab");
+  await p.keyboard.press("ArrowLeft");
+  assert.equal(await p.evaluate(() => (window as any).mdPagesState().current), 2);
   assert.deepEqual(errors, []);
 });
