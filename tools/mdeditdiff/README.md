@@ -1,3 +1,5 @@
+<img src="app/Icon/AppIcon-1024.png" alt="mdEditDiff app icon: a page with one line highlighted in green and one struck through in red" width="112" align="right">
+
 # mdEditDiff
 
 **An editor for people, a diff for agents. See what changed in a Markdown file since you last looked, and who changed it.**

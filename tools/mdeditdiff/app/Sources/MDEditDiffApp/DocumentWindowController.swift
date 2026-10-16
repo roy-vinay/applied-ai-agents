@@ -4,10 +4,12 @@ import WebKit
 /// One document window: a plain-text Markdown editor, a rendered preview, and a
 /// Read / Edit / Split switch.
 @MainActor
-final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTextViewDelegate, WKNavigationDelegate, NSMenuItemValidation {
+final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTextViewDelegate, WKNavigationDelegate, NSMenuItemValidation, NSToolbarDelegate {
     enum Mode: Int, CaseIterable {
         case read = 0, edit = 1, split = 2
         var title: String { ["Read", "Edit", "Split"][rawValue] }
+        /// SF Symbols for the toolbar switch.
+        var symbol: String { ["book", "square.and.pencil", "rectangle.split.2x1"][rawValue] }
     }
 
     private static let defaultFontSize: CGFloat = 13
@@ -18,6 +20,13 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     private let textView: NSTextView
     private let webView: WKWebView
     private let modeControl = NSSegmentedControl(labels: Mode.allCases.map(\.title), trackingMode: .selectOne, target: nil, action: nil)
+    private let changesButton = NSButton(title: "Up to date", target: nil, action: nil)
+
+    private enum ToolbarID {
+        static let mode = NSToolbarItem.Identifier("mdeditdiff.mode")
+        static let changes = NSToolbarItem.Identifier("mdeditdiff.changes")
+        static let history = NSToolbarItem.Identifier("mdeditdiff.history")
+    }
     private let resources: PreviewResourceHandler
     private let linkHandler: LinkMessageHandler
     private let reviewHandler: LinkMessageHandler
@@ -92,7 +101,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         configureEditor()
         configurePreview()
         configureLayout(in: window)
-        configureModeControl(in: window)
+        configureToolbar(in: window)
 
         textView.string = doc.loadedText
         highlighter.apply(to: textView)
@@ -122,7 +131,9 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         textView.isAutomaticDataDetectionEnabled = false
         textView.smartInsertDeleteEnabled = false
         textView.isContinuousSpellCheckingEnabled = false
-        textView.textContainerInset = NSSize(width: 20, height: 20)
+        textView.textContainerInset = NSSize(width: 36, height: 28)
+        textView.backgroundColor = .textBackgroundColor
+        textView.insertionPointColor = .controlAccentColor
         textView.font = highlighter.baseFont
         textView.typingAttributes = highlighter.baseAttributes
         textView.setAccessibilityLabel("Markdown source")
@@ -153,22 +164,85 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         window.contentView = splitView
     }
 
-    private func configureModeControl(in window: NSWindow) {
+    private func configureToolbar(in window: NSWindow) {
         modeControl.target = self
         modeControl.action = #selector(modeControlChanged(_:))
         modeControl.segmentStyle = .automatic
         modeControl.setAccessibilityLabel("Document mode")
         for m in Mode.allCases {
+            if let image = NSImage(systemSymbolName: m.symbol, accessibilityDescription: m.title) {
+                modeControl.setImage(image, forSegment: m.rawValue)
+                modeControl.setImageScaling(.scaleProportionallyDown, forSegment: m.rawValue)
+            }
             modeControl.setToolTip("\(m.title) (⌘\(m.rawValue + 1))", forSegment: m.rawValue)
         }
         modeControl.sizeToFit()
-        let container = NSView(frame: NSRect(x: 0, y: 0, width: modeControl.frame.width + 16, height: 28))
-        modeControl.frame.origin = NSPoint(x: 0, y: (28 - modeControl.frame.height) / 2)
-        container.addSubview(modeControl)
-        let accessory = NSTitlebarAccessoryViewController()
-        accessory.view = container
-        accessory.layoutAttribute = .trailing
-        window.addTitlebarAccessoryViewController(accessory)
+
+        changesButton.target = self
+        changesButton.action = #selector(nextChange(_:))
+        changesButton.bezelStyle = .texturedRounded
+        changesButton.image = NSImage(systemSymbolName: "checkmark.circle", accessibilityDescription: nil)
+        changesButton.imagePosition = .imageLeading
+        changesButton.isEnabled = false
+        changesButton.toolTip = "Go to the next change (⌘])"
+
+        let toolbar = NSToolbar(identifier: "mdeditdiff.document")
+        toolbar.delegate = self
+        toolbar.displayMode = .iconOnly
+        toolbar.allowsUserCustomization = false
+        toolbar.centeredItemIdentifiers = [ToolbarID.mode]
+        window.toolbar = toolbar
+        window.toolbarStyle = .unified
+    }
+
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        [.flexibleSpace, ToolbarID.mode, .flexibleSpace, ToolbarID.changes, ToolbarID.history]
+    }
+
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        toolbarDefaultItemIdentifiers(toolbar)
+    }
+
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        let item = NSToolbarItem(itemIdentifier: itemIdentifier)
+        switch itemIdentifier {
+        case ToolbarID.mode:
+            item.view = modeControl
+            item.label = "Mode"
+        case ToolbarID.changes:
+            item.view = changesButton
+            item.label = "Changes"
+        case ToolbarID.history:
+            item.image = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: "Version history")
+            item.label = "History"
+            item.toolTip = "Version history (⇧⌘H)"
+            item.target = self
+            item.action = #selector(showHistory(_:))
+            item.isBordered = true
+        default:
+            return nil
+        }
+        return item
+    }
+
+    private func updateChangesButton() {
+        var count = 0
+        if case .unread = review { count = unreadCount }
+        if count > 0 {
+            changesButton.title = count == 1 ? "1 change" : "\(count) changes"
+            changesButton.image = NSImage(systemSymbolName: "circle.fill", accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: 7, weight: .bold))
+            changesButton.contentTintColor = .controlAccentColor
+            changesButton.isEnabled = true
+            changesButton.setAccessibilityLabel("\(count) unread changes. Go to the next change.")
+        } else {
+            changesButton.title = "Up to date"
+            changesButton.image = NSImage(systemSymbolName: "checkmark.circle", accessibilityDescription: nil)
+            changesButton.contentTintColor = .secondaryLabelColor
+            changesButton.isEnabled = false
+            changesButton.setAccessibilityLabel("No unread changes")
+        }
+        changesButton.sizeToFit()
     }
 
     // MARK: - Document sync
@@ -199,6 +273,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
             parts.append("History off")
         }
         window?.subtitle = parts.joined(separator: " · ")
+        updateChangesButton()
     }
 
     func textDidChange(_ notification: Notification) {

@@ -371,7 +371,11 @@
       tools.appendChild(button("‹ Prev", "Previous change", function () { root.mdNav(-1); }));
       tools.appendChild(button("Next ›", "Next change", function () { root.mdNav(1); }));
     }
-    if (review.mode === "unread") tools.appendChild(button("Mark as read", null, function () { post({ action: "markRead" }); }));
+    if (review.mode === "unread") {
+      var mark = button("Mark as read", null, function () { post({ action: "markRead" }); });
+      mark.classList.add("primary");
+      tools.appendChild(mark);
+    }
     else tools.appendChild(button("Done", "Stop comparing", function () { post({ action: "endCompare" }); }));
     tools.appendChild(button("History", "Show version history", function () { post({ action: "history" }); }));
     bar.appendChild(tools);
