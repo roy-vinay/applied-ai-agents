@@ -91,10 +91,9 @@ tracking matters less.
 
 Requires macOS 14 (Sonoma) or later, on Apple silicon or Intel.
 
-1. Sign in to GitHub, open the latest
-   [mdeditdiff build](https://github.com/roy-vinay/applied-ai-agents/actions/workflows/mdeditdiff.yml?query=branch%3Amain+is%3Asuccess),
-   click the top run, and download **mdEditDiff-macOS** under **Artifacts**.
-2. Unzip it (it may be zipped twice) and drag **mdEditDiff.app** into **Applications**.
+1. Download **mdEditDiff-macOS.zip** from the
+   [latest release](https://github.com/roy-vinay/applied-ai-agents/releases/latest).
+2. Unzip it and drag **mdEditDiff.app** into **Applications**.
 3. Allow it to open the first time. The app isn't notarized by Apple yet, so macOS blocks it with
    *"Apple could not verify mdEditDiff"*. Click **Done**, then either:
    - open **System Settings > Privacy & Security**, scroll down, click **Open Anyway**, and confirm; or
@@ -107,8 +106,7 @@ Requires macOS 14 (Sonoma) or later, on Apple silicon or Intel.
 Requires Node.js 20 or later (check with `node -v`; get it from [nodejs.org](https://nodejs.org)).
 
 ```bash
-git clone https://github.com/roy-vinay/applied-ai-agents
-npm install -g ./applied-ai-agents/tools/mdeditdiff
+npm install -g https://github.com/roy-vinay/applied-ai-agents/releases/latest/download/mdeditdiff-cli.tgz
 mdeditdiff --help
 ```
 
@@ -124,9 +122,10 @@ the current revision (for example "History r4").
 ## See it in action
 
 The walkthrough plays out the story in the animation above, using a temporary folder with its own history,
-so it never touches your files:
+so it never touches your files. It runs from a clone of the repository:
 
 ```bash
+git clone https://github.com/roy-vinay/applied-ai-agents
 cd applied-ai-agents/tools/mdeditdiff
 npm install
 npm run walkthrough
@@ -376,8 +375,11 @@ npm install
 npm test    # unit, acceptance, two-agent simulation, concurrency, MCP and preview tests
             # (the preview's change-highlighting tests run in Chromium when Playwright's browser is installed)
 npm run bundle   # after changing src/diff.ts: rebuilds the Mac app's copy of the diff engine
-npm run walkthrough
 ```
+
+Releases are built by CI: bump the version in `package.json`, `src/version.ts` and `app/Info.plist`, add a
+[CHANGELOG](CHANGELOG.md) entry, and push a tag such as `mdeditdiff-v0.3.0`. The release workflow tests
+everything, builds the app and the CLI package, and publishes them with checksums.
 
 CI runs the tests on Linux and macOS with Node 20 and 22, builds and tests the Mac app, launches it, and
 takes the screenshots on this page. To regenerate the terminal animation:
