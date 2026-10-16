@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
+    "markdown-it": "^14.3.3",
     "typescript": "^7.0.2"
   },
   "type": "module",

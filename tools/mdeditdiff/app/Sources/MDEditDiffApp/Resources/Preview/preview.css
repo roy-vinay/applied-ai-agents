@@ -1,0 +1,36 @@
+:root {
+  --fg: #1d1d1f; --muted: #6e6e73; --bg: #ffffff; --line: #d9d9de; --code-bg: #f4f4f6;
+  --link: #0a64d8; --quote: #6e6e73; --notice-bg: #fff7e0; --notice-fg: #6b4e00;
+  --size: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #ececf0; --muted: #a1a1aa; --bg: #1e1e20; --line: #3a3a40; --code-bg: #2a2a2e;
+    --link: #6cb2ff; --quote: #a1a1aa; --notice-bg: #3a3220; --notice-fg: #f3d58a;
+  }
+}
+html { background: var(--bg); }
+body { margin: 0; color: var(--fg); background: var(--bg); font: var(--size)/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; -webkit-font-smoothing: antialiased; }
+.markdown-body { max-width: 46em; margin: 0 auto; padding: 32px 40px 80px; overflow-wrap: break-word; }
+h1, h2, h3, h4, h5, h6 { line-height: 1.25; margin: 1.6em 0 0.6em; scroll-margin-top: 16px; }
+h1 { font-size: 2em; } h2 { font-size: 1.5em; border-bottom: 1px solid var(--line); padding-bottom: 0.25em; }
+h3 { font-size: 1.25em; } h4 { font-size: 1.05em; } h5, h6 { font-size: 0.95em; color: var(--muted); }
+.markdown-body > :first-child { margin-top: 0; }
+p, ul, ol, blockquote, pre, .table-wrap { margin: 0 0 1em; }
+a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+a:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 2px; }
+code, pre { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.88em; }
+code { background: var(--code-bg); padding: 0.15em 0.35em; border-radius: 4px; }
+pre { background: var(--code-bg); padding: 12px 14px; border-radius: 6px; overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; font-size: 1em; }
+blockquote { border-left: 3px solid var(--line); color: var(--quote); padding: 0 0 0 1em; margin-left: 0; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+ul, ol { padding-left: 1.6em; } li + li { margin-top: 0.25em; }
+li.task-list-item { list-style: none; } li.task-list-item input { margin: 0 0.5em 0 -1.4em; vertical-align: middle; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; font-size: 0.95em; }
+th, td { border: 1px solid var(--line); padding: 6px 12px; text-align: left; vertical-align: top; }
+th { background: var(--code-bg); font-weight: 600; }
+img { max-width: 100%; }
+.notice { display: inline-block; background: var(--notice-bg); color: var(--notice-fg); border-radius: 4px; padding: 2px 8px; font-size: 0.85em; }
+s, del { color: var(--muted); }
