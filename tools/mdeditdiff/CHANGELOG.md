@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.4
+
+- **Find in Read mode:** ⌘F now works on the formatted document, not just the source.
+  - A find bar at the top right shows "2 of 4", with previous and next buttons.
+  - Return and Shift-Return step through matches, ⌘G and ⇧⌘G work too, and Escape closes the bar.
+  - ⌘E searches for the selected text.
+  - Matches are case-insensitive and work across bold, links and code, but never run from one paragraph into the next.
+  - Matches stay highlighted when an agent edits the file while you search.
+  - In Split mode, Find searches whichever side has focus.
+
 ## 0.3.3
 
 - **Fixed:** a thin vertical line stayed across the document after switching from Split back to Read.

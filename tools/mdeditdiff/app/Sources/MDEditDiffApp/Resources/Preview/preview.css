@@ -146,3 +146,22 @@ body.history-open .markdown-body, body.history-open #review-bar { margin-right: 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 @media (prefers-color-scheme: dark) { .rb-button.primary, .rb-button.primary:hover { color: var(--paper); } }
+
+/* Find bar (⌘F in Read mode): a floating pill at the top right, like Safari and Preview.
+   Matches are orange and outlined, so they never look like change marks or personal highlights. */
+.find-bar { position: fixed; top: 10px; right: 16px; z-index: 20; display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 10px; background: var(--paper); border: 1px solid var(--rule); border-radius: 12px; box-shadow: var(--shadow); font-family: var(--sans); font-size: 13px; }
+.find-bar[hidden] { display: none; }
+body.reviewing .find-bar { top: 58px; }
+body.history-open .find-bar { right: 316px; }
+.fb-input { width: 200px; font: inherit; color: var(--ink); background: var(--code-bg); border: 1px solid var(--rule); border-radius: 7px; padding: 4px 8px; outline: none; }
+.fb-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.find-bar.fb-none .fb-input { border-color: var(--del); }
+.fb-count { min-width: 64px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+.find-bar .rb-button { font-size: 12px; padding: 3px 10px; }
+.find-bar .fb-step { padding: 2px 9px; font-size: 15px; line-height: 1; }
+mark.find-hit { background: rgba(255, 159, 10, 0.26); color: inherit; border-radius: 2px; box-shadow: 0 0 0 1px rgba(255, 159, 10, 0.55); }
+mark.find-current { background: #FFB340; color: #1E2030; box-shadow: 0 0 0 2px #FF9F0A; }
+@media (prefers-color-scheme: dark) {
+  mark.find-hit { background: rgba(255, 179, 64, 0.22); box-shadow: 0 0 0 1px rgba(255, 179, 64, 0.5); }
+  mark.find-current { background: #FFB340; color: #121317; }
+}

@@ -108,6 +108,7 @@
     if (review && root.MDDiff) applyReview(doc);
     if (current >= changeEls.length) current = -1;
     updateBar();
+    if (find.open && find.query) runFind(false);
     window.scrollTo(0, y);
   }
 
@@ -458,8 +459,225 @@
   };
 
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && !document.getElementById("history").hidden) root.mdHideHistory();
+    if (e.key !== "Escape") return;
+    if (find.open) { root.mdFindClose(); return; }
+    if (!document.getElementById("history").hidden) root.mdHideHistory();
   });
+
+  // ---------------------------------------------------------------------------------------------
+  // Find in the rendered document. Matches are case-insensitive, can cross formatting
+  // (bold, links, code) but never cross from one block into the next.
+
+  var find = { open: false, query: "", hits: [], index: -1, timer: 0 };
+  var MAX_HITS = 2000;
+  var BLOCK_TAGS = /^(P|LI|H[1-6]|TD|TH|PRE|BLOCKQUOTE|DIV|TR|MAIN|DEL|UL|OL|TABLE)$/;
+
+  function findBar() {
+    var bar = document.getElementById("find-bar");
+    if (bar) return bar;
+    bar = el("div", "find-bar");
+    bar.id = "find-bar";
+    bar.setAttribute("role", "search");
+    bar.hidden = true;
+    var input = el("input", "fb-input");
+    input.id = "find-input";
+    input.type = "search";
+    input.placeholder = "Find";
+    input.setAttribute("aria-label", "Find in document");
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    var count = el("span", "fb-count");
+    count.id = "find-count";
+    count.setAttribute("aria-live", "polite");
+    var prev = button("‹", "Previous match", function () { root.mdFindStep(-1); });
+    var next = button("›", "Next match", function () { root.mdFindStep(1); });
+    var done = button("Done", "Close find", function () { root.mdFindClose(); });
+    prev.classList.add("fb-step");
+    next.classList.add("fb-step");
+    bar.appendChild(input);
+    bar.appendChild(count);
+    bar.appendChild(prev);
+    bar.appendChild(next);
+    bar.appendChild(done);
+    input.addEventListener("input", function () {
+      clearTimeout(find.timer);
+      find.timer = setTimeout(function () { find.query = input.value; find.index = -1; runFind(true); }, 90);
+    });
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        clearTimeout(find.timer);
+        if (find.query !== input.value) { find.query = input.value; find.index = -1; runFind(false); }
+        root.mdFindStep(e.shiftKey ? -1 : 1);
+      }
+    });
+    document.body.appendChild(bar);
+    return bar;
+  }
+
+  function clearFindMarks() {
+    var marks = document.querySelectorAll("mark.find-hit");
+    var parents = new Set();
+    for (var i = 0; i < marks.length; i++) {
+      var m = marks[i];
+      parents.add(m.parentNode);
+      while (m.firstChild) m.parentNode.insertBefore(m.firstChild, m);
+      m.remove();
+    }
+    parents.forEach(function (p) { if (p) p.normalize(); });
+    find.hits = [];
+  }
+
+  function blockOf(node) {
+    var p = node.parentElement;
+    while (p && !BLOCK_TAGS.test(p.tagName)) p = p.parentElement;
+    return p;
+  }
+
+  /** Text of the document as one string, with a NUL between blocks so no match spans two. */
+  function collectText(scope) {
+    var map = []; // { node, start } in order
+    var text = "";
+    var lastBlock = null;
+    var walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        var p = n.parentElement;
+        if (!p || p.closest(".md-removed-tools, .no-find, script, style")) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var n;
+    while ((n = walker.nextNode())) {
+      var b = blockOf(n);
+      if (b !== lastBlock) { text += "\u0000"; lastBlock = b; }
+      map.push({ node: n, start: text.length });
+      text += n.data;
+    }
+    return { text: text, map: map };
+  }
+
+  function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+  function runFind(scrollToFirst) {
+    clearFindMarks();
+    var q = find.query;
+    var count = document.getElementById("find-count");
+    if (!q) { find.index = -1; if (count) count.textContent = ""; post({ action: "findCount", n: 0 }); return; }
+    var doc = document.getElementById("doc");
+    var all = collectText(doc);
+    var re = new RegExp(escapeRe(q).replace(/\s+/g, "\\s+"), "giu");
+    var ranges = [];
+    var m;
+    while ((m = re.exec(all.text)) && ranges.length < MAX_HITS) {
+      if (!m[0].length) { re.lastIndex++; continue; }
+      ranges.push([m.index, m.index + m[0].length]);
+    }
+    // Split each match into per-text-node segments, then wrap from the end backwards.
+    var segs = [];
+    var j = 0;
+    ranges.forEach(function (r, hit) {
+      while (j < all.map.length - 1 && all.map[j + 1].start <= r[0]) j++;
+      for (var k = j; k < all.map.length && all.map[k].start < r[1]; k++) {
+        var e = all.map[k];
+        var s = Math.max(r[0], e.start) - e.start;
+        var t = Math.min(r[1], e.start + e.node.data.length) - e.start;
+        if (t > s) segs.push({ k: k, s: s, t: t, hit: hit });
+      }
+    });
+    segs.sort(function (a, b) { return b.k - a.k || b.s - a.s; });
+    var hits = ranges.map(function () { return []; });
+    segs.forEach(function (g) {
+      var node = all.map[g.k].node;
+      var range = document.createRange();
+      range.setStart(node, g.s);
+      range.setEnd(node, g.t);
+      var mark = el("mark", "find-hit");
+      mark.dataset.hit = String(g.hit);
+      range.surroundContents(mark);
+      hits[g.hit].unshift(mark);
+    });
+    find.hits = hits;
+    if (!hits.length) find.index = -1;
+    else if (find.index >= hits.length) find.index = hits.length - 1;
+    if (scrollToFirst && hits.length) {
+      find.index = firstHitBelowTop();
+    }
+    showCurrentHit(scrollToFirst);
+    post({ action: "findCount", n: hits.length });
+  }
+
+  /** The first match at or below the top of the visible area, so typing doesn't jump backwards. */
+  function firstHitBelowTop() {
+    for (var i = 0; i < find.hits.length; i++) {
+      if (find.hits[i][0].getBoundingClientRect().bottom > 0) return i;
+    }
+    return 0;
+  }
+
+  function showCurrentHit(scroll) {
+    var count = document.getElementById("find-count");
+    var all = document.querySelectorAll("mark.find-current");
+    for (var i = 0; i < all.length; i++) all[i].classList.remove("find-current");
+    var n = find.hits.length;
+    var label = !find.query ? "" : n === 0 ? "Not found" : (find.index >= 0 ? (find.index + 1) + " of " : "") + n + (n >= MAX_HITS ? "+" : "") + (find.index >= 0 ? "" : n === 1 ? " match" : " matches");
+    if (count) count.textContent = label;
+    var bar = document.getElementById("find-bar");
+    if (bar) bar.classList.toggle("fb-none", !!find.query && n === 0);
+    if (find.index < 0 || !n) return;
+    var marks = find.hits[find.index];
+    marks.forEach(function (mk) { mk.classList.add("find-current"); });
+    if (scroll) {
+      marks[0].scrollIntoView({ block: "center", behavior: "auto" });
+    }
+  }
+
+  /** Show the find bar. Passing text (Use Selection for Find) searches for it right away. */
+  root.mdFindOpen = function (text) {
+    var bar = findBar();
+    var input = document.getElementById("find-input");
+    bar.hidden = false;
+    find.open = true;
+    document.body.classList.add("finding");
+    if (typeof text === "string" && text) {
+      input.value = text;
+      find.query = text;
+      find.index = -1;
+      runFind(true);
+    }
+    input.focus();
+    input.select();
+  };
+
+  /** Next (1) or previous (-1) match. Opens the bar if it's closed. */
+  root.mdFindStep = function (dir) {
+    if (!find.open) { root.mdFindOpen(); if (!find.query) return; }
+    var n = find.hits.length;
+    if (!n) return;
+    find.index = find.index < 0 ? (dir > 0 ? firstHitBelowTop() : n - 1) : (find.index + dir + n) % n;
+    showCurrentHit(true);
+  };
+
+  /** Search for the current selection (⌘E). */
+  root.mdFindSelection = function () {
+    var s = String(window.getSelection() || "").trim();
+    if (s) root.mdFindOpen(s);
+  };
+
+  root.mdFindClose = function () {
+    var bar = document.getElementById("find-bar");
+    if (!bar) return;
+    clearTimeout(find.timer);
+    clearFindMarks();
+    find.open = false;
+    find.index = -1;
+    bar.hidden = true;
+    document.body.classList.remove("finding");
+    post({ action: "findClosed" });
+  };
+
+  root.mdFindState = function () {
+    return { open: find.open, query: find.query, count: find.hits.length, index: find.index };
+  };
 
   // ---------------------------------------------------------------------------------------------
   // Links

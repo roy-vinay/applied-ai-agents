@@ -165,8 +165,9 @@ careful never to change anything you didn't.
 | Changes since you last read, highlighted in the document, with each agent's note | Available (needs the command-line tool) |
 | Restore a removed passage, compare with any earlier version, restore a whole version | Available (needs the command-line tool) |
 | Live refresh when an agent edits an open file; a choice when you have unsaved edits | Available |
+| Find in Read mode and in the preview of Split mode | Available |
 | Notarized download, settings window, Open Recent | Planned |
-| Comments and notes from people, page thumbnails, a folder view of unread changes | Planned |
+| Highlights and notes on the text, pages with thumbnails, a folder view of unread changes | Planned |
 
 ### Changes since you last read
 
@@ -250,7 +251,8 @@ instead of "changed outside, not reported", and the window subtitle shows the fi
 | Open / New | ⌘O / ⌘N (new documents open in Edit mode) |
 | Read / Edit / Split | ⌘1 / ⌘2 / ⌘3, or ⇧⌘M to cycle |
 | Save / Save As | ⌘S / ⇧⌘S |
-| Find / Find and Replace | ⌘F / ⌥⌘F |
+| Find / Find and Replace | ⌘F / ⌥⌘F (replace works in Edit mode) |
+| Find next / previous, Use selection for Find | ⌘G / ⇧⌘G, ⌘E |
 | Bigger / Smaller / Actual size text | ⌘+ / ⌘− / ⌘0 |
 | Next / Previous change | ⌘] / ⌘[ |
 | Mark as read | ⇧⌘K |
