@@ -312,3 +312,8 @@ mark.anno mark.find-hit, mark.find-hit mark.anno { box-shadow: 0 0 0 1px rgba(25
 .notes-group { font-size: 12px; font-weight: 600; color: var(--del); margin: 16px 4px 0; }
 .notes-lost .notes-entry { box-shadow: 0 0 0 1px var(--del); }
 .notes-actions { display: flex; gap: 6px; padding: 4px 2px 0; }
+
+/* Two pages side by side, like an open book: 1 | 2, 3 | 4 … */
+#doc.paged.spread { display: grid; grid-template-columns: repeat(2, var(--page-w)); column-gap: 24px; row-gap: 24px; align-items: start; }
+#doc.paged.spread .page { margin: 0; }
+.pb-spread { font-size: 12px; letter-spacing: -2px; }

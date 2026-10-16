@@ -166,7 +166,7 @@ careful never to change anything you didn't.
 | Restore a removed passage, compare with any earlier version, restore a whole version | Available (needs the command-line tool) |
 | Live refresh when an agent edits an open file; a choice when you have unsaved edits | Available |
 | Find in Read mode and in the preview of Split mode | Available |
-| Pages (US Letter or A4) with numbered thumbnails, Go to Page and zoom, like Preview | Available |
+| Pages (US Letter or A4) with numbered thumbnails, Go to Page, zoom, and two pages side by side, like Preview | Available |
 | Notarized download, settings window, Open Recent | Planned |
 | Highlights in five colors and notes on the text, kept when the text changes, with a Notes list | Available |
 | Export and import of notes, highlights in Edit mode, a folder view of unread changes | Planned |
@@ -218,8 +218,10 @@ to that page; as you scroll, the selected thumbnail follows. The bar at the bott
 type a page number to go there, and use − and + to zoom.
 
 - **Page size:** US Letter by default, or A4 (**View > Page Size**). Margins are one inch.
-- **Zoom:** ⌘+ and ⌘− zoom the pages, ⌘0 is actual size, ⌘9 fits the width. Zooming never changes the
-  page count.
+- **Fits the window:** pages open sized so the whole page is in view. ⌘+ and ⌘− zoom, ⌘0 is actual size,
+  ⌘9 fits the page again, and **View > Fit Width** fills the width. Zooming never changes the page count.
+- **Two pages side by side**, like an open book: **View > Two Pages** (⌃⌘2) or the ▯▯ button in the page
+  bar. **View > Single Page** (⌃⌘1) goes back. Next and previous move by a pair of pages.
 - **Pages are only a view.** Markdown has no pages, so nothing is ever added to your file. Page numbers
   come from the current text, font size and page size, and they update as the text changes, keeping your
   place by the text you were reading.
@@ -293,7 +295,8 @@ instead of "changed outside, not reported", and the window subtitle shows the fi
 | Save / Save As | ⌘S / ⇧⌘S |
 | Find / Find and Replace | ⌘F / ⌥⌘F (replace works in Edit mode) |
 | Find next / previous, Use selection for Find | ⌘G / ⇧⌘G, ⌘E |
-| Zoom in / out, actual size, fit width (pages) | ⌘+ / ⌘− / ⌘0 / ⌘9 |
+| Zoom in / out, actual size, fit page (pages) | ⌘+ / ⌘− / ⌘0 / ⌘9 |
+| Single page / Two pages | ⌃⌘1 / ⌃⌘2 |
 | Bigger / smaller text (editor and continuous scroll) | ⌘+ / ⌘− |
 | Next / Previous page, Go to Page | ⌥⌘↓ / ⌥⌘↑, ⌥⌘G |
 | Show or hide page thumbnails | ⌥⌘2 |

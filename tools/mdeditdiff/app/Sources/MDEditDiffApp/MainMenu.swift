@@ -103,6 +103,8 @@ enum MainMenu {
         m.addItem(.separator())
         m.addItem(item("Pages", #selector(DocumentWindowController.showPages(_:))))
         m.addItem(item("Continuous Scroll", #selector(DocumentWindowController.showContinuous(_:))))
+        m.addItem(item("Single Page", #selector(DocumentWindowController.singlePage(_:)), "1", [.command, .control]))
+        m.addItem(item("Two Pages", #selector(DocumentWindowController.twoPages(_:)), "2", [.command, .control]))
         m.addItem(item("Page Thumbnails", #selector(DocumentWindowController.toggleThumbnails(_:)), "2", [.command, .option]))
         m.addItem(item("Notes and Highlights", #selector(DocumentWindowController.showNotesSidebar(_:)), "3", [.command, .option]))
         let sizes = NSMenu(title: "Page Size")
@@ -121,6 +123,7 @@ enum MainMenu {
         m.addItem(item("Smaller Text", #selector(DocumentWindowController.smallerText(_:)), "-"))
         m.addItem(item("Actual Size", #selector(DocumentWindowController.actualSizeText(_:)), "0"))
         m.addItem(item("Zoom to Fit", #selector(DocumentWindowController.zoomToFit(_:)), "9"))
+        m.addItem(item("Fit Width", #selector(DocumentWindowController.fitWidth(_:))))
         m.addItem(.separator())
         m.addItem(item("Enter Full Screen", #selector(NSWindow.toggleFullScreen(_:)), "f", [.command, .control]))
         return m
