@@ -1,4 +1,4 @@
-<img src="app/Icon/AppIcon-1024.png" alt="mdEditDiff app icon: a page with one line highlighted in green and one struck through in red" width="112" align="right">
+<img src="app/Icon/AppIcon-1024.png" alt="mdEditDiff app icon: the letters md in white on indigo, above a green bar and a struck-through red bar" width="112" align="right">
 
 # mdEditDiff
 
