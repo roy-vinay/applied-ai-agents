@@ -20,10 +20,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.activate(ignoringOtherApps: true)
-        // If launched without a file, offer the Open panel instead of an empty window.
-        DispatchQueue.main.async {
-            if NSDocumentController.shared.documents.isEmpty {
-                NSDocumentController.shared.openDocument(nil)
+        // Launched to open a file (from Finder or `open`): don't show the Open panel.
+        let isDefaultLaunch = (notification.userInfo?[NSApplication.launchIsDefaultLaunchKey] as? Bool) ?? true
+        guard isDefaultLaunch else { return }
+        // Launched on its own: offer the Open panel instead of an empty window.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            MainActor.assumeIsolated {
+                if NSDocumentController.shared.documents.isEmpty {
+                    NSDocumentController.shared.openDocument(nil)
+                }
             }
         }
     }

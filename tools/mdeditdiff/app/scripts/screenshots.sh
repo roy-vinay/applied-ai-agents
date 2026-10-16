@@ -20,6 +20,7 @@ shoot() { # name, extra app arguments...
   echo "Saved $OUT/$name.png"
 }
 
+rm -f "$OUT"/app-*.png
 shoot app-read -DefaultMode read
 shoot app-split -DefaultMode split
 shoot app-edit -DefaultMode edit
