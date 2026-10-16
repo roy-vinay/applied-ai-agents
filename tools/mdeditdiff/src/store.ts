@@ -80,7 +80,13 @@ export class Store {
     try {
       return fs.realpathSync(abs);
     } catch {
-      return abs; // File may have been deleted; keep the path so history is still reachable.
+      // The file may have been deleted. Resolve its folder the same way, so the history
+      // key matches the one used while the file existed (for example /var vs /private/var on macOS).
+      try {
+        return path.join(fs.realpathSync(path.dirname(abs)), path.basename(abs));
+      } catch {
+        return abs;
+      }
     }
   }
 
