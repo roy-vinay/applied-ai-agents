@@ -347,9 +347,64 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     @objc func showSplit(_ sender: Any?) { setMode(.split) }
     @objc func cycleMode(_ sender: Any?) { setMode(Mode(rawValue: (mode.rawValue + 1) % 3) ?? .read) }
 
-    @objc func biggerText(_ sender: Any?) { setFontSize(fontSize + 1) }
-    @objc func smallerText(_ sender: Any?) { setFontSize(fontSize - 1) }
-    @objc func actualSizeText(_ sender: Any?) { setFontSize(Self.defaultFontSize) }
+    // ⌘+ / ⌘− / ⌘0 zoom the pages when they're on screen (the page count never changes), and
+    // change the text size in the editor and in continuous reading.
+    @objc func biggerText(_ sender: Any?) {
+        if zoomingPages { pagesJS("window.mdPagesZoom('in')") } else { setFontSize(fontSize + 1) }
+    }
+    @objc func smallerText(_ sender: Any?) {
+        if zoomingPages { pagesJS("window.mdPagesZoom('out')") } else { setFontSize(fontSize - 1) }
+    }
+    @objc func actualSizeText(_ sender: Any?) {
+        if zoomingPages { pagesJS("window.mdPagesZoom('actual')") } else { setFontSize(Self.defaultFontSize) }
+    }
+    @objc func zoomToFit(_ sender: Any?) { pagesJS("window.mdPagesZoom('fit')") }
+
+    // MARK: - Pages
+
+    /// Page layout settings shared by all windows: paged or continuous, page size, thumbnails, zoom.
+    static var pageLayout: [String: Any] {
+        get { UserDefaults.standard.dictionary(forKey: "PageLayout") ?? [:] }
+        set { UserDefaults.standard.set(newValue, forKey: "PageLayout") }
+    }
+
+    private var pagesOn: Bool { Self.pageLayout["paged"] as? Bool ?? true }
+
+    /// Pages are on screen and the editor doesn't have focus.
+    private var zoomingPages: Bool {
+        guard pagesOn, mode != .edit else { return false }
+        return mode == .read || window?.firstResponder !== textView
+    }
+
+    private func pagesJS(_ script: String) {
+        guard previewReady else { return }
+        webView.evaluateJavaScript(script, completionHandler: nil)
+    }
+
+    private func pushPageLayout() {
+        guard let data = try? JSONSerialization.data(withJSONObject: Self.pageLayout),
+              let json = String(data: data, encoding: .utf8) else { return }
+        pagesJS("window.mdSetLayout(\(json))")
+    }
+
+    private func updatePageLayout(_ change: [String: Any]) {
+        var layout = Self.pageLayout
+        for (k, v) in change { layout[k] = v }
+        Self.pageLayout = layout
+        pushPageLayout()
+    }
+
+    @objc func showPages(_ sender: Any?) { updatePageLayout(["paged": true]); if mode == .edit { setMode(.read) } }
+    @objc func showContinuous(_ sender: Any?) { updatePageLayout(["paged": false]) }
+    @objc func useLetterPages(_ sender: Any?) { updatePageLayout(["size": "letter"]) }
+    @objc func useA4Pages(_ sender: Any?) { updatePageLayout(["size": "a4"]) }
+    @objc func toggleThumbnails(_ sender: Any?) { pagesJS("window.mdPagesToggleSidebar()") }
+    @objc func nextPage(_ sender: Any?) { pagesJS("window.mdPageStep(1)") }
+    @objc func previousPage(_ sender: Any?) { pagesJS("window.mdPageStep(-1)") }
+    @objc func goToPage(_ sender: Any?) {
+        window?.makeFirstResponder(webView)
+        pagesJS("window.mdFocusPageInput()")
+    }
 
     private func setFontSize(_ size: CGFloat) {
         fontSize = min(max(size, 9), 32)
@@ -374,6 +429,19 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
             // Reached here only when the editor doesn't have focus: Find goes to the preview.
             guard mode != .edit else { return false }
             return PreviewWebView.supportedFindActions.contains(NSTextFinder.Action(rawValue: menuItem.tag) ?? .showReplaceInterface)
+        case #selector(biggerText(_:)): menuItem.title = zoomingPages ? "Zoom In" : "Bigger Text"
+        case #selector(smallerText(_:)): menuItem.title = zoomingPages ? "Zoom Out" : "Smaller Text"
+        case #selector(actualSizeText(_:)): menuItem.title = "Actual Size"
+        case #selector(showPages(_:)): menuItem.state = pagesOn ? .on : .off
+        case #selector(showContinuous(_:)): menuItem.state = pagesOn ? .off : .on
+        case #selector(useLetterPages(_:)):
+            menuItem.state = (Self.pageLayout["size"] as? String ?? "letter") == "letter" ? .on : .off
+            return pagesOn
+        case #selector(useA4Pages(_:)):
+            menuItem.state = (Self.pageLayout["size"] as? String) == "a4" ? .on : .off
+            return pagesOn
+        case #selector(toggleThumbnails(_:)), #selector(nextPage(_:)), #selector(previousPage(_:)), #selector(goToPage(_:)), #selector(zoomToFit(_:)):
+            return pagesOn && mode != .edit
         case #selector(showRead(_:)): menuItem.state = mode == .read ? .on : .off
         case #selector(showEdit(_:)): menuItem.state = mode == .edit ? .on : .off
         case #selector(showSplit(_:)): menuItem.state = mode == .split ? .on : .off
@@ -407,6 +475,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         previewReady = true
+        pushPageLayout()
         applyPreviewFontSize()
         renderNow()
         pushReviewToPreview()
@@ -482,6 +551,10 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     private func handleReviewMessage(_ body: [String: Any]) {
         guard let action = body["action"] as? String else { return }
         switch action {
+        case "layout":
+            var saved = body
+            saved.removeValue(forKey: "action")
+            Self.pageLayout = saved
         case "count":
             if case .unread = review { unreadCount = body["n"] as? Int ?? 0 }
             updateSubtitle()
