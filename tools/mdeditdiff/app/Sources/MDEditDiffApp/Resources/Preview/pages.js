@@ -554,6 +554,21 @@
     if (announceIt) announce("Page " + (current + 1) + " of " + pages.length);
   }
 
+  // ← and → turn pages (a pair at a time in the two-page view), like Preview. Not while typing,
+  // not with modifiers (Shift+arrow extends a selection), and not when the page is zoomed wider
+  // than the window (then the arrows scroll sideways as usual).
+  document.addEventListener("keydown", function (e) {
+    if (!state.paged || e.defaultPrevented) return;
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (t && t.closest && t.closest("#thumb-list")) return; // the thumbnail list handles its own keys
+    if (document.documentElement.scrollWidth > window.innerWidth + 1) return;
+    e.preventDefault();
+    root.mdPageStep(e.key === "ArrowRight" ? 1 : -1);
+  });
+
   var scrollQueued = false;
   window.addEventListener("scroll", function () {
     if (!state.paged || scrollQueued) return;

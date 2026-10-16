@@ -298,7 +298,7 @@ instead of "changed outside, not reported", and the window subtitle shows the fi
 | Zoom in / out, actual size, fit page (pages) | ⌘+ / ⌘− / ⌘0 / ⌘9 |
 | Single page / Two pages | ⌃⌘1 / ⌃⌘2 |
 | Bigger / smaller text (editor and continuous scroll) | ⌘+ / ⌘− |
-| Next / Previous page, Go to Page | ⌥⌘↓ / ⌥⌘↑, ⌥⌘G |
+| Next / Previous page (a pair in two-page view), Go to Page | → / ←, or ⌥⌘↓ / ⌥⌘↑; ⌥⌘G |
 | Show or hide page thumbnails | ⌥⌘2 |
 | Highlight, Add Note | ⌃⌘H, ⌃⌘N |
 | Notes and Highlights | ⌥⌘3 |
