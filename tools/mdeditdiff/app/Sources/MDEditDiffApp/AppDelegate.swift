@@ -24,7 +24,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private var appearanceObservation: NSKeyValueObservation?
+
+    /// White icon by day, graphite black by night: follows Light and Dark mode (which, with
+    /// Appearance set to Auto, switches with the time of day).
+    static func updateDockIcon() {
+        let dark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let name = dark ? "AppIcon-Dark" : "AppIcon-Light"
+        if let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Icons"),
+           let image = NSImage(contentsOf: url) {
+            NSApp.applicationIconImage = image
+        }
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Self.updateDockIcon()
+        appearanceObservation = NSApp.observe(\.effectiveAppearance, options: [.new]) { _, _ in
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { AppDelegate.updateDockIcon() }
+            }
+        }
         NSApp.activate(ignoringOtherApps: true)
         // Launched to open a file (from Finder or `open`): don't show the Open panel.
         let isDefaultLaunch = (notification.userInfo?[NSApplication.launchIsDefaultUserInfoKey] as? Bool) ?? true

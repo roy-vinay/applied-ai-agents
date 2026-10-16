@@ -1,4 +1,7 @@
-<img src="app/Icon/AppIcon-1024.png" alt="mdEditDiff app icon: the letters md in white on indigo, above a green bar and a struck-through red bar" width="112" align="right">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="app/Icon/AppIcon-Dark-1024.png">
+  <img src="app/Icon/AppIcon-1024.png" alt="mdEditDiff app icon: the letters md above a green bar and a struck-through red bar" width="112" align="right">
+</picture>
 
 # mdEditDiff
 
@@ -206,6 +209,13 @@ track changes.
 ⇧⌘M cycles through the modes, and the Read / Edit / Split switch sits in the middle of the toolbar. On the right, the toolbar shows how many unread changes there are (click to jump to the next one) and opens version history.
 
 ![mdEditDiff in Split mode: the Markdown source on the left and the formatted preview on the right](docs/img/app-split.png)
+
+### Day and night icon
+
+The app icon is white by day and graphite black at night. It follows your Mac's Light and Dark mode, so
+with **System Settings > Appearance** set to **Auto** it switches with the time of day. The Dock icon
+switches while the app is running; on macOS versions that support dark app icons, Finder shows the
+matching icon too.
 
 ### Saving you can trust
 
