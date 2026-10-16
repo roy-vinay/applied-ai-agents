@@ -6,11 +6,16 @@ mdEditDiff is a free, open-source tool (MIT license) for anyone who works on Mar
 agents. It has two parts: a command-line tool and MCP server for agents, and a native Mac app for people.
 
 mdEditDiff keeps a private change history for every Markdown file you work on, and remembers where each
-reader, agent or person, last looked. Agents ask it what changed and get back only the changed parts,
-word by word, with who reported them, instead of re-reading the whole file. People open the same files in
-a native Mac app that reads and edits Markdown and records every save in the same history.
+reader, agent or person, last looked. Open a plan in the Mac app and you see exactly what changed since you
+last read it, highlighted in the document, with each agent's note, and one click brings back anything that
+was removed. Your agents ask the same history what changed and get back only the changed parts, word by
+word, instead of re-reading the whole file.
+
+![The mdEditDiff Mac app showing a plan with five changes since you last read it: added words highlighted in green, a removed question struck through with a Restore button, a new decision, and a review bar crediting the planner agent](docs/img/app-changes.png)
 
 [Get it](#get-it) · [See it in action](#see-it-in-action) · [The Mac app](#the-mac-app) · [Use it with an agent](#use-it-with-an-agent) · [Contribute](#contribute)
+
+The same story from the agents' side, in a terminal:
 
 ![mdEditDiff in a terminal: a planner agent writes plan.md, a person edits it, the planner revises it, and the implementer asks what changed and gets back four precise changes with who reported them](docs/img/walkthrough.svg)
 
@@ -143,7 +148,49 @@ mdeditdiff changes examples/plan.md --reader me      # just your edit, labeled w
 ## The Mac app
 
 A native macOS reader and editor for Markdown, built for checking and fixing documents that agents write.
-It opens files from Finder as formatted documents, and it is careful never to change anything you didn't.
+It opens files from Finder as formatted documents, shows what changed since you last read them, and is
+careful never to change anything you didn't.
+
+### What's available today
+
+| Feature | Status |
+| --- | --- |
+| Read, Edit and Split modes | Available |
+| Saves that never touch what you didn't change | Available |
+| Safe preview (no scripts, no remote images) | Available |
+| Changes since you last read, highlighted in the document, with each agent's note | Available (needs the command-line tool) |
+| Restore a removed passage, compare with any earlier version, restore a whole version | Available (needs the command-line tool) |
+| Live refresh when an agent edits an open file; a choice when you have unsaved edits | Available |
+| Notarized download, settings window, Open Recent | Planned |
+| Comments and notes from people, page thumbnails, a folder view of unread changes | Planned |
+
+### Changes since you last read
+
+When you open a file that changed since you last read it, a bar at the top says how many changes there are
+and who reported them, for example *"5 changes since you last read · planner: "Proposed a row limit" · 1 not
+reported"*. In the document:
+
+- **Added** blocks have a green bar and background.
+- **Changed** blocks have an amber bar, with inserted words underlined in green and removed words struck
+  through, while links and formatting keep working.
+- **Removed** passages appear struck through where they used to be, with a **Restore** button that puts
+  them back as an unsaved edit you can undo or save.
+
+Move between changes with **Next** and **Previous** (⌘] and ⌘[). **Mark as read** (⇧⌘K) clears the
+highlights; closing the window does the same, so next time you only see what's new. Your own saves never
+count as unread changes for you.
+
+**Version history** (⇧⌘H) lists every version, newest first, with who reported it and their note.
+**Compare** shows what changed since any earlier version; **Restore** brings a whole version back as an
+unsaved edit.
+
+**If an agent edits a file you have open**, the document refreshes and the new changes light up. If you have
+unsaved edits, nothing is replaced: you choose to compare the two versions, keep your edits, or load the
+other version.
+
+All of this uses the shared history from the command-line tool, so install it too
+([Get it](#the-command-line-tool-and-mcp-server)). Without it the app still reads and edits, but doesn't
+track changes.
 
 ![mdEditDiff in Read mode, showing a formatted plan with headings, a numbered list, a table and a quote](docs/img/app-read.png)
 
@@ -194,22 +241,25 @@ instead of "changed outside, not reported", and the window subtitle shows the fi
 | Save / Save As | ⌘S / ⇧⌘S |
 | Find / Find and Replace | ⌘F / ⌥⌘F |
 | Bigger / Smaller / Actual size text | ⌘+ / ⌘− / ⌘0 |
+| Next / Previous change | ⌘] / ⌘[ |
+| Mark as read | ⇧⌘K |
+| Version history | ⇧⌘H |
 
-Two settings for now, set in Terminal (a settings window is coming):
+Settings, for now, are set in Terminal (a settings window is planned):
 
 ```bash
-defaults write io.github.roy-vinay.mdeditdiff DefaultMode split   # open files in split (or edit, read)
-defaults write io.github.roy-vinay.mdeditdiff Appearance dark     # or light; delete the key to follow the system
+defaults write io.github.roy-vinay.mdeditdiff DefaultMode split       # open files in split (or edit, read)
+defaults write io.github.roy-vinay.mdeditdiff Appearance dark         # or light; delete the key to follow the system
+defaults write io.github.roy-vinay.mdeditdiff MarkReadOnClose -bool false   # keep changes unread after closing
 ```
 
 ![mdEditDiff in Read mode with the dark appearance](docs/img/app-read-dark.png)
 
 ### Roadmap
 
-- **Changes since you last read**, highlighted in the formatted document, with the agents' notes and
-  next/previous navigation.
-- **Revision timeline** with compare and one-click restore.
-- Warnings when another app changes a file you're editing, Open Recent, and a settings window.
+- A signed and notarized download through GitHub Releases.
+- A settings window and Open Recent.
+- Notes and comments from people, page thumbnails, and a folder view of unread changes across a project.
 
 ### Build it yourself
 
@@ -277,7 +327,7 @@ mdeditdiff checkpoint plan.md --author implementer --note "Split step 4 into two
 
 | Command | What it does |
 | --- | --- |
-| `changes <file> --reader <name>` | Changes since this reader last looked, then marks the current version as seen. `--peek` leaves the "last looked" point where it is; `--full` adds the full current text. The first call for a reader returns the whole file. |
+| `changes <file> --reader <name>` | Changes since this reader last looked, then marks the current version as seen. `--peek` leaves the "last looked" point where it is; `--full` adds the full current text; `--with-base` (with `--json`) adds the text the reader last saw. The first call for a reader returns the whole file. |
 | `seen <file> --reader <name>` | Marks the current version as seen without showing anything. |
 | `checkpoint <file> --author <name> [--note <text>]` | Records the current version with your name and a short note. |
 | `history <file>` | Lists revisions, newest first, and where each reader last looked. |
@@ -323,7 +373,9 @@ suggest a feature.
 ```bash
 cd tools/mdeditdiff
 npm install
-npm test    # unit, acceptance, two-agent simulation, concurrency, MCP and preview-renderer tests
+npm test    # unit, acceptance, two-agent simulation, concurrency, MCP and preview tests
+            # (the preview's change-highlighting tests run in Chromium when Playwright's browser is installed)
+npm run bundle   # after changing src/diff.ts: rebuilds the Mac app's copy of the diff engine
 npm run walkthrough
 ```
 
