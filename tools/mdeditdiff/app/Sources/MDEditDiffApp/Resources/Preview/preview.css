@@ -46,7 +46,7 @@ body { margin: 0; color: var(--ink); background: var(--desk); font: var(--size)/
 h1, h2, h3, h4, h5, h6 { font-family: var(--sans); color: var(--ink); line-height: 1.22; margin: 1.9em 0 0.55em; scroll-margin-top: 80px; letter-spacing: -0.012em; }
 h1 { font-size: 2.05em; font-weight: 700; letter-spacing: -0.024em; margin-bottom: 0.45em; }
 h2 { font-size: 1.42em; font-weight: 650; padding-top: 1.1em; border-top: 1px solid var(--rule); }
-.markdown-body > h2:first-child { padding-top: 0; border-top: 0; }
+.markdown-body > h2:first-child, hr + h2 { padding-top: 0; border-top: 0; }
 h3 { font-size: 1.15em; font-weight: 650; }
 h4 { font-size: 1em; font-weight: 650; }
 h5, h6 { font-size: 0.92em; font-weight: 600; color: var(--muted); }

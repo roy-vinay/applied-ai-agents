@@ -16,6 +16,9 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     private static let previewScale: CGFloat = 16.0 / 13.0
 
     private let splitView = NSSplitView()
+    /// Holds whichever view the mode needs: the preview, the editor, or the split view with both.
+    /// Read and Edit show one view on its own, so no split divider is ever left on screen.
+    private let container = NSView()
     private let editorScroll: NSScrollView
     private let textView: NSTextView
     private let webView: WKWebView
@@ -159,9 +162,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     private func configureLayout(in window: NSWindow) {
         splitView.isVertical = true
         splitView.dividerStyle = .thin
-        splitView.addArrangedSubview(editorScroll)
-        splitView.addArrangedSubview(webView)
-        window.contentView = splitView
+        window.contentView = container
     }
 
     private func configureToolbar(in window: NSWindow) {
@@ -287,18 +288,52 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     private func setMode(_ newMode: Mode) {
         mode = newMode
         modeControl.selectedSegment = newMode.rawValue
-        editorScroll.isHidden = newMode == .read
-        webView.isHidden = newMode == .edit
-        splitView.adjustSubviews()
-        if newMode == .split {
-            splitView.setPosition(splitView.bounds.width / 2, ofDividerAt: 0)
-        }
+        showViews(for: newMode)
         if newMode == .read {
             renderNow()
             window?.makeFirstResponder(webView)
         } else {
             window?.makeFirstResponder(textView)
             if newMode == .split { renderNow() }
+        }
+    }
+
+    /// Puts exactly the views this mode needs into the window.
+    private func showViews(for mode: Mode) {
+        let wanted: NSView
+        switch mode {
+        case .read: wanted = webView
+        case .edit: wanted = editorScroll
+        case .split: wanted = splitView
+        }
+        if mode == .split {
+            if editorScroll.superview !== splitView || webView.superview !== splitView {
+                editorScroll.removeFromSuperview()
+                webView.removeFromSuperview()
+                for v in [editorScroll, webView] as [NSView] {
+                    v.isHidden = false
+                    v.translatesAutoresizingMaskIntoConstraints = true // NSSplitView lays out by frames
+                }
+                splitView.addArrangedSubview(editorScroll)
+                splitView.addArrangedSubview(webView)
+            }
+        } else {
+            for sub in splitView.arrangedSubviews { splitView.removeArrangedSubview(sub); sub.removeFromSuperview() }
+            wanted.isHidden = false
+        }
+        guard wanted.superview !== container || container.subviews.count != 1 else { return }
+        container.subviews.forEach { $0.removeFromSuperview() }
+        wanted.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(wanted)
+        NSLayoutConstraint.activate([
+            wanted.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            wanted.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            wanted.topAnchor.constraint(equalTo: container.topAnchor),
+            wanted.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+        ])
+        if mode == .split {
+            container.layoutSubtreeIfNeeded()
+            splitView.setPosition(container.bounds.width / 2, ofDividerAt: 0)
         }
     }
 
