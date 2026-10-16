@@ -1,6 +1,6 @@
 {
   "name": "mdeditdiff",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Free, open-source tool: an editor for people, a diff for agents. See what changed in a Markdown file since you last looked, and who changed it. CLI and MCP server for AI agents, plus a native macOS app, sharing one local change history.",
   "main": "dist/src/api.js",
   "scripts": {

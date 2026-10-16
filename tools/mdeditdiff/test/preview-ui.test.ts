@@ -304,10 +304,20 @@ test("pages: thumbnails jump, scrolling moves the selection, Go to Page validate
   await p.keyboard.press("Enter");
   assert.equal(await p.evaluate(() => (window as any).mdPagesState().current), 2);
 
-  // Keyboard in the thumbnail list.
-  await p.focus('#thumb-list button[aria-label="Page 2"]');
+  // Keyboard in the thumbnail list, right after clicking a thumbnail (WebKit doesn't focus on click).
+  await p.click('#thumb-list button[aria-label="Page 2"]');
+  assert.equal(await p.evaluate(() => document.activeElement!.getAttribute("aria-label")), "Page 2");
   await p.keyboard.press("ArrowDown");
   assert.equal(await p.evaluate(() => (window as any).mdPagesState().current), 3);
+  await p.keyboard.press("ArrowDown");
+  assert.equal(await p.evaluate(() => (window as any).mdPagesState().current), 4);
+  await p.keyboard.press("ArrowUp");
+  assert.equal(await p.evaluate(() => (window as any).mdPagesState().current), 3);
+  assert.equal(await p.evaluate(() => document.activeElement!.getAttribute("aria-label")), "Page 3");
+  // Still works after the pages are laid out again (an agent edit, say).
+  await p.evaluate(() => (window as any).mdRerender());
+  await p.keyboard.press("ArrowDown");
+  assert.equal(await p.evaluate(() => (window as any).mdPagesState().current), 4);
   assert.deepEqual(errors, []);
 });
 
