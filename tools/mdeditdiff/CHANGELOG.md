@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.1
+
+A visual refresh of the Mac app. No change in behavior.
+
+- **New app icon:** the md monogram on indigo, over a green bar (added) and a struck-through red bar (removed).
+- **Native toolbar:**
+  - the Read / Edit / Split switch is centered, with icons;
+  - on the right, a changes button ("5 changes", which jumps to the next one, or "Up to date") and a History button.
+- **Reading view:**
+  - the document is set as a sheet of paper on a soft background, with New York serif body text, SF Pro headings and SF Mono code;
+  - change marks sit in the left margin, like a proofreader's marks;
+  - tables, quotes, inline code and section breaks are restyled;
+  - light and dark mode are both tuned.
+- **Editor:** more breathing room, and the same indigo accent for list markers and inline code.
+
 ## 0.3.0
 
 The first packaged release of mdEditDiff: the Mac app and the command-line tool and MCP server.
