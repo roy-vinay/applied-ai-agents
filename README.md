@@ -47,6 +47,14 @@ The parts that keep an agent safe once real users and real money are involved.
 | --- | --- | --- | --- |
 | [MCP chat](agents/mcp-chat) | Terminal chat app showing the Model Context Protocol end to end: an MCP client and server over stdio, with @document mentions and /commands. | | Python, MCP |
 
+## Tools
+
+Tools for people who work alongside AI agents.
+
+| Tool | What it does | Stack |
+| --- | --- | --- |
+| [mdeditdiff](tools/mdeditdiff) | Tells any agent or person what changed in a shared Markdown file since they last looked, and who changed it. Only the changed blocks come back, word-level, with section names, so agents stop re-reading whole plans. Command-line tool and MCP server; a macOS reader app is next. | TypeScript, MCP |
+
 ## Failure Files
 
 Case studies with experiments: a documented public AI incident, the failure mode behind it reproduced in a

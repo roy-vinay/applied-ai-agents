@@ -1,0 +1,32 @@
+name: mdeditdiff
+on:
+  push:
+    paths: ["tools/mdeditdiff/**", ".github/workflows/mdeditdiff.yml"]
+  pull_request:
+    paths: ["tools/mdeditdiff/**", ".github/workflows/mdeditdiff.yml"]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [20, 22]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: tools/mdeditdiff
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: tools/mdeditdiff/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - name: CLI smoke test
+        run: |
+          printf '# Plan\n\n- one\n' > /tmp/plan.md
+          node dist/src/cli.js changes /tmp/plan.md --reader ci
+          printf '# Plan\n\n- one\n- two\n' > /tmp/plan.md
+          node dist/src/cli.js changes /tmp/plan.md --reader ci | grep -q "1 change"

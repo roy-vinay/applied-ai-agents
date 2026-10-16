@@ -1,0 +1,48 @@
+{
+  "name": "mdeditdiff",
+  "version": "0.1.0",
+  "description": "What changed in a Markdown file since you last looked, and who changed it. A change log shared by AI agents and people, with a CLI and MCP server.",
+  "main": "dist/src/api.js",
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "npm run build && node --test dist/test/*.test.js",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "markdown",
+    "diff",
+    "agents",
+    "ai-agents",
+    "claude-code",
+    "change-tracking"
+  ],
+  "author": "Vinay Roy",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2"
+  },
+  "type": "module",
+  "bin": {
+    "mdeditdiff": "dist/src/cli.js"
+  },
+  "files": [
+    "dist/src",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roy-vinay/applied-ai-agents.git",
+    "directory": "tools/mdeditdiff"
+  }
+}
