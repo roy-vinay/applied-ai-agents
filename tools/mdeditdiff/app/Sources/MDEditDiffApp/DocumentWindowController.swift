@@ -23,7 +23,6 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     private var highlighter = MarkdownHighlighter(fontSize: DocumentWindowController.defaultFontSize)
     private var mode: Mode = .read
     private var previewReady = false
-    private var renderWork: DispatchWorkItem?
     private var fontSize: CGFloat = DocumentWindowController.defaultFontSize
     private weak var markdownDocument: MarkdownDocument?
 
@@ -222,14 +221,14 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
 
     private func scheduleRender() {
         guard mode != .edit else { return }
-        renderWork?.cancel()
-        let work = DispatchWorkItem { [weak self] in self?.renderNow() }
-        renderWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: work)
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(renderFromTimer), object: nil)
+        perform(#selector(renderFromTimer), with: nil, afterDelay: 0.2)
     }
 
+    @objc private func renderFromTimer() { renderNow() }
+
     private func renderNow() {
-        renderWork?.cancel()
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(renderFromTimer), object: nil)
         guard previewReady else { return }
         guard let data = try? JSONEncoder().encode(textView.string), let literal = String(data: data, encoding: .utf8) else { return }
         webView.evaluateJavaScript("window.mdRender(\(literal))", completionHandler: nil)
@@ -292,10 +291,10 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
 
 /// Forwards link clicks from the preview without retaining the window controller.
 final class LinkMessageHandler: NSObject, WKScriptMessageHandler {
-    var onLink: ((String) -> Void)?
+    var onLink: (@MainActor (String) -> Void)?
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard message.name == "link", let href = message.body as? String else { return }
-        onLink?(href)
+        MainActor.assumeIsolated { onLink?(href) }
     }
 }

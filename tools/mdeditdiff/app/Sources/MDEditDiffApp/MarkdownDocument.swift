@@ -10,7 +10,9 @@ final class MarkdownDocument: NSDocument {
     /// Text for a window that hasn't been created yet.
     private(set) var loadedText: String = ""
     /// History revision label from mdeditdiff, for example "r5", or nil if unavailable.
-    var historyStatus: String? { didSet { mainController?.updateSubtitle() } }
+    var historyStatus: String? {
+        didSet { MainActor.assumeIsolated { mainController?.updateSubtitle() } }
+    }
 
     private var pendingSaveData: Data?
 
@@ -20,11 +22,13 @@ final class MarkdownDocument: NSDocument {
         windowControllers.first as? DocumentWindowController
     }
 
-    /// The text currently in the editor.
-    var currentText: String { mainController?.currentText ?? loadedText }
+    /// The text currently in the editor. NSDocument calls reading and writing on the main thread.
+    var currentText: String {
+        MainActor.assumeIsolated { mainController?.currentText } ?? loadedText
+    }
 
     override func makeWindowControllers() {
-        addWindowController(DocumentWindowController(document: self))
+        MainActor.assumeIsolated { addWindowController(DocumentWindowController(document: self)) }
         refreshHistory()
     }
 
@@ -32,9 +36,9 @@ final class MarkdownDocument: NSDocument {
         let s = try SourceText(data: data)
         source = s
         loadedText = s.text
-        if let controller = mainController {
+        if mainController != nil {
             // Reverted or reloaded while open.
-            controller.reloadFromDocument()
+            MainActor.assumeIsolated { mainController?.reloadFromDocument() }
             refreshHistory()
         }
     }

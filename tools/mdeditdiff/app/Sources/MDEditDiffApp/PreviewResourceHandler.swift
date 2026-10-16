@@ -7,7 +7,7 @@ final class PreviewResourceHandler: NSObject, WKURLSchemeHandler {
     static let scheme = "mdeditdiff-res"
 
     /// The folder relative image paths resolve against: the document's folder.
-    var baseDirectory: () -> URL? = { nil }
+    var baseDirectory: @MainActor () -> URL? = { nil }
 
     private static let mimeTypes: [String: String] = [
         "png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg", "gif": "image/gif",
@@ -33,7 +33,7 @@ final class PreviewResourceHandler: NSObject, WKURLSchemeHandler {
             fileURL = u
         } else if path.hasPrefix("/") {
             fileURL = URL(fileURLWithPath: path)
-        } else if let base = baseDirectory() {
+        } else if let base = MainActor.assumeIsolated({ baseDirectory() }) {
             fileURL = URL(fileURLWithPath: path, relativeTo: base).standardizedFileURL
         } else {
             return fail(task)
