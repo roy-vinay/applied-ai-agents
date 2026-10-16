@@ -28,16 +28,22 @@ struct MarkdownHighlighter {
             try! NSRegularExpression(pattern: pattern, options: MarkdownSyntax.options)
         }
         let muted = NSColor.secondaryLabelColor
+        // The app's indigo accent (matches the icon and the preview), lighter in dark mode.
+        let accent = NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+                ? NSColor(srgbRed: 0.56, green: 0.55, blue: 1.0, alpha: 1)
+                : NSColor(srgbRed: 0.29, green: 0.28, blue: 0.88, alpha: 1)
+        }
         rules = [
             (re(MarkdownSyntax.heading), [.font: bold, .foregroundColor: NSColor.labelColor]),
             (re(MarkdownSyntax.bold), [.font: bold]),
             (re(MarkdownSyntax.italic), [.obliqueness: 0.15]),
             (re(MarkdownSyntax.strikethrough), [.strikethroughStyle: NSUnderlineStyle.single.rawValue, .foregroundColor: muted]),
             (re(MarkdownSyntax.quote), [.foregroundColor: muted]),
-            (re(MarkdownSyntax.listMarker), [.foregroundColor: NSColor.systemOrange]),
+            (re(MarkdownSyntax.listMarker), [.foregroundColor: accent]),
             (re(MarkdownSyntax.link), [.foregroundColor: NSColor.linkColor]),
-            (re(MarkdownSyntax.inlineCode), [.foregroundColor: NSColor.systemPurple]),
-            (re(MarkdownSyntax.codeFence), [.foregroundColor: NSColor.systemPurple, .font: regular]),
+            (re(MarkdownSyntax.inlineCode), [.foregroundColor: accent]),
+            (re(MarkdownSyntax.codeFence), [.foregroundColor: NSColor.secondaryLabelColor, .font: regular]),
             (re(MarkdownSyntax.rule), [.foregroundColor: muted]),
         ]
     }

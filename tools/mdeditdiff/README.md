@@ -1,3 +1,5 @@
+<img src="app/Icon/AppIcon-1024.png" alt="mdEditDiff app icon: the letters md in white on indigo, above a green bar and a struck-through red bar" width="112" align="right">
+
 # mdEditDiff
 
 **An editor for people, a diff for agents. See what changed in a Markdown file since you last looked, and who changed it.**
@@ -201,7 +203,7 @@ track changes.
 | **Edit** | ⌘2 | The raw Markdown in a plain-text editor with light syntax coloring. | Make changes with full control over the source. |
 | **Split** | ⌘3 | The editor on the left and a live preview on the right, updating as you type. | Edit while checking how the result looks. |
 
-⇧⌘M cycles through the modes, and the Read / Edit / Split switch sits at the top right of every window.
+⇧⌘M cycles through the modes, and the Read / Edit / Split switch sits in the middle of the toolbar. On the right, the toolbar shows how many unread changes there are (click to jump to the next one) and opens version history.
 
 ![mdEditDiff in Split mode: the Markdown source on the left and the formatted preview on the right](docs/img/app-split.png)
 
