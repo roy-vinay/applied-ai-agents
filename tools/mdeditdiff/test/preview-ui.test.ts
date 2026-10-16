@@ -157,3 +157,45 @@ test("screenshot for review", async (t) => {
     await ctx.close();
   }
 });
+
+test("find in the rendered document: counts, crosses formatting, not blocks, steps and closes", async (t) => {
+  if (skip) return t.skip(skip);
+  const { p, errors } = await open();
+  await p.evaluate((cur: string) => (window as any).mdRender(cur), NEW + "\nThe **CSV** export ships.\n\nexport\n\nreports\n");
+  await p.evaluate(() => (window as any).mdFindOpen());
+  await p.fill("#find-input", "csv");
+  await p.waitForFunction(() => (window as any).mdFindState().count > 0);
+  const s1 = await p.evaluate(() => ({ st: (window as any).mdFindState(), label: document.getElementById("find-count")!.textContent, current: document.querySelectorAll("mark.find-current").length }));
+  // "CSV" in the title, step 2, the `csv_export` code, and the bold CSV.
+  assert.equal(s1.st.count, 4);
+  assert.equal(s1.label, "1 of 4");
+  assert.equal(s1.current, 1);
+
+  await p.press("#find-input", "Enter");
+  await p.press("#find-input", "Shift+Enter");
+  await p.press("#find-input", "Shift+Enter");
+  assert.equal(await p.evaluate(() => (window as any).mdFindState().index), 3);
+
+  // Across formatting ("an **Export** button") but never across two blocks ("export" / "reports").
+  await p.fill("#find-input", "an export button");
+  await p.waitForFunction(() => (window as any).mdFindState().query === "an export button");
+  assert.equal(await p.evaluate(() => (window as any).mdFindState().count), 1);
+  assert.equal(await p.evaluate(() => document.querySelectorAll("mark.find-hit").length), 3);
+  await p.fill("#find-input", "export reports");
+  await p.waitForFunction(() => (window as any).mdFindState().query === "export reports");
+  assert.equal(await p.evaluate(() => (window as any).mdFindState().count), 1); // only the title
+
+  // Matches survive a re-render (live refresh) and are removed cleanly on close.
+  await p.evaluate((cur: string) => (window as any).mdRender(cur + "\nExport reports again.\n"), NEW);
+  assert.equal(await p.evaluate(() => (window as any).mdFindState().count), 2);
+  await p.keyboard.press("Escape");
+  const closed = await p.evaluate(() => ({ marks: document.querySelectorAll("mark").length, open: (window as any).mdFindState().open, h1: document.querySelector("h1")!.innerHTML }));
+  assert.equal(closed.marks, 0);
+  assert.equal(closed.open, false);
+  assert.equal(closed.h1, "Export reports to CSV");
+
+  await p.fill("#find-input", "").catch(() => {});
+  await p.evaluate(() => (window as any).mdFindOpen("zzz-not-here"));
+  assert.equal(await p.evaluate(() => document.getElementById("find-count")!.textContent), "Not found");
+  assert.deepEqual(errors, []);
+});

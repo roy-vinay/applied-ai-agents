@@ -21,7 +21,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     private let container = NSView()
     private let editorScroll: NSScrollView
     private let textView: NSTextView
-    private let webView: WKWebView
+    private let webView: PreviewWebView
     private let modeControl = NSSegmentedControl(labels: Mode.allCases.map(\.title), trackingMode: .selectOne, target: nil, action: nil)
     private let changesButton = NSButton(title: "Up to date", target: nil, action: nil)
 
@@ -88,7 +88,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         config.setURLSchemeHandler(resourceHandler, forURLScheme: PreviewResourceHandler.scheme)
         config.userContentController.add(links, name: "link")
         config.userContentController.add(reviews, name: "review")
-        webView = WKWebView(frame: .zero, configuration: config)
+        webView = PreviewWebView(frame: .zero, configuration: config)
 
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1040, height: 760),
@@ -153,6 +153,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         }
         linkHandler.onLink = { [weak self] href in self?.openLink(href) }
         reviewHandler.onMessage = { [weak self] body in self?.handleReviewMessage(body) }
+        webView.onFind = { [weak self] action in self?.findInPreview(action) }
         if let dir = PreviewResourceHandler.previewDirectory {
             let page = dir.appendingPathComponent("preview.html")
             webView.loadFileURL(page, allowingReadAccessTo: dir)
@@ -369,6 +370,10 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
             return false
         case #selector(showHistory(_:)):
             return markdownDocument?.fileURL != nil && markdownDocument?.historyStatus != nil
+        case #selector(NSResponder.performTextFinderAction(_:)):
+            // Reached here only when the editor doesn't have focus: Find goes to the preview.
+            guard mode != .edit else { return false }
+            return PreviewWebView.supportedFindActions.contains(NSTextFinder.Action(rawValue: menuItem.tag) ?? .showReplaceInterface)
         case #selector(showRead(_:)): menuItem.state = mode == .read ? .on : .off
         case #selector(showEdit(_:)): menuItem.state = mode == .edit ? .on : .off
         case #selector(showSplit(_:)): menuItem.state = mode == .split ? .on : .off
@@ -548,6 +553,30 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         textView.textStorage?.replaceCharacters(in: range, with: string)
         textView.didChangeText()
         textView.undoManager?.setActionName(actionName)
+    }
+
+    // MARK: - Find in the rendered document
+
+    /// Find menu items when nothing else in the window handles them (Read mode before the
+    /// preview has focus, for example).
+    override func performTextFinderAction(_ sender: Any?) {
+        let action = PreviewWebView.findAction(from: sender)
+        guard mode != .edit, PreviewWebView.supportedFindActions.contains(action) else { return NSSound.beep() }
+        findInPreview(action)
+    }
+
+    func findInPreview(_ action: NSTextFinder.Action) {
+        guard previewReady else { return }
+        let script: String
+        switch action {
+        case .nextMatch: script = "window.mdFindStep(1)"
+        case .previousMatch: script = "window.mdFindStep(-1)"
+        case .setSearchString: script = "window.mdFindSelection()"
+        case .hideFindInterface: script = "window.mdFindClose()"
+        default: script = "window.mdFindOpen()"
+        }
+        if window?.firstResponder !== webView { window?.makeFirstResponder(webView) }
+        webView.evaluateJavaScript(script, completionHandler: nil)
     }
 
     @objc func nextChange(_ sender: Any?) {
