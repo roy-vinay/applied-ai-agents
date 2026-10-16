@@ -1,10 +1,18 @@
 name: mdeditdiff-release
-# Publishes a GitHub Release when a tag like mdeditdiff-v0.3.0 is pushed.
+# Publishes a GitHub Release whenever main has an mdEditDiff version that hasn't been released yet.
+# To release: bump the version in package.json, src/version.ts and app/Info.plist, add a CHANGELOG
+# entry, and merge to main. The workflow creates the tag mdeditdiff-v<version> and the release.
 on:
   push:
-    tags: ["mdeditdiff-v*"]
+    branches: [main]
+    paths:
+      - "tools/mdeditdiff/package.json"
+      - ".github/workflows/mdeditdiff-release.yml"
 permissions:
   contents: write
+concurrency:
+  group: mdeditdiff-release
+  cancel-in-progress: false
 jobs:
   release:
     runs-on: macos-15
@@ -16,29 +24,43 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - name: Check versions match the tag
+      - name: Read the version and skip if already released
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="${GITHUB_REF_NAME#mdeditdiff-v}"
-          PKG=$(node -p "require('./package.json').version")
+          VERSION=$(node -p "require('./package.json').version")
           APP=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" app/Info.plist)
-          echo "tag=$TAG package=$PKG app=$APP"
-          [ "$TAG" = "$PKG" ] && [ "$TAG" = "$APP" ] || { echo "::error::Version mismatch: tag $TAG, package.json $PKG, Info.plist $APP"; exit 1; }
-          echo "VERSION=$TAG" >> "$GITHUB_ENV"
+          CLI=$(sed -n 's/.*VERSION = "\(.*\)".*/\1/p' src/version.ts)
+          echo "package=$VERSION app=$APP cli=$CLI"
+          [ "$VERSION" = "$APP" ] && [ "$VERSION" = "$CLI" ] || { echo "::error::Version mismatch: package.json $VERSION, Info.plist $APP, src/version.ts $CLI"; exit 1; }
+          grep -q "^## $VERSION$" CHANGELOG.md || { echo "::error::CHANGELOG.md has no '## $VERSION' section"; exit 1; }
+          TAG="mdeditdiff-v$VERSION"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Test and pack the command-line tool
+        if: steps.version.outputs.skip != 'true'
         run: |
           npm ci
           npm test
           npm pack
           mv "mdeditdiff-$VERSION.tgz" mdeditdiff-cli.tgz
       - name: Test and build the Mac app
+        if: steps.version.outputs.skip != 'true'
         working-directory: tools/mdeditdiff/app
         run: |
           swift test
           ./scripts/build-app.sh
           cp build/mdEditDiff-macOS.zip ../mdEditDiff-macOS.zip
       - name: Checksums
+        if: steps.version.outputs.skip != 'true'
         run: shasum -a 256 mdEditDiff-macOS.zip mdeditdiff-cli.tgz > SHA256SUMS.txt && cat SHA256SUMS.txt
       - name: Release notes
+        if: steps.version.outputs.skip != 'true'
         run: |
           {
             echo "## Install"
@@ -48,7 +70,7 @@ jobs:
             echo "**Command-line tool and MCP server** (Node.js 20 or later):"
             echo
             echo '```bash'
-            echo "npm install -g https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/mdeditdiff-cli.tgz"
+            echo "npm install -g https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/mdeditdiff-cli.tgz"
             echo "claude mcp add mdeditdiff -- mdeditdiff mcp   # optional: connect it to Claude Code"
             echo '```'
             echo
@@ -59,8 +81,9 @@ jobs:
           } > release-notes.md
           cat release-notes.md
       - name: Publish the release
+        if: steps.version.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" mdEditDiff-macOS.zip mdeditdiff-cli.tgz SHA256SUMS.txt \
-            --title "mdEditDiff $VERSION" --notes-file release-notes.md
+          gh release create "$TAG" mdEditDiff-macOS.zip mdeditdiff-cli.tgz SHA256SUMS.txt \
+            --target "$GITHUB_SHA" --title "mdEditDiff $VERSION" --notes-file release-notes.md
