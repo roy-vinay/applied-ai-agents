@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0
+
+- **Pages, like Preview:** Read mode now lays the document out on pages, with numbered thumbnails on the left.
+  - Click a thumbnail to jump to that page. As you scroll, the selected thumbnail follows.
+  - A bar at the bottom shows "Page 3 of 12", with previous and next buttons, a box to type a page number, and zoom.
+  - US Letter by default, or A4 (**View > Page Size**), with one-inch margins.
+  - ⌘+ and ⌘− zoom the pages, ⌘0 is actual size and ⌘9 fits the width. Zoom never changes the page count.
+  - Headings stay with the text after them. Long paragraphs, lists, tables and code continue on the next page, and tables repeat their header.
+  - Pages are only a view: nothing is added to your Markdown. After an edit or an agent's change, pages update and keep your place by the text.
+  - Find works across page breaks.
+  - **View > Continuous Scroll** brings back one long page. Page Thumbnails (⌥⌘2) shows or hides the sidebar. The app remembers these choices.
+- **Fixed:** a heading named like part of the app (for example "History") could cover the document.
+
 ## 0.3.4
 
 - **Find in Read mode:** ⌘F now works on the formatted document, not just the source.

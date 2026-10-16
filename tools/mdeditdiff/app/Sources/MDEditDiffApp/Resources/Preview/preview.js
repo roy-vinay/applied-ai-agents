@@ -25,7 +25,8 @@
         var base = slugify(tokens[i + 1].content) || "section";
         var id = base;
         if (used[base] !== undefined) { used[base] += 1; id = base + "-" + used[base]; } else { used[base] = 0; }
-        t.attrSet("id", id);
+        // Prefixed so a heading named "history" or "doc" can never take over an id the app uses.
+        t.attrSet("id", "sec-" + id);
       }
       if (t.type === "list_item_open" && tokens[i + 2] && tokens[i + 2].type === "inline") {
         var inline = tokens[i + 2];
@@ -87,6 +88,8 @@
   // Rendering
 
   function render() {
+    var pager = root.MDPages;
+    var anchor = pager ? pager.captureAnchor() : null;
     var y = window.scrollY;
     var doc = document.getElementById("doc");
     doc.innerHTML = md.render(source);
@@ -100,6 +103,7 @@
           return;
         }
         img.onerror = function () { notice(img, "Image not found: " + s); };
+        if (pager && pager.prepareImage(img, s) === false) { notice(img, "Image not found: " + s); return; }
         img.src = "mdeditdiff-res://image/?p=" + encodeURIComponent(s);
       })(imgs[i]);
     }
@@ -108,9 +112,13 @@
     if (review && root.MDDiff) applyReview(doc);
     if (current >= changeEls.length) current = -1;
     updateBar();
+    if (pager) pager.layout(doc);
     if (find.open && find.query) runFind(false);
-    window.scrollTo(0, y);
+    if (pager) { pager.restoreAnchor(anchor); pager.afterScroll(); } else window.scrollTo(0, y);
   }
+
+  /** Lay the current text out again (after an image loads or the page size changes). */
+  root.mdRerender = function () { render(); };
 
   root.mdRender = function (src) {
     source = src;
@@ -118,7 +126,10 @@
   };
 
   root.mdSetFontSize = function (px) {
+    var before = document.documentElement.style.getPropertyValue("--size");
     document.documentElement.style.setProperty("--size", px + "px");
+    // Pages depend on the font size, so lay them out again.
+    if (before && before !== px + "px" && root.MDPages && root.MDPages.isPaged() && source) render();
   };
 
   /** Show changes against a base text, or pass null to stop. */
@@ -516,7 +527,7 @@
   }
 
   function clearFindMarks() {
-    var marks = document.querySelectorAll("mark.find-hit");
+    var marks = document.querySelectorAll("#doc mark.find-hit");
     var parents = new Set();
     for (var i = 0; i < marks.length; i++) {
       var m = marks[i];
@@ -549,7 +560,10 @@
     var n;
     while ((n = walker.nextNode())) {
       var b = blockOf(n);
-      if (b !== lastBlock) { text += "\u0000"; lastBlock = b; }
+      // A block continued on the next page is still one block, so matches can cross the page break.
+      var continued = b && lastBlock && b.classList.contains("pg-cont") && b.getAttribute("data-line") === lastBlock.getAttribute("data-line");
+      if (b !== lastBlock && !continued) text += "\u0000";
+      lastBlock = b;
       map.push({ node: n, start: text.length });
       text += n.data;
     }
@@ -616,7 +630,7 @@
 
   function showCurrentHit(scroll) {
     var count = document.getElementById("find-count");
-    var all = document.querySelectorAll("mark.find-current");
+    var all = document.querySelectorAll("#doc mark.find-current");
     for (var i = 0; i < all.length; i++) all[i].classList.remove("find-current");
     var n = find.hits.length;
     var label = !find.query ? "" : n === 0 ? "Not found" : (find.index >= 0 ? (find.index + 1) + " of " : "") + n + (n >= MAX_HITS ? "+" : "") + (find.index >= 0 ? "" : n === 1 ? " match" : " matches");
@@ -688,7 +702,8 @@
     e.preventDefault();
     var href = a.getAttribute("href") || "";
     if (href.charAt(0) === "#") {
-      var target = document.getElementById(decodeURIComponent(href.slice(1)));
+      var name = decodeURIComponent(href.slice(1));
+      var target = document.getElementById("sec-" + name) || document.getElementById("sec-" + slugify(name));
       if (target) target.scrollIntoView();
       return;
     }

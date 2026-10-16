@@ -52,8 +52,8 @@ let x = 1
 test("preview renders every supported construct", () => {
   const html = render(REFERENCE).replace(/ data-line="\d+"/g, "");
   for (const needle of [
-    '<h1 id="title">Title</h1>',
-    '<h2 id="title-1">Title</h2>',
+    '<h1 id="sec-title">Title</h1>',
+    '<h2 id="sec-title-1">Title</h2>',
     "<strong>bold</strong>",
     "<em>italic</em>",
     "<s>struck</s>",
