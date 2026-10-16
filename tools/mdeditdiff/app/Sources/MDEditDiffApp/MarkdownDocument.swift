@@ -48,6 +48,7 @@ final class MarkdownDocument: NSDocument {
     }
 
     override func save(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType, completionHandler: @escaping (Error?) -> Void) {
+        let previousURL = fileURL
         super.save(to: url, ofType: typeName, for: saveOperation) { [weak self] error in
             if error == nil, let self, let written = self.pendingSaveData, saveOperation != .autosaveElsewhereOperation {
                 if let s = try? SourceText(data: written) {
@@ -55,6 +56,9 @@ final class MarkdownDocument: NSDocument {
                     self.loadedText = s.text
                 }
                 self.recordSave(at: url)
+                if saveOperation == .saveAsOperation {
+                    MainActor.assumeIsolated { self.mainController?.annotationsAfterSaveAs(from: previousURL, to: url) }
+                }
             }
             self?.pendingSaveData = nil
             completionHandler(error)
@@ -82,6 +86,12 @@ final class MarkdownDocument: NSDocument {
     }
 
     // MARK: - Changes made by other apps (for example an agent)
+
+    /// Moved or renamed in Finder: personal highlights and notes move with it.
+    override func presentedItemDidMove(to newURL: URL) {
+        if let old = fileURL { AnnotationStore.move(from: old, to: newURL) }
+        super.presentedItemDidMove(to: newURL)
+    }
 
     override func presentedItemDidChange() {
         super.presentedItemDidChange()

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0
+
+- **Highlights and notes:** select text in Read mode and pick a color, or choose Add Note.
+  - A small bar appears over any selection. Right-click, ⌃⌘H (Highlight) and ⌃⌘N (Add Note) work too.
+  - Five colors, each with its own underline style, so they don't depend on color alone.
+  - Notes show as a marker in the margin. Click to open or close; they save as you type.
+  - Click a highlight to change its color, add a note, or remove it.
+- **They follow the text:** when you or an agent edit the file, highlights and notes move with their passage, including across rewrapped lines and page breaks.
+  - If the passage is removed, rewritten, or now appears more than once, nothing is guessed. The note waits under **Needs Reattachment** until you select the right text and choose **Reattach to Selection**.
+- **Notes and Highlights list:** the sidebar now has Pages and Notes tabs (⌥⌘3 opens Notes), listing everything in document order.
+- **Private:** kept by the app on your Mac, never in the Markdown file, and never shown to agents. Moving a file in Finder keeps them; Save As asks whether to copy them. The format is in docs/ANNOTATIONS.md.
+
 ## 0.4.0
 
 - **Pages, like Preview:** Read mode now lays the document out on pages, with numbered thumbnails on the left.

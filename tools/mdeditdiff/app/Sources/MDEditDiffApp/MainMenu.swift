@@ -82,6 +82,10 @@ enum MainMenu {
         let f = item("Find", nil)
         f.submenu = find
         m.addItem(f)
+        m.addItem(.separator())
+        m.addItem(item("Highlight", #selector(DocumentWindowController.highlightSelection(_:)), "h", [.command, .control]))
+        m.addItem(item("Add Note", #selector(DocumentWindowController.addNoteToSelection(_:)), "n", [.command, .control]))
+        m.addItem(item("Remove Highlight", #selector(DocumentWindowController.removeHighlight(_:))))
         return m
     }
 
@@ -100,6 +104,7 @@ enum MainMenu {
         m.addItem(item("Pages", #selector(DocumentWindowController.showPages(_:))))
         m.addItem(item("Continuous Scroll", #selector(DocumentWindowController.showContinuous(_:))))
         m.addItem(item("Page Thumbnails", #selector(DocumentWindowController.toggleThumbnails(_:)), "2", [.command, .option]))
+        m.addItem(item("Notes and Highlights", #selector(DocumentWindowController.showNotesSidebar(_:)), "3", [.command, .option]))
         let sizes = NSMenu(title: "Page Size")
         sizes.addItem(item("US Letter", #selector(DocumentWindowController.useLetterPages(_:))))
         sizes.addItem(item("A4", #selector(DocumentWindowController.useA4Pages(_:))))
