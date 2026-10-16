@@ -10,7 +10,7 @@ guessing, by running `git diff` (which only knows about commits), or by hoping t
 mdeditdiff gives every reader, agent or person, its own "last looked" point on each file. Ask it what
 changed and you get back only the changed parts, in readable Markdown, with who reported them. Agents
 use it through a command-line tool or an MCP server. A macOS reader app for people, built on the same
-history, is planned next.
+history, is in early prototype ([below](#the-mac-app-prototype)).
 
 ## What an answer looks like
 
@@ -80,6 +80,36 @@ mdeditdiff checkpoint plan.md --author implementer --note "Split step 4 into two
 > re-reading the whole file. Right after you edit a shared file, call `checkpoint` with your name and a
 > one-line note saying what you changed.
 
+## The Mac app (prototype)
+
+`app/` holds the macOS reader for people, built on the same history. This first version (Milestone 2)
+opens a Markdown file in **Read** mode, and switches to **Edit** (plain-text editor with light syntax
+highlighting) or **Split** (editor and preview side by side) with ⌘1, ⌘2, ⌘3 or ⇧⌘M.
+
+- **Saving never touches what you didn't change.** Saving without edits writes back the exact original
+  bytes. Edited files keep their line endings (LF, CRLF or CR), byte-order mark, and final newline.
+  Nothing autosaves over your file.
+- **Safe preview.** Raw HTML in a document is shown as text, scripts never run, `javascript:` links are
+  dropped, and remote images are not loaded. Local images load relative to the document.
+- **Shared history.** If the `mdeditdiff` command is installed, each save is recorded as a checkpoint under
+  your macOS user name, and the window subtitle shows the current revision.
+
+Requires macOS 14 or later. To build it yourself (needs Xcode or the Swift toolchain):
+
+```bash
+cd tools/mdeditdiff/app
+./scripts/build-app.sh        # creates build/mdEditDiff.app and build/mdEditDiff-macOS.zip
+```
+
+CI also builds a universal app on every change: open the latest
+[mdeditdiff workflow run](https://github.com/roy-vinay/applied-ai-agents/actions/workflows/mdeditdiff.yml)
+and download **mdEditDiff-macOS** under Artifacts. The app is not notarized yet, so macOS will block the
+first launch: right-click the app, choose **Open**, then **Open** again (or run
+`xattr -dr com.apple.quarantine mdEditDiff.app`).
+
+Coming next: highlighted changes since you last read the file, the revision timeline, and restore
+(Milestone 3).
+
 ## Commands
 
 | Command | What it does |
@@ -131,6 +161,8 @@ npm install
 npm test    # builds, then runs the unit, acceptance, two-agent simulation, concurrency and MCP tests
 ```
 
-CI runs the tests on Linux and macOS with Node 20 and 22.
+CI runs the tests on Linux and macOS with Node 20 and 22, and builds and tests the Mac app.
+The app's own tests (byte-exact saving, highlighting patterns) run with `swift test` in `app/`;
+its preview renderer is tested from Node (`test/preview.test.ts`).
 
 MIT license.

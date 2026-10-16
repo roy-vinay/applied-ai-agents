@@ -53,7 +53,7 @@ Tools for people who work alongside AI agents.
 
 | Tool | What it does | Stack |
 | --- | --- | --- |
-| [mdeditdiff](tools/mdeditdiff) | Tells any agent or person what changed in a shared Markdown file since they last looked, and who changed it. Only the changed blocks come back, word-level, with section names, so agents stop re-reading whole plans. Command-line tool and MCP server; a macOS reader app is next. | TypeScript, MCP |
+| [mdeditdiff](tools/mdeditdiff) | Tells any agent or person what changed in a shared Markdown file since they last looked, and who changed it. Only the changed blocks come back, word-level, with section names, so agents stop re-reading whole plans. Command-line tool and MCP server, plus an early macOS reader app with Read, Edit and Split modes. | TypeScript, MCP, Swift |
 
 ## Failure Files
 
