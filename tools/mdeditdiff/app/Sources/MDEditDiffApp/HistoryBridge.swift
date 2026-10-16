@@ -1,10 +1,10 @@
 import Foundation
 
-/// Talks to the mdeditdiff command-line tool, so saves made here show up in the same
-/// history agents use. Everything is optional: if mdeditdiff isn't installed, the app
-/// works normally and the window says history is off.
+/// Talks to the mdeditdiff command-line tool, so the app and agents share one history.
+/// Everything is optional: if mdeditdiff isn't installed, the app works normally and
+/// change tracking is simply off.
 enum HistoryBridge {
-    /// The name this person appears under in history.
+    /// The name this person appears under in history, both as reader and author.
     static var personName: String { NSUserName() }
 
     private static let queue = DispatchQueue(label: "mdeditdiff.history")
@@ -34,30 +34,44 @@ enum HistoryBridge {
         }
     }
 
-    /// Extracts the JSON object from the output (shell startup files may print other lines).
-    private static func json(_ output: String) -> [String: Any]? {
-        guard let start = output.firstIndex(of: "{"), let end = output.lastIndex(of: "}") else { return nil }
-        let data = Data(output[start...end].utf8)
-        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+    /// Runs a command with --json and returns the parsed object, or nil if the tool is missing or failed.
+    private static func runJSON(_ args: [String], completion: @escaping ([String: Any]?) -> Void) {
+        run(args + ["--json"]) { status, out in
+            guard status == 0, let start = out.firstIndex(of: "{"), let end = out.lastIndex(of: "}") else {
+                return completion(nil)
+            }
+            let obj = try? JSONSerialization.jsonObject(with: Data(out[start...end].utf8))
+            completion(obj as? [String: Any])
+        }
     }
 
-    /// The latest revision label, for example "r5 of 5", recording the current version if it's new.
-    static func latestRevision(of url: URL, completion: @escaping (String?) -> Void) {
-        run(["history", url.path, "--json", "--limit", "1"]) { status, out in
-            guard status == 0, let obj = json(out),
-                  let revs = obj["revisions"] as? [[String: Any]], let rev = revs.first?["revision"] as? String
-            else { return completion(nil) }
-            completion(rev)
-        }
+    /// What changed for this person since they last read the file, with the text they last read.
+    /// Records the current version in history if it's new. Never moves the person's bookmark.
+    static func changes(of url: URL, completion: @escaping ([String: Any]?) -> Void) {
+        runJSON(["changes", url.path, "--reader", personName, "--peek", "--with-base"], completion: completion)
+    }
+
+    /// Marks the current version as read by this person.
+    static func markSeen(_ url: URL, completion: @escaping ([String: Any]?) -> Void = { _ in }) {
+        runJSON(["seen", url.path, "--reader", personName], completion: completion)
     }
 
     /// Records a save with this person's name.
     static func checkpoint(_ url: URL, note: String, completion: @escaping (String?) -> Void) {
-        run(["checkpoint", url.path, "--author", personName, "--note", note, "--json"]) { status, out in
-            guard status == 0, let obj = json(out),
-                  let rev = obj["revision"] as? [String: Any], let label = rev["revision"] as? String
-            else { return completion(nil) }
-            completion(label)
+        runJSON(["checkpoint", url.path, "--author", personName, "--note", note]) { obj in
+            completion((obj?["revision"] as? [String: Any])?["revision"] as? String)
+        }
+    }
+
+    /// Revisions, newest first, and where each reader last looked.
+    static func history(of url: URL, completion: @escaping ([String: Any]?) -> Void) {
+        runJSON(["history", url.path, "--limit", "200"], completion: completion)
+    }
+
+    /// Full text of one revision.
+    static func text(of url: URL, revision: String, completion: @escaping (String?) -> Void) {
+        runJSON(["show", url.path, revision]) { obj in
+            completion(obj?["text"] as? String)
         }
     }
 }

@@ -5,9 +5,10 @@
   "main": "dist/src/api.js",
   "scripts": {
     "build": "tsc -p .",
-    "test": "npm run build && node --test dist/test/*.test.js",
+    "test": "npm run build && npm run bundle && node --test dist/test/*.test.js",
     "prepare": "npm run build",
-    "walkthrough": "npm run build && ./examples/walkthrough.sh"
+    "walkthrough": "npm run build && ./examples/walkthrough.sh",
+    "bundle": "esbuild src/diff.ts --bundle --format=iife --global-name=MDDiff --target=es2020 --outfile=app/Sources/MDEditDiffApp/Resources/Preview/mdeditdiff-diff.js --banner:js=\"// Generated from tools/mdeditdiff/src/diff.ts by 'npm run bundle'. Do not edit.\""
   },
   "keywords": [
     "mcp",
@@ -26,7 +27,9 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
+    "esbuild": "^0.28.2",
     "markdown-it": "^14.3.3",
+    "playwright": "^1.56.0",
     "typescript": "^7.0.2"
   },
   "type": "module",

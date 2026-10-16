@@ -140,3 +140,20 @@ test("diff: numbers stay whole and punctuation joins naturally", () => {
     ],
   );
 });
+
+test("diff: removed blocks say where they would go in the newer version", () => {
+  const a = "# T\n\nKeep one.\n\nGone.\n\nKeep two.\n\nAlso gone.\n";
+  const b = "# T\n\nKeep one.\n\nKeep two.\n";
+  const r = diffMarkdown(a, b);
+  const removed = r.changes.filter((c) => c.type === "removed");
+  assert.deepEqual(
+    removed.map((c) => [c.old, c.at_line]),
+    [
+      ["Gone.", 5],
+      ["Also gone.", undefined],
+    ],
+  );
+  // A removal followed by an insertion is placed before the inserted block.
+  const r2 = diffMarkdown("A.\n\nOld unrelated words here.\n\nZ.\n", "A.\n\nBrand new sentence entirely.\n\nZ.\n");
+  assert.equal(r2.changes.find((c) => c.type === "removed")!.at_line, 3);
+});

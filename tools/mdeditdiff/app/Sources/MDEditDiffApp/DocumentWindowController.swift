@@ -20,11 +20,32 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     private let modeControl = NSSegmentedControl(labels: Mode.allCases.map(\.title), trackingMode: .selectOne, target: nil, action: nil)
     private let resources: PreviewResourceHandler
     private let linkHandler: LinkMessageHandler
+    private let reviewHandler: LinkMessageHandler
     private var highlighter = MarkdownHighlighter(fontSize: DocumentWindowController.defaultFontSize)
     private var mode: Mode = .read
     private var previewReady = false
     private var fontSize: CGFloat = DocumentWindowController.defaultFontSize
     private weak var markdownDocument: MarkdownDocument?
+
+    /// What the preview compares against, if anything.
+    private enum Review {
+        case none
+        /// Changes since this person last read the file.
+        case unread(base: String, revisions: [[String: Any]])
+        /// Changes since an earlier revision the person picked in History.
+        case compare(base: String, title: String)
+        /// The person's unsaved edits compared with a newer version on disk.
+        case conflict(disk: String)
+    }
+    private var review: Review = .none
+    private var unreadCount = 0
+    private var lastHistory: [[String: Any]] = []
+    private var conflictAlertShowing = false
+
+    /// Mark changes as read when the window closes (default on).
+    private static var markReadOnClose: Bool {
+        UserDefaults.standard.object(forKey: "MarkReadOnClose") as? Bool ?? true
+    }
 
     var currentText: String { textView.string }
 
@@ -47,11 +68,14 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
 
         let resourceHandler = PreviewResourceHandler()
         let links = LinkMessageHandler()
+        let reviews = LinkMessageHandler()
         resources = resourceHandler
         linkHandler = links
+        reviewHandler = reviews
         let config = WKWebViewConfiguration()
         config.setURLSchemeHandler(resourceHandler, forURLScheme: PreviewResourceHandler.scheme)
         config.userContentController.add(links, name: "link")
+        config.userContentController.add(reviews, name: "review")
         webView = WKWebView(frame: .zero, configuration: config)
 
         let window = NSWindow(
@@ -75,6 +99,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         setMode(doc.fileURL == nil ? .edit : Self.defaultModeForFiles)
         window.center()
         updateSubtitle()
+        refreshReview()
     }
 
     @available(*, unavailable)
@@ -113,6 +138,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
             self?.markdownDocument?.fileURL?.deletingLastPathComponent()
         }
         linkHandler.onLink = { [weak self] href in self?.openLink(href) }
+        reviewHandler.onMessage = { [weak self] body in self?.handleReviewMessage(body) }
         if let dir = PreviewResourceHandler.previewDirectory {
             let page = dir.appendingPathComponent("preview.html")
             webView.loadFileURL(page, allowingReadAccessTo: dir)
@@ -156,17 +182,23 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         textView.setSelectedRange(NSRange(location: min(selection.location, length), length: 0))
         textView.undoManager?.removeAllActions()
         renderNow()
+        refreshReview()
     }
 
     func updateSubtitle() {
         guard let doc = markdownDocument else { return }
-        if doc.fileURL == nil {
-            window?.subtitle = ""
-        } else if let rev = doc.historyStatus {
-            window?.subtitle = "History \(rev)"
-        } else {
-            window?.subtitle = "History off"
+        var parts: [String] = []
+        if case .unread = review, unreadCount > 0 {
+            parts.append(unreadCount == 1 ? "1 unread change" : "\(unreadCount) unread changes")
         }
+        if doc.fileURL == nil {
+            // New, unsaved document.
+        } else if let rev = doc.historyStatus {
+            parts.append("History \(rev)")
+        } else {
+            parts.append("History off")
+        }
+        window?.subtitle = parts.joined(separator: " · ")
     }
 
     func textDidChange(_ notification: Notification) {
@@ -219,6 +251,14 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
 
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         switch menuItem.action {
+        case #selector(nextChange(_:)), #selector(previousChange(_:)):
+            if case .none = review { return false }
+            return true
+        case #selector(markAsRead(_:)):
+            if case .unread = review { return unreadCount > 0 }
+            return false
+        case #selector(showHistory(_:)):
+            return markdownDocument?.fileURL != nil && markdownDocument?.historyStatus != nil
         case #selector(showRead(_:)): menuItem.state = mode == .read ? .on : .off
         case #selector(showEdit(_:)): menuItem.state = mode == .edit ? .on : .off
         case #selector(showSplit(_:)): menuItem.state = mode == .split ? .on : .off
@@ -254,6 +294,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         previewReady = true
         applyPreviewFontSize()
         renderNow()
+        pushReviewToPreview()
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
@@ -262,6 +303,207 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
             decisionHandler(.allow)
         } else {
             decisionHandler(.cancel)
+        }
+    }
+
+    // MARK: - Review: changes since you last read, history, restore
+
+    /// Asks the shared history what changed for this person, and shows it in the preview.
+    func refreshReview() {
+        guard let url = markdownDocument?.fileURL else { return }
+        // Keep a comparison the person chose until they press Done.
+        if case .compare = review { return }
+        if case .conflict = review { return }
+        HistoryBridge.changes(of: url) { [weak self] result in
+            guard let self else { return }
+            guard let result, let status = result["status"] as? String else {
+                // mdeditdiff isn't installed or failed: no change tracking.
+                self.markdownDocument?.historyStatus = nil
+                self.setReview(.none)
+                return
+            }
+            if let to = result["to"] as? [String: Any], let rev = to["revision"] as? String {
+                self.markdownDocument?.historyStatus = rev
+            }
+            switch status {
+            case "first_look":
+                // First time this person opens the file: what they see now is their starting point.
+                HistoryBridge.markSeen(url)
+                self.setReview(.none)
+            default:
+                if let base = result["base_text"] as? String {
+                    self.setReview(.unread(base: base, revisions: result["revisions"] as? [[String: Any]] ?? []))
+                } else {
+                    self.setReview(.none)
+                }
+            }
+        }
+    }
+
+    private func setReview(_ newReview: Review) {
+        review = newReview
+        if case .unread = newReview {} else { unreadCount = 0 }
+        pushReviewToPreview()
+        updateSubtitle()
+    }
+
+    private func pushReviewToPreview() {
+        guard previewReady else { return }
+        var payload: [String: Any]?
+        switch review {
+        case .none: payload = nil
+        case let .unread(base, revisions): payload = ["mode": "unread", "baseText": base, "revisions": revisions]
+        case let .compare(base, title): payload = ["mode": "compare", "baseText": base, "title": title]
+        case let .conflict(disk): payload = ["mode": "conflict", "baseText": disk]
+        }
+        guard let payload else {
+            webView.evaluateJavaScript("window.mdSetReview(null)", completionHandler: nil)
+            return
+        }
+        guard let data = try? JSONSerialization.data(withJSONObject: payload), let json = String(data: data, encoding: .utf8) else { return }
+        webView.evaluateJavaScript("window.mdSetReview(\(json))", completionHandler: nil)
+    }
+
+    private func handleReviewMessage(_ body: [String: Any]) {
+        guard let action = body["action"] as? String else { return }
+        switch action {
+        case "count":
+            if case .unread = review { unreadCount = body["n"] as? Int ?? 0 }
+            updateSubtitle()
+        case "markRead":
+            markAsRead(nil)
+        case "history":
+            showHistory(nil)
+        case "endCompare":
+            setReview(.none)
+            refreshReview()
+        case "restoreBlock":
+            guard let text = body["text"] as? String else { return }
+            restoreBlock(text, beforeLine: body["beforeLine"] as? Int ?? 0, kind: body["kind"] as? String ?? "paragraph")
+        case "compare":
+            guard let rev = body["revision"] as? String, let url = markdownDocument?.fileURL else { return }
+            HistoryBridge.text(of: url, revision: rev) { [weak self] text in
+                guard let self, let text else { return NSSound.beep() }
+                self.setReview(.compare(base: text, title: self.describe(revision: rev)))
+                if self.mode == .edit { self.setMode(.read) }
+            }
+        case "restoreVersion":
+            guard let rev = body["revision"] as? String, let url = markdownDocument?.fileURL else { return }
+            HistoryBridge.text(of: url, revision: rev) { [weak self] text in
+                guard let self, let text else { return NSSound.beep() }
+                let all = NSRange(location: 0, length: (self.textView.string as NSString).length)
+                self.replaceText(in: all, with: text, actionName: "Restore \(rev)")
+                self.webView.evaluateJavaScript("window.mdHideHistory()", completionHandler: nil)
+            }
+        default:
+            break
+        }
+    }
+
+    private func describe(revision: String) -> String {
+        guard let entry = lastHistory.first(where: { $0["revision"] as? String == revision }) else { return revision }
+        if let author = entry["author"] as? String { return "\(revision) (\(author))" }
+        return revision
+    }
+
+    /// Puts a removed block back where it was, as an undoable, unsaved edit.
+    private func restoreBlock(_ block: String, beforeLine: Int, kind: String) {
+        let ns = textView.string as NSString
+        let tight = kind == "list-item" || kind == "table-row"
+        var location = ns.length
+        if beforeLine > 0 {
+            var line = 1
+            var index = 0
+            while line < beforeLine && index < ns.length {
+                let r = ns.lineRange(for: NSRange(location: index, length: 0))
+                index = NSMaxRange(r)
+                line += 1
+            }
+            location = min(index, ns.length)
+        }
+        let insertion: String
+        if location >= ns.length {
+            let needsNewline = ns.length > 0 && !textView.string.hasSuffix("\n")
+            insertion = (needsNewline ? "\n" : "") + (tight || ns.length == 0 ? "" : "\n") + block + "\n"
+        } else {
+            insertion = block + (tight ? "\n" : "\n\n")
+        }
+        replaceText(in: NSRange(location: location, length: 0), with: insertion, actionName: "Restore Passage")
+        textView.setSelectedRange(NSRange(location: location, length: (block as NSString).length))
+    }
+
+    /// Replaces text through the text view so it can be undone and marks the document edited.
+    private func replaceText(in range: NSRange, with string: String, actionName: String) {
+        guard textView.shouldChangeText(in: range, replacementString: string) else { return }
+        textView.textStorage?.replaceCharacters(in: range, with: string)
+        textView.didChangeText()
+        textView.undoManager?.setActionName(actionName)
+    }
+
+    @objc func nextChange(_ sender: Any?) {
+        if mode == .edit { setMode(.read) }
+        webView.evaluateJavaScript("window.mdNav(1)", completionHandler: nil)
+    }
+
+    @objc func previousChange(_ sender: Any?) {
+        if mode == .edit { setMode(.read) }
+        webView.evaluateJavaScript("window.mdNav(-1)", completionHandler: nil)
+    }
+
+    @objc func markAsRead(_ sender: Any?) {
+        guard let url = markdownDocument?.fileURL else { return }
+        HistoryBridge.markSeen(url) { [weak self] _ in self?.refreshReview() }
+    }
+
+    @objc func showHistory(_ sender: Any?) {
+        guard let url = markdownDocument?.fileURL else { return }
+        if mode == .edit { setMode(.split) }
+        HistoryBridge.history(of: url) { [weak self] result in
+            guard let self, let result else { return NSSound.beep() }
+            let revisions = result["revisions"] as? [[String: Any]] ?? []
+            self.lastHistory = revisions
+            let readerAt = (result["readers"] as? [String: Any])?[HistoryBridge.personName] as? String
+            guard let data = try? JSONSerialization.data(withJSONObject: revisions), let json = String(data: data, encoding: .utf8) else { return }
+            let at = readerAt.map { "\"\($0)\"" } ?? "null"
+            self.webView.evaluateJavaScript("window.mdShowHistory(\(json), \(at))", completionHandler: nil)
+        }
+    }
+
+    /// The file changed on disk and was reloaded (no unsaved edits): show what's new.
+    func outsideChangeLoaded() {
+        refreshReview()
+    }
+
+    /// The file changed on disk while the person has unsaved edits. Nothing is replaced
+    /// until they choose.
+    func showConflict(diskText: String, keepTheirs: @escaping () -> Void) {
+        guard let window, !conflictAlertShowing else { return }
+        conflictAlertShowing = true
+        if let url = markdownDocument?.fileURL { HistoryBridge.changes(of: url) { _ in } } // record the outside version
+        let alert = NSAlert()
+        alert.messageText = "This file changed in another app"
+        alert.informativeText = "Your unsaved edits are still here, and nothing has been replaced. Compare the two versions, keep your edits, or load the other version (your unsaved edits will be discarded)."
+        alert.addButton(withTitle: "Compare")
+        alert.addButton(withTitle: "Keep My Edits")
+        alert.addButton(withTitle: "Load Other Version")
+        alert.beginSheetModal(for: window) { [weak self] response in
+            guard let self else { return }
+            self.conflictAlertShowing = false
+            switch response {
+            case .alertFirstButtonReturn:
+                self.setReview(.conflict(disk: diskText))
+                if self.mode == .edit { self.setMode(.split) }
+            case .alertThirdButtonReturn:
+                keepTheirs()
+            default:
+                break
+            }
+        }
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        if Self.markReadOnClose, case .unread = review, unreadCount > 0, let url = markdownDocument?.fileURL {
+            HistoryBridge.markSeen(url)
         }
     }
 
@@ -299,12 +541,17 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     }
 }
 
-/// Forwards link clicks from the preview without retaining the window controller.
+/// Forwards messages from the preview (link clicks and review actions) without retaining
+/// the window controller.
 final class LinkMessageHandler: NSObject, WKScriptMessageHandler {
     var onLink: (@MainActor (String) -> Void)?
+    var onMessage: (@MainActor ([String: Any]) -> Void)?
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard message.name == "link", let href = message.body as? String else { return }
-        MainActor.assumeIsolated { onLink?(href) }
+        if message.name == "link", let href = message.body as? String {
+            MainActor.assumeIsolated { onLink?(href) }
+        } else if message.name == "review", let body = message.body as? [String: Any] {
+            MainActor.assumeIsolated { onMessage?(body) }
+        }
     }
 }

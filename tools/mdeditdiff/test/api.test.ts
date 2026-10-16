@@ -197,3 +197,12 @@ test("watch records each saved version separately, coalescing rapid writes", asy
   const h = history(store, plan);
   assert.equal(h.total, 3, `revisions: ${JSON.stringify(h.revisions.map((r) => r.revision))}`);
 });
+
+test("changes --with-base returns the text the reader last saw", () => {
+  changesSince(store, plan, "me", { markSeen: true });
+  fs.writeFileSync(plan, PLAN + "\nNew.\n");
+  const r = changesSince(store, plan, "me", { markSeen: false, withBase: true });
+  assert.equal((r as any).base_text, PLAN);
+  markSeen(store, plan, "me");
+  assert.equal((changesSince(store, plan, "me", { withBase: true }) as any).base_text, PLAN + "\nNew.\n");
+});

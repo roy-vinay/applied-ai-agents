@@ -12,6 +12,8 @@ export interface Change {
   section: string;
   /** 1-based line in the newer version (or the older one for removals). */
   line: number;
+  /** For removals: 1-based line of the block in the newer version that now follows the removed one (absent at the end). */
+  at_line?: number;
   old?: string;
   new?: string;
   /** Word-level parts for modified blocks. */
@@ -24,7 +26,7 @@ export interface DiffResult {
 }
 
 // Words (keeping numbers like 100,000 or 2.5 whole) and single punctuation marks.
-const tokenize = (s: string): string[] => collapse(s).match(/[\p{L}\p{N}_'’-]+(?:[.,:]\p{N}+)*|[^\s\p{L}\p{N}_]/gu) ?? [];
+export const tokenize = (s: string): string[] => collapse(s).match(/[\p{L}\p{N}_'’-]+(?:[.,:]\p{N}+)*|[^\s\p{L}\p{N}_]/gu) ?? [];
 
 /** Text used for word comparison: list numbers are dropped so renumbering is not a change. */
 const body = (b: Block): string => (b.kind === "list-item" ? b.text.replace(/^\s*([-*+]|\d{1,9}[.)])[ \t]+/, "") : b.text);
@@ -88,7 +90,7 @@ export function diffMarkdown(oldText: string, newText: string): DiffResult {
   let dels: Block[] = [];
   let ins: Block[] = [];
 
-  const flush = () => {
+  const flush = (nextLine?: number) => {
     // Pair removed and added blocks that look like edits of each other, keeping order.
     let start = 0;
     const out: Change[] = [];
@@ -104,7 +106,9 @@ export function diffMarkdown(oldText: string, newText: string): DiffResult {
         }
       }
       if (best < 0) {
-        out.push({ type: "removed", kind: d.kind, section: locate(d), line: d.line, old: d.text });
+        // Placed before the next block that comes after it in the newer version.
+        const at = ins[start]?.line ?? nextLine;
+        out.push({ type: "removed", kind: d.kind, section: locate(d), line: d.line, old: d.text, ...(at ? { at_line: at } : {}) });
         continue;
       }
       for (let j = start; j < best; j++) out.push(added(ins[j]));
@@ -125,7 +129,7 @@ export function diffMarkdown(oldText: string, newText: string): DiffResult {
   const added = (b: Block): Change => ({ type: "added", kind: b.kind, section: locate(b), line: b.line, new: b.text });
 
   for (const o of ops) {
-    if (o.op === "equal") flush();
+    if (o.op === "equal") flush(B[o.b].line);
     else if (o.op === "delete") dels.push(A[o.a]);
     else ins.push(B[o.b]);
   }
@@ -147,3 +151,6 @@ export function inlineWords(words: WordPart[]): string {
   }
   return out;
 }
+
+export { diffSeq } from "./myers.js";
+export { parseBlocks } from "./markdown.js";
