@@ -16,14 +16,21 @@ jobs:
       run:
         working-directory: tools/mdeditdiff
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
           cache: npm
           cache-dependency-path: tools/mdeditdiff/package-lock.json
       - run: npm ci
-      - run: npm test
+      - name: Test
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee test.log || {
+            msg=$(grep -A30 '^not ok' test.log | head -80 | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
+            echo "::error title=Test failures::$msg"
+            exit 1
+          }
       - name: CLI smoke test
         run: |
           printf '# Plan\n\n- one\n' > /tmp/plan.md
