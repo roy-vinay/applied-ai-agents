@@ -16,14 +16,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = MainMenu.build()
+        // Optional appearance override: `defaults write io.github.roy-vinay.mdeditdiff Appearance dark` (or light).
+        switch UserDefaults.standard.string(forKey: "Appearance")?.lowercased() {
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        default: break // Follow the system.
+        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.activate(ignoringOtherApps: true)
-        // If launched without a file, offer the Open panel instead of an empty window.
-        DispatchQueue.main.async {
-            if NSDocumentController.shared.documents.isEmpty {
-                NSDocumentController.shared.openDocument(nil)
+        // Launched to open a file (from Finder or `open`): don't show the Open panel.
+        let isDefaultLaunch = (notification.userInfo?[NSApplication.launchIsDefaultUserInfoKey] as? Bool) ?? true
+        guard isDefaultLaunch else { return }
+        // Launched on its own: offer the Open panel instead of an empty window.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            MainActor.assumeIsolated {
+                if NSDocumentController.shared.documents.isEmpty {
+                    NSDocumentController.shared.openDocument(nil)
+                }
             }
         }
     }
