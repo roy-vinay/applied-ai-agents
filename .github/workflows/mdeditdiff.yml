@@ -40,6 +40,8 @@ jobs:
 
   app:
     runs-on: macos-15
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: tools/mdeditdiff/app
@@ -68,6 +70,25 @@ jobs:
           PID=$!
           sleep 8
           if kill -0 $PID 2>/dev/null; then echo "App is running"; kill $PID; else echo "::error title=Launch failed::The app exited within 8 seconds"; exit 1; fi
+      - name: Install the CLI (so screenshots show shared history)
+        working-directory: tools/mdeditdiff
+        run: npm ci && npm run build && npm install -g .
+      - name: Screenshots
+        run: ./scripts/screenshots.sh
+      - name: Commit screenshots to docs branches
+        if: startsWith(github.ref, 'refs/heads/docs/')
+        working-directory: tools/mdeditdiff
+        run: |
+          git config user.name "Vinay Roy"
+          git config user.email "vroy@berkeley.edu"
+          git add docs/img/app-*.png
+          if git diff --cached --quiet; then echo "No screenshot changes"; exit 0; fi
+          git commit -m "mdEditDiff docs: app screenshots"
+          git push origin HEAD:${GITHUB_REF#refs/heads/}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mdEditDiff-screenshots
+          path: tools/mdeditdiff/docs/img/app-*.png
       - uses: actions/upload-artifact@v4
         with:
           name: mdEditDiff-macOS

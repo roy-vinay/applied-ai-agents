@@ -28,6 +28,16 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
 
     var currentText: String { textView.string }
 
+    /// Mode for opening existing files: Read unless the "DefaultMode" setting says otherwise
+    /// (for example `defaults write io.github.roy-vinay.mdeditdiff DefaultMode split`).
+    static var defaultModeForFiles: Mode {
+        switch UserDefaults.standard.string(forKey: "DefaultMode")?.lowercased() {
+        case "edit": return .edit
+        case "split": return .split
+        default: return .read
+        }
+    }
+
     init(document doc: MarkdownDocument) {
         markdownDocument = doc
 
@@ -62,7 +72,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
 
         textView.string = doc.loadedText
         highlighter.apply(to: textView)
-        setMode(doc.fileURL == nil ? .edit : .read)
+        setMode(doc.fileURL == nil ? .edit : Self.defaultModeForFiles)
         window.center()
         updateSubtitle()
     }
