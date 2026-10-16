@@ -310,8 +310,8 @@
       var i = buttons.indexOf(document.activeElement);
       if (i < 0) return;
       var to = -1;
-      if (e.key === "ArrowDown" || e.key === "ArrowRight") to = Math.min(buttons.length - 1, i + 1);
-      else if (e.key === "ArrowUp" || e.key === "ArrowLeft") to = Math.max(0, i - 1);
+      if (e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "PageDown") to = Math.min(buttons.length - 1, i + 1);
+      else if (e.key === "ArrowUp" || e.key === "ArrowLeft" || e.key === "PageUp") to = Math.max(0, i - 1);
       else if (e.key === "Home") to = 0;
       else if (e.key === "End") to = buttons.length - 1;
       else if (e.key === "Escape") { e.preventDefault(); focusDocument(); return; }
@@ -368,6 +368,8 @@
   function buildThumbs() {
     var nav = sidebar();
     var list = document.getElementById("thumb-list");
+    // Rebuilding (after an edit or an image loads) shouldn't throw keyboard focus out of the list.
+    var hadFocus = list.contains(document.activeElement);
     if (thumbObserver) thumbObserver.disconnect();
     list.textContent = "";
     if (!state.paged) return;
@@ -387,12 +389,20 @@
       var label = el("span", "thumb-num", String(i + 1));
       label.setAttribute("aria-hidden", "true");
       b.appendChild(label);
-      b.addEventListener("click", function () { goTo(i, true); });
+      b.addEventListener("click", function () {
+        // WebKit doesn't focus a button on click, so the arrow keys wouldn't reach the list. Focus it.
+        b.focus({ preventScroll: true });
+        goTo(i, true);
+      });
       li.appendChild(b);
       list.appendChild(li);
       if (thumbObserver) thumbObserver.observe(li); else fillThumb(li);
     });
     markCurrent(false);
+    if (hadFocus) {
+      var again = list.querySelectorAll("button.thumb")[current];
+      if (again) again.focus({ preventScroll: true });
+    }
   }
 
   // ---------------------------------------------------------------------------------------------

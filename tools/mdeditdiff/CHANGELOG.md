@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1
+
+- **Fixed:** after clicking a page thumbnail, the up and down arrow keys (and Page Up / Page Down) now move to the previous or next page. Focus also stays in the thumbnails when the pages are laid out again.
+
 ## 0.5.0
 
 - **Highlights and notes:** select text in Read mode and pick a color, or choose Add Note.
