@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3
+
+- **Fixed:** a thin vertical line stayed across the document after switching from Split back to Read.
+- **Fixed:** a section break followed by a heading no longer shows two dividers.
+
 ## 0.3.2
 
 - **Day and night app icon:** white by day, graphite black at night. It follows Light and Dark mode, so with Appearance set to Auto it switches with the time of day.
