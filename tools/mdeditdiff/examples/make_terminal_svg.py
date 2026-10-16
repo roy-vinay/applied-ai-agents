@@ -1,6 +1,6 @@
-"""Turn the output of demo/demo.sh into an animated terminal SVG for the README.
+"""Turn the output of examples/walkthrough.sh into an animated terminal SVG for the README.
 
-Usage: ./demo/demo.sh | python3 demo/make_terminal_svg.py > docs/img/demo.svg
+Usage: ./examples/walkthrough.sh | python3 examples/make_terminal_svg.py > docs/img/walkthrough.svg
 """
 import html
 import re
@@ -20,7 +20,7 @@ for line in lines:
     m = re.match(r"\x1b\[([\d;]+)m(.*?)\x1b\[0m$", line)
     if m:
         codes, line = m.group(1).split(";"), m.group(2)
-        style = "cmd" if "2" in codes else "say"
+        style = "cmd" if "2" in codes else "say" if "36" in codes else "title"
         if style == "say":
             t += STEP_PAUSE
     line = re.sub(r"\x1b\[[\d;]*m", "", line)
@@ -31,10 +31,10 @@ total = t + HOLD
 width = int(PAD * 2 + CHAR_W * max(len(l) for _, l, _ in items))
 height = int(PAD * 2 + 26 + LINE_H * len(items))
 out = [
-    f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="Terminal demo of mdeditdiff: a planner agent, a person and an implementer agent share plan.md, and the implementer asks what changed">',
+    f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="mdEditDiff walkthrough in a terminal: a planner agent, a person and an implementer agent share plan.md, and the implementer asks what changed">',
     "<style>",
     "text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;fill:#d7dae0;white-space:pre}",
-    ".say{fill:#56b6c2;font-weight:700}.cmd{fill:#8b93a1}.add{fill:#98c379}.del{fill:#e06c75}.mod{fill:#e5c07b}",
+    ".say{fill:#56b6c2;font-weight:700}.title{fill:#ffffff;font-weight:700}.cmd{fill:#8b93a1}.add{fill:#98c379}.del{fill:#e06c75}.mod{fill:#e5c07b}",
     "</style>",
     f'<rect width="{width}" height="{height}" rx="10" fill="#1e2127"/>',
     '<circle cx="20" cy="18" r="6" fill="#ff5f57"/><circle cx="40" cy="18" r="6" fill="#febc2e"/><circle cx="60" cy="18" r="6" fill="#28c840"/>',

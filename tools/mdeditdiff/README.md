@@ -2,14 +2,17 @@
 
 **An editor for people, a diff for agents. See what changed in a Markdown file since you last looked, and who changed it.**
 
+mdEditDiff is a free, open-source tool (MIT license) for anyone who works on Markdown files alongside AI
+agents. It has two parts: a command-line tool and MCP server for agents, and a native Mac app for people.
+
 mdEditDiff keeps a private change history for every Markdown file you work on, and remembers where each
 reader, agent or person, last looked. Agents ask it what changed and get back only the changed parts,
 word by word, with who reported them, instead of re-reading the whole file. People open the same files in
 a native Mac app that reads and edits Markdown and records every save in the same history.
 
-[Get it](#get-it) · [Try the demo](#try-the-demo) · [The Mac app](#the-mac-app) · [Use it with an agent](#use-it-with-an-agent)
+[Get it](#get-it) · [See it in action](#see-it-in-action) · [The Mac app](#the-mac-app) · [Use it with an agent](#use-it-with-an-agent) · [Contribute](#contribute)
 
-![A terminal demo: a planner agent writes plan.md, a person edits it, the planner revises it, and the implementer asks what changed and gets back four precise changes with who reported them](docs/img/demo.svg)
+![mdEditDiff in a terminal: a planner agent writes plan.md, a person edits it, the planner revises it, and the implementer asks what changed and gets back four precise changes with who reported them](docs/img/walkthrough.svg)
 
 ## The problem
 
@@ -113,28 +116,28 @@ claude mcp add mdeditdiff -- mdeditdiff mcp
 With the tool installed, the Mac app records each save in the shared history, and the window subtitle shows
 the current revision (for example "History r4").
 
-## Try the demo
+## See it in action
 
-The demo plays out the story in the animation above, in a temporary folder with its own history, so it
-never touches your files:
+The walkthrough plays out the story in the animation above, using a temporary folder with its own history,
+so it never touches your files:
 
 ```bash
 cd applied-ai-agents/tools/mdeditdiff
 npm install
-npm run demo
+npm run walkthrough
 ```
 
 It walks through six steps: a planner agent writes `plan.md`, an implementer reads it, you edit it without
 telling anyone, the planner checks what changed before revising, the implementer asks what changed and gets
 back four precise changes, and the full history shows who did what.
 
-To see the Mac app side, open [`demo/plan.md`](demo/plan.md) in mdEditDiff, switch to Edit (⌘2), change a
+To see the Mac app side, open [`examples/plan.md`](examples/plan.md) in mdEditDiff, switch to Edit (⌘2), change a
 step, and save. With the command-line tool installed, then run:
 
 ```bash
-mdeditdiff changes demo/plan.md --reader me      # first time: the full text
+mdeditdiff changes examples/plan.md --reader me      # first time: the full text
 # edit and save the file in the app again, then:
-mdeditdiff changes demo/plan.md --reader me      # just your edit, labeled with your name
+mdeditdiff changes examples/plan.md --reader me      # just your edit, labeled with your name
 ```
 
 ## The Mac app
@@ -201,7 +204,7 @@ defaults write io.github.roy-vinay.mdeditdiff Appearance dark     # or light; de
 
 ![mdEditDiff in Read mode with the dark appearance](docs/img/app-read-dark.png)
 
-### Coming next
+### Roadmap
 
 - **Changes since you last read**, highlighted in the formatted document, with the agents' notes and
   next/previous navigation.
@@ -220,7 +223,7 @@ swift test                   # byte-exact saving and editor tests
 
 ## What an agent gets back
 
-From the demo: a planner wrote a plan, a person removed a question, tightened a step and recorded a
+From the walkthrough: a planner wrote a plan, a person removed a question, tightened a step and recorded a
 decision without telling anyone, and the planner then proposed a row limit and checked in. The
 implementer asks what changed:
 
@@ -309,17 +312,24 @@ mdeditdiff checkpoint plan.md --author implementer --note "Split step 4 into two
 - **UTF-8 only.** Other encodings are refused rather than guessed.
 - **Moves are not detected.** A moved paragraph shows as removed in one place and added in another.
 
-## Develop
+## Contribute
+
+mdEditDiff is open source under the MIT license, and contributions are welcome: bug reports, ideas and
+pull requests. Open an [issue](https://github.com/roy-vinay/applied-ai-agents/issues) to report a problem or
+suggest a feature.
+
+### Develop
 
 ```bash
 cd tools/mdeditdiff
 npm install
 npm test    # unit, acceptance, two-agent simulation, concurrency, MCP and preview-renderer tests
-npm run demo
+npm run walkthrough
 ```
 
 CI runs the tests on Linux and macOS with Node 20 and 22, builds and tests the Mac app, launches it, and
 takes the screenshots on this page. To regenerate the terminal animation:
-`./demo/demo.sh | python3 demo/make_terminal_svg.py > docs/img/demo.svg`.
+`./examples/walkthrough.sh | python3 examples/make_terminal_svg.py > docs/img/walkthrough.svg`.
 
-MIT license.
+Licensed under the [MIT license](LICENSE). The Mac app bundles [markdown-it](https://github.com/markdown-it/markdown-it)
+(MIT) for its preview.

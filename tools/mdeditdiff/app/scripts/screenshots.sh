@@ -6,7 +6,7 @@ APP="$PWD/build/mdEditDiff.app"
 OUT="$PWD/../docs/img"
 mkdir -p "$OUT"
 WORK="$(mktemp -d)"
-cp ../demo/plan.md "$WORK/plan.md"
+cp ../examples/plan.md "$WORK/plan.md"
 
 shoot() { # name, extra app arguments...
   local name="$1"; shift

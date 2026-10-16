@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="839" height="1050" viewBox="0 0 839 1050" role="img" aria-label="mdEditDiff walkthrough in a terminal: a planner agent, a person and an implementer agent share plan.md, and the implementer asks what changed">
+<style>
+text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;fill:#d7dae0;white-space:pre}
+.say{fill:#56b6c2;font-weight:700}.title{fill:#ffffff;font-weight:700}.cmd{fill:#8b93a1}.add{fill:#98c379}.del{fill:#e06c75}.mod{fill:#e5c07b}
+</style>
+<rect width="839" height="1050" rx="10" fill="#1e2127"/>
+<circle cx="20" cy="18" r="6" fill="#ff5f57"/><circle cx="40" cy="18" r="6" fill="#febc2e"/><circle cx="60" cy="18" r="6" fill="#28c840"/>
+<style>@keyframes l0{0%,2.60%{opacity:0}3.40%,98%{opacity:1}100%{opacity:0}}.l0{animation:l0 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="58" class="l0 title" xml:space="preserve">mdEditDiff: an editor for people, a diff for agents.</text>
+<style>@keyframes l1{0%,2.90%{opacity:0}3.70%,98%{opacity:1}100%{opacity:0}}.l1{animation:l1 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="77" class="l1 " xml:space="preserve">Free, open-source (MIT): github.com/roy-vinay/applied-ai-agents/tree/main/tools/mdeditdiff</text>
+<style>@keyframes l2{0%,3.20%{opacity:0}4.00%,98%{opacity:1}100%{opacity:0}}.l2{animation:l2 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="96" class="l2 " xml:space="preserve"></text>
+<style>@keyframes l3{0%,10.42%{opacity:0}11.22%,98%{opacity:1}100%{opacity:0}}.l3{animation:l3 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="115" class="l3 say" xml:space="preserve"># 1. A planner agent writes plan.md and checks it in.</text>
+<style>@keyframes l4{0%,10.73%{opacity:0}11.53%,98%{opacity:1}100%{opacity:0}}.l4{animation:l4 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="134" class="l4 cmd" xml:space="preserve">$ mdeditdiff checkpoint plan.md --author planner --note &quot;First plan&quot;</text>
+<style>@keyframes l5{0%,12.24%{opacity:0}13.04%,98%{opacity:1}100%{opacity:0}}.l5{animation:l5 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="153" class="l5 " xml:space="preserve">r1: Recorded a new revision with your name.</text>
+<style>@keyframes l6{0%,12.54%{opacity:0}13.34%,98%{opacity:1}100%{opacity:0}}.l6{animation:l6 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="172" class="l6 " xml:space="preserve"></text>
+<style>@keyframes l7{0%,19.77%{opacity:0}20.57%,98%{opacity:1}100%{opacity:0}}.l7{animation:l7 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="191" class="l7 say" xml:space="preserve"># 2. An implementer agent reads it for the first time (it gets the full text once).</text>
+<style>@keyframes l8{0%,20.07%{opacity:0}20.87%,98%{opacity:1}100%{opacity:0}}.l8{animation:l8 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="210" class="l8 cmd" xml:space="preserve">$ mdeditdiff changes plan.md --reader implementer</text>
+<style>@keyframes l9{0%,21.58%{opacity:0}22.38%,98%{opacity:1}100%{opacity:0}}.l9{animation:l9 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="229" class="l9 " xml:space="preserve">plan.md: first look for reader &quot;implementer&quot;. Full text of r1 follows. Marked as seen.</text>
+<style>@keyframes l10{0%,21.89%{opacity:0}22.69%,98%{opacity:1}100%{opacity:0}}.l10{animation:l10 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="248" class="l10 " xml:space="preserve"></text>
+<style>@keyframes l11{0%,22.19%{opacity:0}22.99%,98%{opacity:1}100%{opacity:0}}.l11{animation:l11 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="267" class="l11 " xml:space="preserve"># Export reports to CSV</text>
+<style>@keyframes l12{0%,22.49%{opacity:0}23.29%,98%{opacity:1}100%{opacity:0}}.l12{animation:l12 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="286" class="l12 " xml:space="preserve">   ...</text>
+<style>@keyframes l13{0%,22.79%{opacity:0}23.59%,98%{opacity:1}100%{opacity:0}}.l13{animation:l13 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="305" class="l13 " xml:space="preserve"></text>
+<style>@keyframes l14{0%,30.02%{opacity:0}30.82%,98%{opacity:1}100%{opacity:0}}.l14{animation:l14 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="324" class="l14 say" xml:space="preserve"># 3. A person edits the plan in their editor and tells no one.</text>
+<style>@keyframes l15{0%,30.32%{opacity:0}31.12%,98%{opacity:1}100%{opacity:0}}.l15{animation:l15 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="343" class="l15 " xml:space="preserve">   - answers the archived-rows question and removes it</text>
+<style>@keyframes l16{0%,30.62%{opacity:0}31.42%,98%{opacity:1}100%{opacity:0}}.l16{animation:l16 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="362" class="l16 " xml:space="preserve">   - tightens step 2</text>
+<style>@keyframes l17{0%,30.93%{opacity:0}31.73%,98%{opacity:1}100%{opacity:0}}.l17{animation:l17 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="381" class="l17 " xml:space="preserve"></text>
+<style>@keyframes l18{0%,38.15%{opacity:0}38.95%,98%{opacity:1}100%{opacity:0}}.l18{animation:l18 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="400" class="l18 say" xml:space="preserve"># 4. The planner checks what changed before revising, then proposes a row limit and checks in.</text>
+<style>@keyframes l19{0%,38.45%{opacity:0}39.25%,98%{opacity:1}100%{opacity:0}}.l19{animation:l19 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="419" class="l19 cmd" xml:space="preserve">$ mdeditdiff changes plan.md --reader planner</text>
+<style>@keyframes l20{0%,39.97%{opacity:0}40.77%,98%{opacity:1}100%{opacity:0}}.l20{animation:l20 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="438" class="l20 " xml:space="preserve">plan.md: 3 changes (1 modified, 1 added, 1 removed) since r1, your last look, up to r2. Marked as seen.</text>
+<style>@keyframes l21{0%,40.27%{opacity:0}41.07%,98%{opacity:1}100%{opacity:0}}.l21{animation:l21 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="457" class="l21 " xml:space="preserve">By: r2 changed outside, not reported</text>
+<style>@keyframes l22{0%,40.57%{opacity:0}41.37%,98%{opacity:1}100%{opacity:0}}.l22{animation:l22 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="476" class="l22 cmd" xml:space="preserve">$ mdeditdiff checkpoint plan.md --author planner --note &quot;Proposed a row limit&quot;</text>
+<style>@keyframes l23{0%,42.08%{opacity:0}42.88%,98%{opacity:1}100%{opacity:0}}.l23{animation:l23 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="495" class="l23 " xml:space="preserve">r3: Recorded a new revision with your name.</text>
+<style>@keyframes l24{0%,42.39%{opacity:0}43.19%,98%{opacity:1}100%{opacity:0}}.l24{animation:l24 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="514" class="l24 " xml:space="preserve"></text>
+<style>@keyframes l25{0%,49.61%{opacity:0}50.41%,98%{opacity:1}100%{opacity:0}}.l25{animation:l25 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="533" class="l25 say" xml:space="preserve"># 5. The implementer comes back. Instead of re-reading the plan, it asks what changed:</text>
+<style>@keyframes l26{0%,49.91%{opacity:0}50.71%,98%{opacity:1}100%{opacity:0}}.l26{animation:l26 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="552" class="l26 cmd" xml:space="preserve">$ mdeditdiff changes plan.md --reader implementer</text>
+<style>@keyframes l27{0%,51.43%{opacity:0}52.23%,98%{opacity:1}100%{opacity:0}}.l27{animation:l27 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="571" class="l27 " xml:space="preserve">plan.md: 4 changes (2 modified, 1 added, 1 removed) since r1, your last look, up to r3. Marked as seen.</text>
+<style>@keyframes l28{0%,51.73%{opacity:0}52.53%,98%{opacity:1}100%{opacity:0}}.l28{animation:l28 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="590" class="l28 " xml:space="preserve">By: r2 changed outside, not reported; r3 planner: &quot;Proposed a row limit&quot;</text>
+<style>@keyframes l29{0%,52.03%{opacity:0}52.83%,98%{opacity:1}100%{opacity:0}}.l29{animation:l29 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="609" class="l29 " xml:space="preserve">Word changes are shown as [-removed-] {+added+}.</text>
+<style>@keyframes l30{0%,52.34%{opacity:0}53.14%,98%{opacity:1}100%{opacity:0}}.l30{animation:l30 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="628" class="l30 " xml:space="preserve"></text>
+<style>@keyframes l31{0%,52.64%{opacity:0}53.44%,98%{opacity:1}100%{opacity:0}}.l31{animation:l31 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="647" class="l31 mod" xml:space="preserve">~ modified Export reports to CSV &gt; Steps (list-item, line 8)</text>
+<style>@keyframes l32{0%,52.94%{opacity:0}53.74%,98%{opacity:1}100%{opacity:0}}.l32{animation:l32 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="666" class="l32 " xml:space="preserve">    Build the CSV on the server{+, streaming rows so large reports never time out+}.</text>
+<style>@keyframes l33{0%,53.24%{opacity:0}54.04%,98%{opacity:1}100%{opacity:0}}.l33{animation:l33 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="685" class="l33 del" xml:space="preserve">- removed  Export reports to CSV &gt; Open questions (list-item, was line 14)</text>
+<style>@keyframes l34{0%,53.55%{opacity:0}54.35%,98%{opacity:1}100%{opacity:0}}.l34{animation:l34 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="704" class="l34 " xml:space="preserve">    - Should exports include archived rows?</text>
+<style>@keyframes l35{0%,53.85%{opacity:0}54.65%,98%{opacity:1}100%{opacity:0}}.l35{animation:l35 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="723" class="l35 mod" xml:space="preserve">~ modified Export reports to CSV &gt; Open questions (list-item, line 14)</text>
+<style>@keyframes l36{0%,54.15%{opacity:0}54.95%,98%{opacity:1}100%{opacity:0}}.l36{animation:l36 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="742" class="l36 " xml:space="preserve">    What is the row limit? {+Proposed: 100,000 rows.+}</text>
+<style>@keyframes l37{0%,54.46%{opacity:0}55.26%,98%{opacity:1}100%{opacity:0}}.l37{animation:l37 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="761" class="l37 add" xml:space="preserve">+ added    Export reports to CSV &gt; Open questions (paragraph, line 16)</text>
+<style>@keyframes l38{0%,54.76%{opacity:0}55.56%,98%{opacity:1}100%{opacity:0}}.l38{animation:l38 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="780" class="l38 " xml:space="preserve">    Decision: archived rows are excluded.</text>
+<style>@keyframes l39{0%,55.06%{opacity:0}55.86%,98%{opacity:1}100%{opacity:0}}.l39{animation:l39 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="799" class="l39 " xml:space="preserve"></text>
+<style>@keyframes l40{0%,62.28%{opacity:0}63.08%,98%{opacity:1}100%{opacity:0}}.l40{animation:l40 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="818" class="l40 say" xml:space="preserve"># 6. The full history, with who reported each version and where each reader last looked:</text>
+<style>@keyframes l41{0%,62.59%{opacity:0}63.39%,98%{opacity:1}100%{opacity:0}}.l41{animation:l41 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="837" class="l41 cmd" xml:space="preserve">$ mdeditdiff history plan.md</text>
+<style>@keyframes l42{0%,64.10%{opacity:0}64.90%,98%{opacity:1}100%{opacity:0}}.l42{animation:l42 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="856" class="l42 " xml:space="preserve">plan.md: 3 revisions, newest first.</text>
+<style>@keyframes l43{0%,64.40%{opacity:0}65.20%,98%{opacity:1}100%{opacity:0}}.l43{animation:l43 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="875" class="l43 " xml:space="preserve">r3  2026-10-16T06:05:22.836Z  planner: &quot;Proposed a row limit&quot;</text>
+<style>@keyframes l44{0%,64.71%{opacity:0}65.51%,98%{opacity:1}100%{opacity:0}}.l44{animation:l44 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="894" class="l44 " xml:space="preserve">r2  2026-10-16T06:05:22.743Z  changed outside, not reported</text>
+<style>@keyframes l45{0%,65.01%{opacity:0}65.81%,98%{opacity:1}100%{opacity:0}}.l45{animation:l45 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="913" class="l45 " xml:space="preserve">r1  2026-10-16T06:05:22.572Z  planner: &quot;First plan&quot;</text>
+<style>@keyframes l46{0%,65.31%{opacity:0}66.11%,98%{opacity:1}100%{opacity:0}}.l46{animation:l46 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="932" class="l46 " xml:space="preserve"></text>
+<style>@keyframes l47{0%,65.61%{opacity:0}66.41%,98%{opacity:1}100%{opacity:0}}.l47{animation:l47 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="951" class="l47 " xml:space="preserve">Last looked: planner at r3, implementer at r3</text>
+<style>@keyframes l48{0%,65.92%{opacity:0}66.72%,98%{opacity:1}100%{opacity:0}}.l48{animation:l48 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="970" class="l48 " xml:space="preserve"></text>
+<style>@keyframes l49{0%,73.14%{opacity:0}73.94%,98%{opacity:1}100%{opacity:0}}.l49{animation:l49 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="989" class="l49 say" xml:space="preserve"># That&#x27;s mdEditDiff. Install it: npm install -g ./tools/mdeditdiff (from a clone of the repo).</text>
+<style>@keyframes l50{0%,73.44%{opacity:0}74.24%,98%{opacity:1}100%{opacity:0}}.l50{animation:l50 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="1008" class="l50 " xml:space="preserve">   Source, Mac app and docs: github.com/roy-vinay/applied-ai-agents/tree/main/tools/mdeditdiff</text>
+<style>@keyframes l51{0%,73.75%{opacity:0}74.55%,98%{opacity:1}100%{opacity:0}}.l51{animation:l51 23.1s linear infinite;opacity:0}</style>
+<text x="18" y="1027" class="l51 " xml:space="preserve">   (This walkthrough used a temporary history; your real history was not touched.)</text>
+</svg>

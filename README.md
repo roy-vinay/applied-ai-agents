@@ -53,7 +53,7 @@ Tools for people who work alongside AI agents.
 
 | Tool | What it does | Stack |
 | --- | --- | --- |
-| [mdEditDiff](tools/mdeditdiff) | An editor for people, a diff for agents. Agents ask what changed in a shared Markdown file since they last looked and get back only the changed parts, word by word, with who reported them, instead of re-reading whole plans. People get a native Mac app that reads and edits Markdown, with Read, Edit and Split modes and saves that never touch what they didn't change. [Download the Mac app or install the CLI and MCP server](tools/mdeditdiff#get-it). | TypeScript, MCP, Swift |
+| [mdEditDiff](tools/mdeditdiff) | Free, open-source (MIT). An editor for people, a diff for agents. Agents ask what changed in a shared Markdown file since they last looked and get back only the changed parts, word by word, with who reported them, instead of re-reading whole plans. People get a native Mac app that reads and edits Markdown, with Read, Edit and Split modes and saves that never touch what they didn't change. [Download the Mac app or install the CLI and MCP server](tools/mdeditdiff#get-it). | TypeScript, MCP, Swift |
 
 ## Failure Files
 
