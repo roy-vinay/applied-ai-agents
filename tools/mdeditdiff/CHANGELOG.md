@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2
+
+- **Day and night app icon:** white by day, graphite black at night. It follows Light and Dark mode, so with Appearance set to Auto it switches with the time of day.
+- **When it switches:** the Dock icon changes while the app is running. On macOS versions that support dark app icons, Finder shows the matching icon too.
+
 ## 0.3.1
 
 A visual refresh of the Mac app. No change in behavior.
