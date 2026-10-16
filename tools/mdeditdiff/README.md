@@ -192,8 +192,12 @@ instead of "changed outside, not reported", and the window subtitle shows the fi
 | Find / Find and Replace | ⌘F / ⌥⌘F |
 | Bigger / Smaller / Actual size text | ⌘+ / ⌘− / ⌘0 |
 
-To open files in Split or Edit mode by default:
-`defaults write io.github.roy-vinay.mdeditdiff DefaultMode split` (or `edit`; `read` restores the default).
+Two settings for now, set in Terminal (a settings window is coming):
+
+```bash
+defaults write io.github.roy-vinay.mdeditdiff DefaultMode split   # open files in split (or edit, read)
+defaults write io.github.roy-vinay.mdeditdiff Appearance dark     # or light; delete the key to follow the system
+```
 
 ![mdEditDiff in Read mode with the dark appearance](docs/img/app-read-dark.png)
 

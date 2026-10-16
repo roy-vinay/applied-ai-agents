@@ -24,4 +24,4 @@ rm -f "$OUT"/app-*.png
 shoot app-read -DefaultMode read
 shoot app-split -DefaultMode split
 shoot app-edit -DefaultMode edit
-shoot app-read-dark -DefaultMode read -AppleInterfaceStyle Dark
+shoot app-read-dark -DefaultMode read -Appearance dark

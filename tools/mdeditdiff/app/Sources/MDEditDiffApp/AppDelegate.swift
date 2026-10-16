@@ -16,6 +16,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = MainMenu.build()
+        // Optional appearance override: `defaults write io.github.roy-vinay.mdeditdiff Appearance dark` (or light).
+        switch UserDefaults.standard.string(forKey: "Appearance")?.lowercased() {
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        default: break // Follow the system.
+        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
