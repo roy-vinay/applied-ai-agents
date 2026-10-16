@@ -21,7 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.activate(ignoringOtherApps: true)
         // Launched to open a file (from Finder or `open`): don't show the Open panel.
-        let isDefaultLaunch = (notification.userInfo?[NSApplication.launchIsDefaultLaunchKey] as? Bool) ?? true
+        let isDefaultLaunch = (notification.userInfo?[NSApplication.launchIsDefaultUserInfoKey] as? Bool) ?? true
         guard isDefaultLaunch else { return }
         // Launched on its own: offer the Open panel instead of an empty window.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
