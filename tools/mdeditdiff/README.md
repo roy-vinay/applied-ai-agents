@@ -1,16 +1,63 @@
-# mdeditdiff
+# mdEditDiff
 
-**What changed in a Markdown file since you last looked, and who changed it.**
+**An editor for people, a diff for agents. See what changed in a Markdown file since you last looked, and who changed it.**
 
 AI agents increasingly work through shared Markdown files. A planner agent writes `plan.md`, an
-implementer follows it, a person fixes a step, and the planner revises it again. Each of them needs to
-know what changed since they last read the file. Today they find out by re-reading the whole file and
-guessing, by running `git diff` (which only knows about commits), or by hoping the last writer left a note.
+implementer follows it, a person fixes a step, and the planner revises it again. Everyone involved needs to
+know what changed since they last read the file. Today they find out by re-reading the whole file, by
+running `git diff` (which only knows about commits), or by hoping the last writer left a note.
 
-mdeditdiff gives every reader, agent or person, its own "last looked" point on each file. Ask it what
-changed and you get back only the changed parts, in readable Markdown, with who reported them. Agents
-use it through a command-line tool or an MCP server. A macOS reader app for people, built on the same
-history, is in early prototype ([below](#the-mac-app-prototype)).
+mdEditDiff keeps a private change history for each Markdown file on your computer and gives every reader,
+agent or person, its own "last looked" point. It comes in two parts that share that history:
+
+- **For agents: the `mdeditdiff` command-line tool and MCP server.** An agent asks what changed and gets back
+  only the changed parts, word by word, with the section each change is in and who reported it. It works
+  with Claude Code, Cursor and any agent that can run a command, and it never changes your files.
+- **For people: the mdEditDiff Mac app.** A native reader and editor that opens Markdown files from
+  Finder as formatted documents, with Read, Edit and Split modes. Saving never touches anything you didn't
+  edit, and each save is recorded in the same history the agents use. (Early prototype; highlighted
+  changes and the revision timeline are coming next.)
+
+Everything stays on your computer. There is no account, no cloud service and no telemetry.
+
+## Get it
+
+### The Mac app
+
+Requires macOS 14 (Sonoma) or later, on Apple silicon or Intel.
+
+1. Sign in to GitHub, open the latest
+   [mdeditdiff build](https://github.com/roy-vinay/applied-ai-agents/actions/workflows/mdeditdiff.yml?query=branch%3Amain+is%3Asuccess),
+   click the top run, and download **mdEditDiff-macOS** under **Artifacts**.
+2. Unzip it (it may be zipped twice) and drag **mdEditDiff.app** into **Applications**.
+3. Allow it to open the first time. The app isn't notarized by Apple yet, so macOS blocks it with
+   *"Apple could not verify mdEditDiff"*. Click **Done**, then either:
+   - open **System Settings > Privacy & Security**, scroll down, click **Open Anyway**, and confirm; or
+   - run `xattr -dr com.apple.quarantine /Applications/mdEditDiff.app` in Terminal.
+4. Open a file: right-click any `.md` file in Finder and choose **Open With > mdEditDiff**. To make it the
+   default, select a `.md` file, press ⌘I, pick mdEditDiff under **Open with**, and click **Change All**.
+
+Using it: files open in **Read** mode. Press **⌘2** to edit the Markdown, **⌘3** to edit with a live
+preview beside it, **⌘1** to go back to reading, and **⌘S** to save.
+
+### The command-line tool and MCP server
+
+Requires Node.js 20 or later (check with `node -v`; get it from [nodejs.org](https://nodejs.org)).
+
+```bash
+git clone https://github.com/roy-vinay/applied-ai-agents
+npm install -g ./applied-ai-agents/tools/mdeditdiff
+mdeditdiff --help
+```
+
+Connect it to Claude Code:
+
+```bash
+claude mcp add mdeditdiff -- mdeditdiff mcp
+```
+
+With the tool installed, the Mac app records each save in the shared history, and the window subtitle shows
+the current revision (for example "History r4").
 
 ## What an answer looks like
 
@@ -37,26 +84,10 @@ The implementer gets four precise changes, with the section each one is in, inst
 whole plan. Unchanged sections are never repeated. Rewrapped paragraphs and renumbered lists don't count
 as changes. Add `--json` for structured output ([format](docs/FORMAT.md)).
 
-## Install
-
-Requires Node.js 20 or later.
-
-```bash
-git clone https://github.com/roy-vinay/applied-ai-agents
-npm install -g ./applied-ai-agents/tools/mdeditdiff
-mdeditdiff --help
-```
-
 ## Use it with an agent
 
-**MCP (Claude Code, Cursor, and other MCP clients).** Add a server that runs `mdeditdiff mcp`.
-In Claude Code:
-
-```bash
-claude mcp add mdeditdiff -- mdeditdiff mcp
-```
-
-In clients configured with JSON:
+**MCP (Claude Code, Cursor, and other MCP clients).** Add a server that runs `mdeditdiff mcp`, as shown
+above for Claude Code. In clients configured with JSON:
 
 ```json
 { "mcpServers": { "mdeditdiff": { "command": "mdeditdiff", "args": ["mcp"] } } }
@@ -80,7 +111,7 @@ mdeditdiff checkpoint plan.md --author implementer --note "Split step 4 into two
 > re-reading the whole file. Right after you edit a shared file, call `checkpoint` with your name and a
 > one-line note saying what you changed.
 
-## The Mac app (prototype)
+## About the Mac app
 
 `app/` holds the macOS reader for people, built on the same history. This first version (Milestone 2)
 opens a Markdown file in **Read** mode, and switches to **Edit** (plain-text editor with light syntax
@@ -101,11 +132,7 @@ cd tools/mdeditdiff/app
 ./scripts/build-app.sh        # creates build/mdEditDiff.app and build/mdEditDiff-macOS.zip
 ```
 
-CI also builds a universal app on every change: open the latest
-[mdeditdiff workflow run](https://github.com/roy-vinay/applied-ai-agents/actions/workflows/mdeditdiff.yml)
-and download **mdEditDiff-macOS** under Artifacts. The app is not notarized yet, so macOS will block the
-first launch: right-click the app, choose **Open**, then **Open** again (or run
-`xattr -dr com.apple.quarantine mdEditDiff.app`).
+To download a ready-built app instead, see [Get it](#the-mac-app).
 
 Coming next: highlighted changes since you last read the file, the revision timeline, and restore
 (Milestone 3).

@@ -1,7 +1,7 @@
 {
   "name": "mdeditdiff",
   "version": "0.1.0",
-  "description": "What changed in a Markdown file since you last looked, and who changed it. A change log shared by AI agents and people, with a CLI and MCP server.",
+  "description": "An editor for people, a diff for agents: see what changed in a Markdown file since you last looked, and who changed it. CLI and MCP server for AI agents, plus a macOS reader app, sharing one local change history.",
   "main": "dist/src/api.js",
   "scripts": {
     "build": "tsc -p .",
