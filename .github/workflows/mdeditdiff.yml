@@ -23,6 +23,11 @@ jobs:
           cache: npm
           cache-dependency-path: tools/mdeditdiff/package-lock.json
       - run: npm ci
+      - name: Install a browser for the preview tests
+        if: matrix.os == 'ubuntu-latest' && matrix.node == 22
+        run: npx playwright install --with-deps chromium
+      - name: Check the app's bundled diff engine is up to date
+        run: npm run bundle && git diff --exit-code -- app/Sources/MDEditDiffApp/Resources/Preview/mdeditdiff-diff.js
       - name: Test
         run: |
           set -o pipefail
@@ -75,8 +80,8 @@ jobs:
         run: npm ci && npm run build && npm install -g .
       - name: Screenshots
         run: ./scripts/screenshots.sh
-      - name: Commit screenshots to docs branches
-        if: startsWith(github.ref, 'refs/heads/docs/')
+      - name: Commit screenshots to the branch (not main)
+        if: github.event_name == 'push' && github.ref != 'refs/heads/main'
         working-directory: tools/mdeditdiff
         run: |
           git config user.name "Vinay Roy"

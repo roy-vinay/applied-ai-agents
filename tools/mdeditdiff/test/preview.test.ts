@@ -50,7 +50,7 @@ let x = 1
 `;
 
 test("preview renders every supported construct", () => {
-  const html = render(REFERENCE);
+  const html = render(REFERENCE).replace(/ data-line="\d+"/g, "");
   for (const needle of [
     '<h1 id="title">Title</h1>',
     '<h2 id="title-1">Title</h2>',

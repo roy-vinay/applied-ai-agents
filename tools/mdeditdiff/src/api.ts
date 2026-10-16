@@ -26,7 +26,7 @@ const info = (r: Revision): RevisionInfo => ({
 
 export type ChangesResult =
   | { format: number; status: "first_look"; file: string; reader: string; to: RevisionInfo; text: string; marked_seen: boolean }
-  | { format: number; status: "no_changes"; file: string; reader: string; since: RevisionInfo; to: RevisionInfo; marked_seen: boolean }
+  | { format: number; status: "no_changes"; file: string; reader: string; since: RevisionInfo; to: RevisionInfo; marked_seen: boolean; base_text?: string }
   | ({
       format: number;
       status: "changed";
@@ -38,13 +38,15 @@ export type ChangesResult =
       revisions: RevisionInfo[];
       marked_seen: boolean;
       text?: string;
+      /** Full text of the reader's last-looked revision, when requested (for example by the Mac app). */
+      base_text?: string;
     } & DiffResult);
 
 export function changesSince(
   store: Store,
   file: string,
   reader: string,
-  opts: { markSeen?: boolean; full?: boolean } = {},
+  opts: { markSeen?: boolean; full?: boolean; withBase?: boolean } = {},
 ): ChangesResult {
   const who = checkName("reader", reader);
   const abs = store.resolve(file);
@@ -73,7 +75,10 @@ export function changesSince(
     if (baseRev.id === latest.id) {
       mark();
       store.save(idx);
-      return { format: FORMAT_VERSION, status: "no_changes", file: abs, reader: who, since: info(baseRev), to: info(latest), marked_seen: !!opts.markSeen };
+      return {
+        format: FORMAT_VERSION, status: "no_changes", file: abs, reader: who, since: info(baseRev), to: info(latest), marked_seen: !!opts.markSeen,
+        ...(opts.withBase ? { base_text: store.getText(baseRev) } : {}),
+      };
     }
     const result = diffMarkdown(store.getText(baseRev), store.getText(latest));
     const between = idx.revisions.filter((r) => r.id > baseRev.id && r.id <= latest.id).map(info);
@@ -81,7 +86,10 @@ export function changesSince(
     store.save(idx);
     if (result.changes.length === 0) {
       // Bytes changed but nothing a reader would notice (for example rewrapped text).
-      return { format: FORMAT_VERSION, status: "no_changes", file: abs, reader: who, since: info(baseRev), to: info(latest), marked_seen: !!opts.markSeen };
+      return {
+        format: FORMAT_VERSION, status: "no_changes", file: abs, reader: who, since: info(baseRev), to: info(latest), marked_seen: !!opts.markSeen,
+        ...(opts.withBase ? { base_text: store.getText(baseRev) } : {}),
+      };
     }
     return {
       format: FORMAT_VERSION,
@@ -94,6 +102,7 @@ export function changesSince(
       marked_seen: !!opts.markSeen,
       ...result,
       ...(opts.full ? { text: store.getText(latest) } : {}),
+      ...(opts.withBase ? { base_text: store.getText(baseRev) } : {}),
     };
   });
 }

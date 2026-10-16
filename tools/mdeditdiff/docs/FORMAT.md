@@ -69,7 +69,8 @@ when a paragraph was only rewrapped.
       ]
     }
   ],
-  "text": "only present when full text was requested"
+  "text": "only present when full text was requested",
+  "base_text": "only present with --with-base: the full text of the reader's last-looked version"
 }
 ```
 
@@ -84,6 +85,7 @@ reported changes in that range. It does not say which revision produced which ch
 | `kind` | `heading`, `paragraph`, `list-item`, `table-row`, `code`, `quote`, `rule`, or `front-matter`. |
 | `section` | The headings above the block, outermost first, joined with ` > `. `(top)` if none. |
 | `line` | 1-based line where the block starts: in the newer version, or in the older version for `removed`. |
+| `at_line` | For `removed` only: 1-based line, in the newer version, of the block that now follows the removed one, so it can be shown or restored in place. Absent when it was at the end. |
 | `old`, `new` | The block's full text before and after. `added` has only `new`; `removed` has only `old`. |
 | `words` | For `modified` only: the block's words in order, each run marked `=` (unchanged), `-` (removed) or `+` (added). List markers and numbers are left out. |
 

@@ -13,6 +13,7 @@ Usage:
   mdeditdiff changes <file> --reader <name> [--peek] [--full] [--json]
       Changes since this reader last looked. Marks the current version as seen
       unless --peek is given. The first call for a reader returns the full text.
+      --with-base adds the full text of the version you last looked at (JSON only).
   mdeditdiff seen <file> --reader <name>
       Mark the current version as seen without showing changes.
   mdeditdiff checkpoint <file> --author <name> [--note <text>]
@@ -53,6 +54,7 @@ function main(argv: string[]): number {
       store: { type: "string" },
       peek: { type: "boolean" },
       full: { type: "boolean" },
+      "with-base": { type: "boolean" },
       json: { type: "boolean" },
       help: { type: "boolean", short: "h" },
       version: { type: "boolean", short: "v" },
@@ -99,6 +101,7 @@ function main(argv: string[]): number {
       const r = changesSince(store, file, need(values.reader, "--reader", "MDEDITDIFF_READER"), {
         markSeen: !values.peek,
         full: values.full,
+        withBase: values["with-base"],
       });
       out(r, renderChanges(r));
       return 0;

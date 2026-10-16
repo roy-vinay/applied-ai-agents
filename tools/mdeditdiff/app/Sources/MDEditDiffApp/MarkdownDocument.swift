@@ -29,7 +29,6 @@ final class MarkdownDocument: NSDocument {
 
     override func makeWindowControllers() {
         MainActor.assumeIsolated { addWindowController(DocumentWindowController(document: self)) }
-        refreshHistory()
     }
 
     override func read(from data: Data, ofType typeName: String) throws {
@@ -39,7 +38,6 @@ final class MarkdownDocument: NSDocument {
         if mainController != nil {
             // Reverted or reloaded while open.
             MainActor.assumeIsolated { mainController?.reloadFromDocument() }
-            refreshHistory()
         }
     }
 
@@ -74,16 +72,38 @@ final class MarkdownDocument: NSDocument {
 
     // MARK: - Shared history (mdeditdiff)
 
-    private func refreshHistory() {
-        guard let url = fileURL else { return }
-        HistoryBridge.latestRevision(of: url) { [weak self] label in
-            self?.historyStatus = label
+    private func recordSave(at url: URL) {
+        HistoryBridge.checkpoint(url, note: "Saved in mdEditDiff") { [weak self] label in
+            guard let self else { return }
+            self.historyStatus = label
+            // Your own save is not an unread change for you.
+            MainActor.assumeIsolated { self.mainController?.refreshReview() }
         }
     }
 
-    private func recordSave(at url: URL) {
-        HistoryBridge.checkpoint(url, note: "Saved in mdEditDiff") { [weak self] label in
-            self?.historyStatus = label
+    // MARK: - Changes made by other apps (for example an agent)
+
+    override func presentedItemDidChange() {
+        super.presentedItemDidChange()
+        DispatchQueue.main.async { [weak self] in
+            MainActor.assumeIsolated { self?.handleOutsideChange() }
+        }
+    }
+
+    @MainActor
+    private func handleOutsideChange() {
+        guard let url = fileURL, let type = fileType, let data = try? Data(contentsOf: url) else { return }
+        if data == source.originalData { return } // No real change (or our own save).
+        if !isDocumentEdited {
+            // Nothing to lose: show the new version and what changed.
+            try? revert(toContentsOf: url, ofType: type)
+            mainController?.outsideChangeLoaded()
+            return
+        }
+        guard let disk = try? SourceText(data: data) else { return }
+        mainController?.showConflict(diskText: disk.text) { [weak self] in
+            guard let self else { return }
+            try? self.revert(toContentsOf: url, ofType: type)
         }
     }
 }
