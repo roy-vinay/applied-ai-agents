@@ -13,8 +13,9 @@
 
   var state = {
     paged: true, size: "letter", sidebar: true, sidebarWidth: 168,
+    spread: false, // two pages side by side, like an open book
     tab: "pages", // what the left sidebar shows: "pages" (thumbnails) or "notes" 
-    zoomMode: "auto", // auto (fit width, at most 100%), fitWidth, fitPage, manual
+    zoomMode: "auto", // auto (the whole page, or both pages, fit in the window), fitWidth, fitPage, manual
     zoom: 1
   };
   var pages = [];       // .page elements in order
@@ -229,19 +230,23 @@
     return Math.max(200, window.innerWidth - (sidebarShown() ? state.sidebarWidth : 0) - 2 * GUTTER);
   }
 
+  /** Width of what's shown side by side: one page, or two with a gap. */
+  function spreadWidth() { return state.spread ? 2 * size().w + GUTTER : size().w; }
+
+  function topInsetForZoom() {
+    var bar = document.getElementById("review-bar");
+    return bar && !bar.hidden ? bar.offsetHeight : 0;
+  }
+
   function computeZoom() {
     var s = size();
-    var fitW = availableWidth() / s.w;
-    var fitP = Math.min(fitW, (window.innerHeight - 2 * GUTTER) / s.h);
+    var fitW = availableWidth() / spreadWidth();
+    var fitP = Math.min(fitW, (window.innerHeight - topInsetForZoom() - 2 * GUTTER) / s.h);
     var z;
     switch (state.zoomMode) {
       case "fitWidth": z = fitW; break;
-      case "fitPage": z = fitP; break;
       case "manual": z = state.zoom; break;
-      default:
-        z = Math.min(1, fitW);
-        // Use 100% when the page fits with slimmer gutters, rather than showing 97%.
-        if (z < 1 && availableWidth() + 2 * GUTTER - s.w >= 12) z = 1;
+      default: z = fitP; // "auto" and "fitPage": the whole page (or both pages) in view
     }
     return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
   }
@@ -250,13 +255,14 @@
     var doc = document.getElementById("doc");
     if (!doc || !state.paged) return;
     zoom = computeZoom();
-    var s = size();
-    doc.style.width = s.w + "px";
+    var w = spreadWidth();
+    doc.classList.toggle("spread", state.spread);
+    doc.style.width = w + "px";
     doc.style.transform = zoom === 1 ? "" : "scale(" + zoom + ")";
     docHeight = doc.offsetHeight;
-    var left = Math.max(GUTTER, (availableWidth() + 2 * GUTTER - s.w * zoom) / 2);
+    var left = Math.max(GUTTER, (availableWidth() + 2 * GUTTER - w * zoom) / 2);
     doc.style.marginLeft = left + "px";
-    doc.style.marginRight = (s.w * (zoom - 1) + GUTTER) + "px";
+    doc.style.marginRight = (w * (zoom - 1) + GUTTER) + "px";
     doc.style.marginBottom = (docHeight * (zoom - 1) + GUTTER) + "px";
     updateBar();
   }
@@ -425,6 +431,8 @@
     bar.setAttribute("role", "toolbar");
     bar.setAttribute("aria-label", "Pages");
     bar.appendChild(barButton("▤", "Show or hide page thumbnails", function () { root.mdPagesToggleSidebar(); }, "pb-thumbs"));
+    var two = barButton("▯▯", "Show two pages side by side", function () { root.mdPagesSpread(!state.spread); }, "pb-spread");
+    bar.appendChild(two);
     bar.appendChild(barButton("‹", "Previous page", function () { root.mdPageStep(-1); }));
     var label = el("label", "pb-label");
     label.appendChild(document.createTextNode("Page "));
@@ -444,7 +452,7 @@
     sep.setAttribute("aria-hidden", "true");
     bar.appendChild(sep);
     bar.appendChild(barButton("−", "Zoom out", function () { root.mdPagesZoom("out"); }));
-    var z = barButton("100%", "Zoom to fit width", function () { root.mdPagesZoom("fit"); }, "pb-zoom");
+    var z = barButton("100%", "Fit the page in the window", function () { root.mdPagesZoom("fitPage"); }, "pb-zoom");
     z.id = "page-zoom";
     bar.appendChild(z);
     bar.appendChild(barButton("+", "Zoom in", function () { root.mdPagesZoom("in"); }));
@@ -483,6 +491,11 @@
     var z = document.getElementById("page-zoom");
     z.textContent = Math.round(zoom * 100) + "%";
     bar.querySelector(".pb-thumbs").setAttribute("aria-pressed", sidebarShown() ? "true" : "false");
+    var two = bar.querySelector(".pb-spread");
+    two.setAttribute("aria-pressed", state.spread ? "true" : "false");
+    two.textContent = state.spread ? "▯▯" : "▯";
+    two.title = state.spread ? "Show one page at a time" : "Show two pages side by side";
+    two.setAttribute("aria-label", two.title);
   }
 
   var live = null;
@@ -514,8 +527,9 @@
 
   function markCurrent(scrollSidebar) {
     var items = document.querySelectorAll("#thumb-list button.thumb");
+    var partner = state.spread ? (current % 2 === 0 ? current + 1 : current - 1) : -1;
     for (var i = 0; i < items.length; i++) {
-      var on = i === current;
+      var on = i === current || i === partner; // both pages of a spread
       items[i].classList.toggle("thumb-current", on);
       if (on) items[i].setAttribute("aria-current", "page"); else items[i].removeAttribute("aria-current");
     }
@@ -648,7 +662,7 @@
   // Settings
 
   function saveLayout() {
-    post({ action: "layout", paged: state.paged, size: state.size, sidebar: state.sidebar, sidebarWidth: state.sidebarWidth, zoomMode: state.zoomMode, zoom: state.zoom, tab: state.tab });
+    post({ action: "layout", paged: state.paged, size: state.size, sidebar: state.sidebar, sidebarWidth: state.sidebarWidth, zoomMode: state.zoomMode, zoom: state.zoom, tab: state.tab, spread: state.spread });
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -698,6 +712,7 @@
       if (typeof prefs.zoomMode === "string") state.zoomMode = prefs.zoomMode;
       if (typeof prefs.zoom === "number") state.zoom = prefs.zoom;
       if (prefs.tab === "pages" || prefs.tab === "notes") state.tab = prefs.tab;
+      if (typeof prefs.spread === "boolean") state.spread = prefs.spread;
     }
     setSidebarWidth(state.sidebarWidth);
     if (relayout && root.mdRerender) root.mdRerender();
@@ -709,7 +724,24 @@
     }
   };
 
-  root.mdPageStep = function (dir) { goTo(current + dir, true); };
+  /** Next or previous page; with two pages side by side, the next or previous pair. */
+  root.mdPageStep = function (dir) {
+    if (!state.spread) { goTo(current + dir, true); return; }
+    var left = current - (current % 2);
+    goTo(left + 2 * dir, true);
+  };
+
+  /** One page at a time, or two side by side like a book. */
+  root.mdPagesSpread = function (on) {
+    if (!state.paged) return;
+    var a = captureAnchor();
+    state.spread = !!on;
+    applyZoom();
+    restoreAnchor(a);
+    current = pageAtCenter();
+    markCurrent(true);
+    saveLayout();
+  };
   root.mdGoToPage = function (n) { goTo(n - 1, true); };
   root.mdFocusPageInput = function () {
     if (!state.paged) return;
@@ -770,7 +802,7 @@
   root.mdPagesState = function () {
     return {
       paged: state.paged, size: state.size, count: pages.length, current: current + 1, zoom: zoom,
-      zoomMode: state.zoomMode, sidebar: sidebarShown(), sidebarWidth: state.sidebarWidth, revision: layoutRevision, tab: tab()
+      zoomMode: state.zoomMode, sidebar: sidebarShown(), sidebarWidth: state.sidebarWidth, revision: layoutRevision, tab: tab(), spread: state.spread
     };
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -575,3 +575,40 @@ test("notes: a highlight across a page break stays one annotation; change review
   assert.equal(await p.evaluate(() => document.querySelectorAll("#doc mark.anno").length >= 2), true);
   assert.deepEqual(errors, []);
 });
+
+test("pages: fit the window by default, and two pages side by side like a book", async (t) => {
+  if (skip) return t.skip(skip);
+  const { p, errors } = await openPaged(1400, 900);
+  await p.evaluate((src: string) => (window as any).mdRender(src), longDoc());
+  const single = await p.evaluate(() => {
+    const r = document.querySelector("#doc .page")!.getBoundingClientRect();
+    return { st: (window as any).mdPagesState(), bottom: r.bottom, h: window.innerHeight };
+  });
+  assert.equal(single.st.zoomMode, "auto");
+  assert.ok(single.bottom <= single.h, "the whole first page is in view");
+
+  await p.evaluate(() => (window as any).mdPagesSpread(true));
+  const two = await p.evaluate(() => {
+    const pages = Array.from(document.querySelectorAll("#doc .page")) as HTMLElement[];
+    const a = pages[0].getBoundingClientRect(), b = pages[1].getBoundingClientRect(), c = pages[2].getBoundingClientRect();
+    return {
+      sameRow: Math.abs(a.top - b.top) < 1 && b.left > a.right,
+      nextRow: c.top > a.bottom - 1 && Math.abs(c.left - a.left) < 1,
+      inView: b.right <= window.innerWidth && a.bottom <= window.innerHeight,
+      st: (window as any).mdPagesState(),
+      current: Array.from(document.querySelectorAll("#thumb-list .thumb-current")).map((e) => e.getAttribute("aria-label")),
+    };
+  });
+  assert.ok(two.sameRow, "pages 1 and 2 side by side");
+  assert.ok(two.nextRow, "page 3 starts the next row");
+  assert.ok(two.inView, "both pages fit in the window");
+  assert.equal(two.st.count, single.st.count, "same pages, just arranged differently");
+  assert.deepEqual(two.current, ["Page 1", "Page 2"]);
+  await p.evaluate(() => (window as any).mdPageStep(1));
+  assert.equal(await p.evaluate(() => (window as any).mdPagesState().current), 3);
+  await p.evaluate(() => (window as any).mdPagesSpread(false));
+  assert.equal(await p.evaluate(() => (window as any).mdPagesState().spread), false);
+  const log = await p.evaluate(() => (window as any).mdTestLog.filter((m: any) => m.action === "layout").map((m: any) => m.spread));
+  assert.deepEqual(log, [true, false]);
+  assert.deepEqual(errors, []);
+});

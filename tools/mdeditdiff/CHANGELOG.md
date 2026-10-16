@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.2
+
+- **Pages fit the window:** pages now open sized so the whole page is in view, like Preview's Zoom to Fit (⌘9). **View > Fit Width** fills the width instead.
+- **Two pages side by side:** **View > Two Pages** (⌃⌘2), or the ▯▯ button in the page bar, shows pages in pairs like an open book. **View > Single Page** (⌃⌘1) goes back.
+  - Next and previous move by a pair, and both thumbnails of the pair are selected.
+  - The app remembers your choice.
+
 ## 0.5.1
 
 - **Fixed:** after clicking a page thumbnail, the up and down arrow keys (and Page Up / Page Down) now move to the previous or next page. Focus also stays in the thumbnails when the pages are laid out again.

@@ -359,7 +359,10 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     @objc func actualSizeText(_ sender: Any?) {
         if zoomingPages { pagesJS("window.mdPagesZoom('actual')") } else { setFontSize(Self.defaultFontSize) }
     }
-    @objc func zoomToFit(_ sender: Any?) { pagesJS("window.mdPagesZoom('fit')") }
+    @objc func zoomToFit(_ sender: Any?) { pagesJS("window.mdPagesZoom('fitPage')") }
+    @objc func fitWidth(_ sender: Any?) { pagesJS("window.mdPagesZoom('fitWidth')") }
+    @objc func singlePage(_ sender: Any?) { updatePageLayout(["spread": false]); pagesJS("window.mdPagesSpread(false)") }
+    @objc func twoPages(_ sender: Any?) { updatePageLayout(["spread": true]); pagesJS("window.mdPagesSpread(true)") }
 
     // MARK: - Highlights and notes
 
@@ -517,6 +520,14 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
             return pagesOn
         case #selector(highlightSelection(_:)), #selector(addNoteToSelection(_:)), #selector(removeHighlight(_:)):
             return mode != .edit
+        case #selector(singlePage(_:)):
+            menuItem.state = (Self.pageLayout["spread"] as? Bool ?? false) ? .off : .on
+            return pagesOn && mode != .edit
+        case #selector(twoPages(_:)):
+            menuItem.state = (Self.pageLayout["spread"] as? Bool ?? false) ? .on : .off
+            return pagesOn && mode != .edit
+        case #selector(fitWidth(_:)):
+            return pagesOn && mode != .edit
         case #selector(toggleThumbnails(_:)), #selector(nextPage(_:)), #selector(previousPage(_:)), #selector(goToPage(_:)), #selector(zoomToFit(_:)):
             return pagesOn && mode != .edit
         case #selector(showRead(_:)): menuItem.state = mode == .read ? .on : .off
