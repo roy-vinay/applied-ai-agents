@@ -236,7 +236,10 @@
       case "fitWidth": z = fitW; break;
       case "fitPage": z = fitP; break;
       case "manual": z = state.zoom; break;
-      default: z = Math.min(1, fitW);
+      default:
+        z = Math.min(1, fitW);
+        // Use 100% when the page fits with slimmer gutters, rather than showing 97%.
+        if (z < 1 && availableWidth() + 2 * GUTTER - s.w >= 12) z = 1;
     }
     return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
   }
