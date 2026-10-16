@@ -378,8 +378,9 @@ npm run bundle   # after changing src/diff.ts: rebuilds the Mac app's copy of th
 ```
 
 Releases are built by CI: bump the version in `package.json`, `src/version.ts` and `app/Info.plist`, add a
-[CHANGELOG](CHANGELOG.md) entry, and push a tag such as `mdeditdiff-v0.3.0`. The release workflow tests
-everything, builds the app and the CLI package, and publishes them with checksums.
+[CHANGELOG](CHANGELOG.md) entry, and merge to `main`. The release workflow sees the new version, tests
+everything, builds the app and the CLI package, and publishes them with checksums under the tag
+`mdeditdiff-v<version>`.
 
 CI runs the tests on Linux and macOS with Node 20 and 22, builds and tests the Mac app, launches it, and
 takes the screenshots on this page. To regenerate the terminal animation:
