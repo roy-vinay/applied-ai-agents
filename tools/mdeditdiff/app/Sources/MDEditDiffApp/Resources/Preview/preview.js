@@ -20,6 +20,7 @@
       var t = tokens[i];
       if (t.map && (t.nesting === 1 || t.type === "fence" || t.type === "code_block" || t.type === "hr")) {
         t.attrSet("data-line", String(t.map[0] + 1));
+        t.attrSet("data-line-end", String(t.map[1] + 1));
       }
       if (t.type === "heading_open" && tokens[i + 1] && tokens[i + 1].type === "inline") {
         var base = slugify(tokens[i + 1].content) || "section";
@@ -113,6 +114,7 @@
     if (current >= changeEls.length) current = -1;
     updateBar();
     if (pager) pager.layout(doc);
+    if (root.MDAnnotations) root.MDAnnotations.apply(doc, source);
     if (find.open && find.query) runFind(false);
     if (pager) { pager.restoreAnchor(anchor); pager.afterScroll(); } else window.scrollTo(0, y);
   }

@@ -154,6 +154,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         linkHandler.onLink = { [weak self] href in self?.openLink(href) }
         reviewHandler.onMessage = { [weak self] body in self?.handleReviewMessage(body) }
         webView.onFind = { [weak self] action in self?.findInPreview(action) }
+        webView.onAnnotate = { [weak self] kind in self?.annotate(kind) }
         if let dir = PreviewResourceHandler.previewDirectory {
             let page = dir.appendingPathComponent("preview.html")
             webView.loadFileURL(page, allowingReadAccessTo: dir)
@@ -360,6 +361,80 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     }
     @objc func zoomToFit(_ sender: Any?) { pagesJS("window.mdPagesZoom('fit')") }
 
+    // MARK: - Highlights and notes
+
+    /// The latest snapshot from the preview (also kept for untitled documents until they're saved).
+    private var annotationJSON: String?
+    private var savedAnnotationJSON: String?
+
+    private func loadAnnotations() {
+        guard let url = markdownDocument?.fileURL, let json = AnnotationStore.load(for: url) else { return }
+        annotationJSON = json
+        savedAnnotationJSON = json
+        sendAnnotations(json)
+    }
+
+    private func sendAnnotations(_ json: String?) {
+        guard let json, let data = try? JSONEncoder().encode(json), let literal = String(data: data, encoding: .utf8) else {
+            pagesJS("window.mdSetAnnotations(null)")
+            return
+        }
+        pagesJS("window.mdSetAnnotations(\(literal))")
+    }
+
+    private func saveAnnotations() {
+        guard let url = markdownDocument?.fileURL, let json = annotationJSON, json != savedAnnotationJSON else { return }
+        let ok = AnnotationStore.save(json, for: url)
+        if ok { savedAnnotationJSON = json }
+        pagesJS("window.mdAnnotationsSaved(\(ok))")
+    }
+
+    /// After Save As: annotations stay with the original file; offer to copy them to the new one.
+    func annotationsAfterSaveAs(from old: URL?, to new: URL) {
+        guard let old, old != new else {
+            // An untitled document saved for the first time keeps what was added before saving.
+            savedAnnotationJSON = nil
+            saveAnnotations()
+            return
+        }
+        let count = AnnotationStore.count(in: annotationJSON)
+        guard count > 0, let window else {
+            annotationJSON = nil
+            savedAnnotationJSON = nil
+            sendAnnotations(nil)
+            return
+        }
+        let alert = NSAlert()
+        alert.messageText = "Copy your highlights and notes to “\(new.lastPathComponent)”?"
+        alert.informativeText = "They stay on “\(old.lastPathComponent)” either way. Highlights and notes are kept by mdEditDiff on this Mac, not inside the Markdown file."
+        alert.addButton(withTitle: "Copy")
+        alert.addButton(withTitle: "Don’t Copy")
+        alert.beginSheetModal(for: window) { [weak self] response in
+            guard let self else { return }
+            if response == .alertFirstButtonReturn {
+                self.savedAnnotationJSON = nil
+                self.saveAnnotations()
+            } else {
+                self.annotationJSON = nil
+                self.savedAnnotationJSON = nil
+                self.sendAnnotations(nil)
+            }
+        }
+    }
+
+    private func annotate(_ kind: String) {
+        if mode == .edit { setMode(.read) }
+        pagesJS(kind == "note" ? "window.mdAnnotateSelection('note')" : "window.mdAnnotateSelection('highlight', 'yellow')")
+    }
+
+    @objc func highlightSelection(_ sender: Any?) { annotate("highlight") }
+    @objc func addNoteToSelection(_ sender: Any?) { annotate("note") }
+    @objc func removeHighlight(_ sender: Any?) { pagesJS("window.mdRemoveAnnotationsInSelection()") }
+    @objc func showNotesSidebar(_ sender: Any?) {
+        if mode == .edit { setMode(.read) }
+        pagesJS("window.mdShowSidebarTab('notes')")
+    }
+
     // MARK: - Pages
 
     /// Page layout settings shared by all windows: paged or continuous, page size, thumbnails, zoom.
@@ -440,6 +515,8 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         case #selector(useA4Pages(_:)):
             menuItem.state = (Self.pageLayout["size"] as? String) == "a4" ? .on : .off
             return pagesOn
+        case #selector(highlightSelection(_:)), #selector(addNoteToSelection(_:)), #selector(removeHighlight(_:)):
+            return mode != .edit
         case #selector(toggleThumbnails(_:)), #selector(nextPage(_:)), #selector(previousPage(_:)), #selector(goToPage(_:)), #selector(zoomToFit(_:)):
             return pagesOn && mode != .edit
         case #selector(showRead(_:)): menuItem.state = mode == .read ? .on : .off
@@ -476,6 +553,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         previewReady = true
         pushPageLayout()
+        loadAnnotations()
         applyPreviewFontSize()
         renderNow()
         pushReviewToPreview()
@@ -551,6 +629,10 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     private func handleReviewMessage(_ body: [String: Any]) {
         guard let action = body["action"] as? String else { return }
         switch action {
+        case "annotations":
+            guard let json = body["json"] as? String else { return }
+            annotationJSON = json
+            saveAnnotations()
         case "layout":
             var saved = body
             saved.removeValue(forKey: "action")
@@ -714,6 +796,14 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     }
 
     func windowWillClose(_ notification: Notification) {
+        // Save any note typed in the last moment before the window closes.
+        if let url = markdownDocument?.fileURL, previewReady {
+            let saved = savedAnnotationJSON
+            webView.evaluateJavaScript("window.mdAnnotationsState ? window.mdAnnotationsState().json : null") { result, _ in
+                guard let json = result as? String, json != saved else { return }
+                if saved != nil || AnnotationStore.count(in: json) > 0 { AnnotationStore.save(json, for: url) }
+            }
+        }
         if Self.markReadOnClose, case .unread = review, unreadCount > 0, let url = markdownDocument?.fileURL {
             HistoryBridge.markSeen(url)
         }

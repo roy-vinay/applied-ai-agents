@@ -13,6 +13,7 @@
 
   var state = {
     paged: true, size: "letter", sidebar: true, sidebarWidth: 168,
+    tab: "pages", // what the left sidebar shows: "pages" (thumbnails) or "notes" 
     zoomMode: "auto", // auto (fit width, at most 100%), fitWidth, fitPage, manual
     zoom: 1
   };
@@ -42,7 +43,8 @@
 
   function size() { return SIZES[state.size] || SIZES.letter; }
   function contentHeight() { return size().h - 2 * MARGIN; }
-  function sidebarShown() { return state.paged && state.sidebar && window.innerWidth >= 640; }
+  function sidebarShown() { return state.sidebar && window.innerWidth >= 640 && (state.paged || state.tab === "notes"); }
+  function tab() { return state.paged ? state.tab : "notes"; }
 
   // ---------------------------------------------------------------------------------------------
   // Splitting blocks that don't fit on the rest of a page
@@ -271,8 +273,20 @@
     if (nav) return nav;
     nav = el("nav", "thumbs no-find");
     nav.id = "thumbs";
-    nav.setAttribute("aria-label", "Page thumbnails");
+    nav.setAttribute("aria-label", "Sidebar");
+    var tabs = el("div", "side-tabs");
+    tabs.setAttribute("role", "tablist");
+    [["pages", "Pages"], ["notes", "Notes"]].forEach(function (t) {
+      var b = el("button", "side-tab", t[1]);
+      b.type = "button";
+      b.id = "side-tab-" + t[0];
+      b.setAttribute("role", "tab");
+      b.addEventListener("click", function () { root.mdShowSidebarTab(t[0]); });
+      tabs.appendChild(b);
+    });
+    nav.appendChild(tabs);
     var list = el("ol", "thumb-list");
+    list.setAttribute("aria-label", "Page thumbnails");
     list.id = "thumb-list";
     nav.appendChild(list);
     var grip = el("div", "thumb-grip");
@@ -308,6 +322,18 @@
     });
     document.body.appendChild(nav);
     return nav;
+  }
+
+  function showTab() {
+    var nav = sidebar();
+    var t = tab();
+    nav.dataset.tab = t;
+    ["pages", "notes"].forEach(function (name) {
+      var b = document.getElementById("side-tab-" + name);
+      if (!b) return;
+      b.setAttribute("aria-selected", name === t ? "true" : "false");
+      b.disabled = name === "pages" && !state.paged;
+    });
   }
 
   function setSidebarWidth(w) {
@@ -612,7 +638,7 @@
   // Settings
 
   function saveLayout() {
-    post({ action: "layout", paged: state.paged, size: state.size, sidebar: state.sidebar, sidebarWidth: state.sidebarWidth, zoomMode: state.zoomMode, zoom: state.zoom });
+    post({ action: "layout", paged: state.paged, size: state.size, sidebar: state.sidebar, sidebarWidth: state.sidebarWidth, zoomMode: state.zoomMode, zoom: state.zoom, tab: state.tab });
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -630,6 +656,7 @@
       document.documentElement.style.setProperty("--page-content-h", contentHeight() + "px");
       setSidebarWidth(state.sidebarWidth);
       document.body.classList.toggle("paged", state.paged);
+      showTab();
       document.body.classList.toggle("thumbs-open", sidebarShown());
       doc.classList.toggle("paged", state.paged);
       if (!state.paged) {
@@ -660,6 +687,7 @@
       if (typeof prefs.sidebarWidth === "number") state.sidebarWidth = prefs.sidebarWidth;
       if (typeof prefs.zoomMode === "string") state.zoomMode = prefs.zoomMode;
       if (typeof prefs.zoom === "number") state.zoom = prefs.zoom;
+      if (prefs.tab === "pages" || prefs.tab === "notes") state.tab = prefs.tab;
     }
     setSidebarWidth(state.sidebarWidth);
     if (relayout && root.mdRerender) root.mdRerender();
@@ -679,8 +707,23 @@
     input.focus();
     input.select();
   };
+  /** Shows the sidebar on "pages" (thumbnails) or "notes" (notes and highlights). */
+  root.mdShowSidebarTab = function (t) {
+    state.tab = t === "notes" ? "notes" : "pages";
+    state.sidebar = true;
+    var a = captureAnchor();
+    showTab();
+    document.body.classList.toggle("thumbs-open", sidebarShown());
+    applyZoom();
+    restoreAnchor(a);
+    markCurrent(true);
+    saveLayout();
+    if (root.MDAnnotations) root.MDAnnotations.redraw();
+  };
+
   root.mdPagesToggleSidebar = function () {
     state.sidebar = !sidebarShown();
+    showTab();
     var a = captureAnchor();
     document.body.classList.toggle("thumbs-open", sidebarShown());
     applyZoom();
@@ -717,7 +760,7 @@
   root.mdPagesState = function () {
     return {
       paged: state.paged, size: state.size, count: pages.length, current: current + 1, zoom: zoom,
-      zoomMode: state.zoomMode, sidebar: sidebarShown(), sidebarWidth: state.sidebarWidth, revision: layoutRevision
+      zoomMode: state.zoomMode, sidebar: sidebarShown(), sidebarWidth: state.sidebarWidth, revision: layoutRevision, tab: tab()
     };
   };
 })(typeof window !== "undefined" ? window : globalThis);

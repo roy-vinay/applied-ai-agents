@@ -168,7 +168,8 @@ careful never to change anything you didn't.
 | Find in Read mode and in the preview of Split mode | Available |
 | Pages (US Letter or A4) with numbered thumbnails, Go to Page and zoom, like Preview | Available |
 | Notarized download, settings window, Open Recent | Planned |
-| Highlights and notes on the text, a folder view of unread changes | Planned |
+| Highlights in five colors and notes on the text, kept when the text changes, with a Notes list | Available |
+| Export and import of notes, highlights in Edit mode, a folder view of unread changes | Planned |
 
 ### Changes since you last read
 
@@ -230,6 +231,26 @@ type a page number to go there, and use − and + to zoom.
 
 ![mdEditDiff in Split mode: the Markdown source on the left and the formatted preview on the right](docs/img/app-split.png)
 
+### Highlights and notes
+
+Select text in Read mode (or the preview in Split mode) and a small bar appears: pick a color to
+highlight it, or choose **Add Note**. You can also right-click the selection, or use **Edit > Highlight**
+(⌃⌘H) and **Edit > Add Note** (⌃⌘N).
+
+- **Notes** show as a marker in the margin next to their passage. Click the marker to open or close the
+  note; Escape closes it. Notes save as you type.
+- **Click a highlight** to change its color, add a note, remove the highlight, or delete it.
+- **Notes and Highlights** (⌥⌘3, or the Notes tab in the sidebar) lists them in document order. Click one
+  to jump to it.
+- **They stay on their text.** When you or an agent edit the file, highlights and notes move with their
+  passage. If the passage is removed, rewritten, or now appears more than once, the note isn't moved to a
+  guess; it waits under **Needs Reattachment** until you select the right text and choose **Reattach to
+  Selection**.
+- **Private and separate.** They're kept by the app on your Mac, never inside the Markdown file, and
+  agents never see them. See [docs/ANNOTATIONS.md](docs/ANNOTATIONS.md) for where and how.
+- Each color also has its own underline style (solid, double, dotted, dashed, wavy), so they can be told
+  apart without color.
+
 ### Day and night icon
 
 The app icon is white by day and graphite black at night. It follows your Mac's Light and Dark mode, so
@@ -276,6 +297,8 @@ instead of "changed outside, not reported", and the window subtitle shows the fi
 | Bigger / smaller text (editor and continuous scroll) | ⌘+ / ⌘− |
 | Next / Previous page, Go to Page | ⌥⌘↓ / ⌥⌘↑, ⌥⌘G |
 | Show or hide page thumbnails | ⌥⌘2 |
+| Highlight, Add Note | ⌃⌘H, ⌃⌘N |
+| Notes and Highlights | ⌥⌘3 |
 | Next / Previous change | ⌘] / ⌘[ |
 | Mark as read | ⇧⌘K |
 | Version history | ⇧⌘H |

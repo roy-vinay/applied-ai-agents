@@ -170,7 +170,7 @@ mark.find-current { background: #FFB340; color: #1E2030; box-shadow: 0 0 0 2px #
    thumbnails on the left, like Preview. Page breaks are presentation only; the Markdown never changes. */
 :root { --page-w: 816px; --page-h: 1056px; --page-content-h: 864px; --thumbs-w: 168px; --thumb-scale: 0.137; --page-margin: 96px; }
 body.paged { overflow-x: auto; }
-body.paged.thumbs-open { padding-left: var(--thumbs-w); }
+body.thumbs-open { padding-left: var(--thumbs-w); }
 body.paged #review-bar { z-index: 6; }
 #doc.paged { max-width: none; margin: 24px 0; padding: 0; background: none; border-radius: 0; box-shadow: none; transform-origin: 0 0; min-height: 0; }
 .page { position: relative; box-sizing: border-box; width: var(--page-w); height: var(--page-h); padding: var(--page-margin); margin: 0 0 24px; background: var(--paper); border-radius: 3px; box-shadow: var(--shadow); overflow-wrap: break-word; }
@@ -191,7 +191,7 @@ li.pg-cont::marker { content: ""; }
 
 /* Thumbnails */
 .thumbs { position: fixed; top: 0; left: 0; bottom: 0; width: var(--thumbs-w); box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain; background: var(--panel-bg); border-right: 1px solid var(--rule); z-index: 7; display: none; font-family: var(--sans); }
-body.paged.thumbs-open .thumbs { display: block; }
+body.thumbs-open .thumbs { display: block; }
 .thumb-list { list-style: none; margin: 0; padding: 16px 0 72px; }
 .thumb-item { margin: 0 0 14px; text-align: center; }
 .thumb { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px; border: 0; background: none; border-radius: 8px; cursor: pointer; color: var(--muted); }
@@ -222,4 +222,93 @@ body.thumbs-open.history-open .page-bar { left: calc(50% + var(--thumbs-w) / 2 -
 .pb-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .pb-input.pb-bad { border-color: var(--del); box-shadow: 0 0 0 3px var(--del-bg); }
 .pb-sep { width: 1px; height: 16px; background: var(--rule); margin: 0 4px; }
-body.paged.thumbs-open .find-bar { right: 16px; }
+body.thumbs-open .find-bar { right: 16px; }
+#doc { position: relative; }
+
+/* Sidebar tabs: Pages | Notes */
+.side-tabs { position: sticky; top: 0; z-index: 2; display: flex; gap: 2px; margin: 0; padding: 10px 10px 8px; background: var(--panel-bg); border-bottom: 1px solid var(--rule); }
+.side-tab { flex: 1; padding: 4px 6px; border: 0; border-radius: 7px; background: none; color: var(--muted); font-size: 12px; font-weight: 500; cursor: pointer; }
+.side-tab[aria-selected="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 0 0 1px var(--rule); }
+.side-tab:disabled { opacity: 0.4; cursor: default; }
+.side-tab:focus-visible { outline: 2px solid var(--accent); }
+.thumbs[data-tab="notes"] .thumb-list { display: none; }
+.thumbs[data-tab="pages"] .notes-panel { display: none; }
+
+/* Personal highlights. Each color also has its own underline style, so they're told apart without
+   color: solid, double, dotted, dashed, wavy. Notes without a highlight get a dotted underline. */
+:root {
+  --hl-yellow: #FFE680; --hl-green: #B8F0C6; --hl-blue: #BFDDFF; --hl-pink: #FFC9DE; --hl-purple: #DCCBFF;
+  --hl-yellow-ink: #A07A00; --hl-green-ink: #1F8A47; --hl-blue-ink: #2C6BC7; --hl-pink-ink: #C2366F; --hl-purple-ink: #6B43C9;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --hl-yellow: rgba(255, 214, 10, 0.32); --hl-green: rgba(48, 209, 88, 0.3); --hl-blue: rgba(10, 132, 255, 0.34); --hl-pink: rgba(255, 55, 135, 0.32); --hl-purple: rgba(175, 110, 255, 0.34);
+    --hl-yellow-ink: #FFD60A; --hl-green-ink: #30D158; --hl-blue-ink: #64A8FF; --hl-pink-ink: #FF6FA8; --hl-purple-ink: #C59BFF;
+  }
+}
+mark.anno { color: inherit; border-radius: 2px; padding: 0.04em 0; text-decoration-line: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; cursor: pointer; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+mark.anno-yellow { background: var(--hl-yellow); text-decoration-color: var(--hl-yellow-ink); text-decoration-style: solid; }
+mark.anno-green { background: var(--hl-green); text-decoration-color: var(--hl-green-ink); text-decoration-style: double; }
+mark.anno-blue { background: var(--hl-blue); text-decoration-color: var(--hl-blue-ink); text-decoration-style: dotted; }
+mark.anno-pink { background: var(--hl-pink); text-decoration-color: var(--hl-pink-ink); text-decoration-style: dashed; }
+mark.anno-purple { background: var(--hl-purple); text-decoration-color: var(--hl-purple-ink); text-decoration-style: wavy; }
+mark.anno-plain { background: none; text-decoration-style: dotted; text-decoration-color: var(--accent); }
+mark.anno-overlap { box-shadow: inset 0 -2px 0 var(--accent); }
+mark.anno-flash-mark { outline: 2px solid var(--accent); outline-offset: 2px; }
+mark.anno mark.find-hit, mark.find-hit mark.anno { box-shadow: 0 0 0 1px rgba(255, 159, 10, 0.7); }
+
+/* Note markers sit in the right margin next to their passage; cards open below the passage. */
+.anno-marker { position: absolute; z-index: 3; width: 24px; height: 22px; padding: 0; border: 0; border-radius: 6px 6px 6px 2px; background: var(--accent); color: #fff; cursor: pointer; box-shadow: 0 1px 3px rgba(24, 26, 48, 0.25); }
+.anno-marker::before { content: ""; position: absolute; left: 6px; right: 6px; top: 7px; height: 1.5px; background: currentColor; box-shadow: 0 4px 0 currentColor; border-radius: 1px; }
+.anno-marker[aria-expanded="true"] { box-shadow: 0 0 0 3px var(--accent-soft), 0 1px 3px rgba(24, 26, 48, 0.25); }
+.anno-marker:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.anno-m-yellow { background: var(--hl-yellow-ink); } .anno-m-green { background: var(--hl-green-ink); } .anno-m-blue { background: var(--hl-blue-ink); }
+.anno-m-pink { background: var(--hl-pink-ink); } .anno-m-purple { background: var(--hl-purple-ink); }
+.anno-card { position: absolute; z-index: 4; box-sizing: border-box; padding: 10px 12px 8px; background: var(--paper); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 10px; box-shadow: var(--shadow); font-family: var(--sans); font-size: 13px; line-height: 1.45; }
+.anno-card[hidden] { display: none; }
+.anno-card-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.anno-card-quote { flex: 1; color: var(--muted); font-style: italic; font-family: var(--serif); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.anno-icon { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 0 4px; border-radius: 5px; }
+.anno-icon:hover { color: var(--accent-ink); background: var(--accent-soft); }
+.anno-text { display: block; width: 100%; box-sizing: border-box; min-height: 56px; resize: none; font: 13px/1.45 var(--sans); color: var(--ink); background: var(--code-bg); border: 1px solid var(--rule); border-radius: 7px; padding: 6px 8px; }
+.anno-text:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.anno-card-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+.anno-card-meta { color: var(--muted); font-size: 11px; }
+.anno-link { border: 0; background: none; padding: 2px 4px; color: var(--accent-ink); font-size: 12px; cursor: pointer; border-radius: 5px; }
+.anno-link:hover { background: var(--accent-soft); }
+.anno-danger, .anno-danger-text { color: var(--del); }
+.thumb-inner .anno-marker, .thumb-inner .anno-card { display: none; }
+
+/* The popover over a selection or a highlight */
+.anno-pop { position: fixed; z-index: 30; display: flex; align-items: center; gap: 4px; padding: 5px 6px; background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow); font-family: var(--sans); font-size: 12px; }
+.anno-swatch { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid rgba(0, 0, 0, 0.15); cursor: pointer; padding: 0; }
+.anno-swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent); }
+.anno-swatch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.anno-s-yellow { background: #FFD60A; } .anno-s-green { background: #34C759; } .anno-s-blue { background: #0A84FF; } .anno-s-pink { background: #FF375F; } .anno-s-purple { background: #AF52DE; }
+.anno-pop-sep { width: 1px; height: 16px; background: var(--rule); margin: 0 3px; }
+.anno-pop-btn { border: 0; background: none; color: var(--ink); padding: 3px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+.anno-pop-btn:hover { background: var(--accent-soft); color: var(--accent-ink); }
+.anno-pop-danger { color: var(--del); }
+.anno-pop-note { color: var(--muted); font-size: 11px; padding: 0 4px; }
+.anno-flash { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 40; padding: 8px 14px; border-radius: 10px; background: var(--ink); color: var(--paper); font-family: var(--sans); font-size: 12.5px; box-shadow: var(--shadow); max-width: 80vw; }
+.anno-flash[hidden], .anno-error[hidden] { display: none; }
+.anno-error { position: fixed; right: 16px; bottom: 64px; z-index: 40; max-width: 320px; padding: 10px 14px; border-radius: 10px; background: var(--del-bg); color: var(--del-fg); border: 1px solid var(--del); font-family: var(--sans); font-size: 12.5px; }
+
+/* Notes and Highlights list */
+.notes-panel { padding: 10px 10px 80px; font-family: var(--sans); font-size: 12px; }
+.notes-empty, .notes-help { color: var(--muted); line-height: 1.5; margin: 6px 4px 10px; }
+.notes-list { list-style: none; margin: 0; padding: 0; }
+.notes-item { margin: 0 0 6px; }
+.notes-entry { display: flex; gap: 8px; width: 100%; text-align: left; padding: 8px; border: 0; border-radius: 8px; background: var(--paper); box-shadow: 0 0 0 1px var(--rule); color: var(--ink); cursor: pointer; }
+.notes-entry:hover { box-shadow: 0 0 0 1.5px var(--accent); }
+.notes-entry:focus-visible { outline: 2px solid var(--accent); }
+.notes-entry:disabled { cursor: default; opacity: 0.85; }
+.notes-swatch { flex: none; width: 10px; height: 10px; margin-top: 3px; border-radius: 50%; }
+.notes-swatch-note { background: none; border: 1.5px dotted var(--accent); }
+.notes-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.notes-quote { font-family: var(--serif); font-style: italic; color: var(--ink); overflow-wrap: anywhere; }
+.notes-note { color: var(--ink); overflow-wrap: anywhere; }
+.notes-meta { color: var(--muted); font-size: 11px; }
+.notes-group { font-size: 12px; font-weight: 600; color: var(--del); margin: 16px 4px 0; }
+.notes-lost .notes-entry { box-shadow: 0 0 0 1px var(--del); }
+.notes-actions { display: flex; gap: 6px; padding: 4px 2px 0; }

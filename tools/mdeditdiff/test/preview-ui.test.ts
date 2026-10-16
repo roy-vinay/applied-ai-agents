@@ -380,3 +380,188 @@ test("a heading can't take over the app's own ids, and #links still jump to it",
   await p.click("#doc a");
   assert.deepEqual(errors, []);
 });
+
+// ------------------------------------------------------------------------------------------------
+// Highlights and notes
+
+/** Selects the nth occurrence of `text` in the rendered document. */
+async function selectText(p: any, text: string, nth = 0) {
+  return p.evaluate(([text, nth]: [string, number]) => {
+    const doc = document.getElementById("doc")!;
+    const w = document.createTreeWalker(doc, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n: Node) => ((n.parentElement as HTMLElement).closest(".no-find, .anno-card, .page-num") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+    });
+    const nodes: [Text, number][] = [];
+    let all = "";
+    let n: Node | null;
+    while ((n = w.nextNode())) { nodes.push([n as Text, all.length]); all += (n as Text).data; }
+    let idx = -1, from = 0;
+    for (let k = 0; k <= nth; k++) { idx = all.indexOf(text, from); from = idx + 1; }
+    if (idx < 0) throw new Error("not found: " + text);
+    const pos = (o: number, end: boolean): [Text, number] => {
+      for (let i = nodes.length - 1; i >= 0; i--) if (end ? nodes[i][1] < o : nodes[i][1] <= o) return [nodes[i][0], o - nodes[i][1]];
+      return [nodes[0][0], 0];
+    };
+    const r = document.createRange();
+    const [sn, so] = pos(idx, false);
+    const [en, eo] = pos(idx + text.length, true);
+    r.setStart(sn, so);
+    r.setEnd(en, eo);
+    const s = getSelection()!;
+    s.removeAllRanges();
+    s.addRange(r);
+    return s.toString();
+  }, [text, nth]);
+}
+
+const marks = (p: any) => p.evaluate(() => {
+  const out: Record<string, string> = {};
+  document.querySelectorAll("#doc mark.anno").forEach((m) => {
+    const id = (m as HTMLElement).dataset.anno!;
+    out[id] = (out[id] || "") + m.textContent;
+  });
+  return Object.values(out);
+});
+
+const PLAN = `# Launch plan
+
+We need the **delivery timeline** from the vendor before Friday.
+
+## Risks
+
+- Confirm the delivery timeline with legal.
+- Ship it.
+
+| Area | Owner |
+| --- | --- |
+| Delivery | Sam Lee |
+`;
+
+test("notes: highlight across formatting and table cells; anchors follow edits; removed text needs reattachment", async (t) => {
+  if (skip) return t.skip(skip);
+  const { p, errors } = await openPaged();
+  await p.evaluate((src: string) => (window as any).mdRender(src), PLAN);
+  await selectText(p, "delivery timeline from");
+  const a = await p.evaluate(() => (window as any).mdAnnotateSelection("highlight", "green"));
+  assert.equal(a.sourceQuote, "delivery timeline** from");
+  assert.equal(a.color, "green");
+  await selectText(p, "Sam Lee");
+  await p.evaluate(() => (window as any).mdAnnotateSelection("note"));
+  assert.deepEqual(await marks(p), ["delivery timeline from", "Sam Lee"]);
+  assert.equal(await p.evaluate(() => document.querySelectorAll("#doc mark.anno-green").length >= 1), true);
+
+  // An agent inserts a paragraph above: both stay on their text.
+  let src = PLAN.replace("# Launch plan\n", "# Launch plan\n\nA new intro from an agent.\n");
+  await p.evaluate((s: string) => (window as any).mdRender(s), src);
+  assert.deepEqual(await marks(p), ["delivery timeline from", "Sam Lee"]);
+
+  // Text typed inside the highlight extends it.
+  src = src.replace("delivery timeline** from", "delivery timeline** (final) from");
+  await p.evaluate((s: string) => (window as any).mdRender(s), src);
+  assert.deepEqual(await marks(p), ["delivery timeline (final) from", "Sam Lee"]);
+
+  // The passage is rewritten: the highlight is kept under Needs Reattachment, not moved to the other
+  // "delivery timeline" in the list.
+  src = src.replace("We need the **delivery timeline** (final) from the vendor before Friday.", "Vendor dates are still open.");
+  await p.evaluate((s: string) => (window as any).mdRender(s), src);
+  assert.deepEqual(await marks(p), ["Sam Lee"]);
+  const st = await p.evaluate(() => (window as any).mdAnnotationsState().items.map((x: any) => [x.quote, x.detached]));
+  assert.deepEqual(st, [["delivery timeline from", true], ["Sam Lee", false]]);
+  await p.evaluate(() => (window as any).mdShowSidebarTab("notes"));
+  assert.match(await p.evaluate(() => document.getElementById("notes-panel")!.innerText), /Needs Reattachment \(1\)[\s\S]*delivery timeline from/);
+
+  // Reattach it to the list item's text.
+  await selectText(p, "delivery timeline with legal");
+  await p.click("#notes-panel >> text=Reattach to Selection");
+  assert.deepEqual(await marks(p), ["delivery timeline with legal", "Sam Lee"]);
+  assert.equal(await p.evaluate(() => (window as any).mdAnnotationsState().items.every((x: any) => !x.detached)), true);
+  assert.deepEqual(errors, []);
+});
+
+test("notes: collapse and expand never change the document or pages; Escape collapses to the marker", async (t) => {
+  if (skip) return t.skip(skip);
+  const { p, errors } = await openPaged();
+  await p.evaluate((src: string) => (window as any).mdRender(src), PLAN);
+  await selectText(p, "Ship it");
+  await p.evaluate(() => (window as any).mdAnnotateSelection("note"));
+  await p.keyboard.type("Ask legal first");
+  const before = await p.evaluate(() => ({ html: document.querySelector("#doc .page-body")!.textContent, rev: (window as any).mdPagesState().revision }));
+  await p.keyboard.press("Escape");
+  const collapsed = await p.evaluate(() => ({
+    hidden: (document.querySelector("#doc .anno-card") as HTMLElement).hidden,
+    expanded: document.querySelector("#doc .anno-marker")!.getAttribute("aria-expanded"),
+    focus: document.activeElement!.className,
+    rev: (window as any).mdPagesState().revision,
+    note: (window as any).mdAnnotationsState().items[0].note,
+  }));
+  assert.equal(collapsed.hidden, true);
+  assert.equal(collapsed.expanded, "false");
+  assert.match(collapsed.focus, /anno-marker/);
+  assert.equal(collapsed.rev, before.rev);
+  assert.equal(collapsed.note, "Ask legal first");
+  await p.click("#doc .anno-marker");
+  assert.equal(await p.evaluate(() => (document.querySelector("#doc .anno-card") as HTMLElement).hidden), false);
+  assert.equal(await p.evaluate(() => document.querySelector("#doc .page-body")!.textContent), before.html);
+  // The note is saved without touching the Markdown, and its text is never part of Find.
+  await p.evaluate(() => (window as any).mdAnnotationsFlushSave());
+  const saved = await p.evaluate(() => (window as any).mdTestLog.filter((m: any) => m.action === "annotations").pop());
+  assert.match(saved.json, /Ask legal first/);
+  await p.evaluate(() => (window as any).mdFindOpen("legal first"));
+  assert.equal(await p.evaluate(() => (window as any).mdFindState().count), 0);
+  assert.deepEqual(errors, []);
+});
+
+test("notes: saved annotations come back on reopen, and still find their text after an outside edit", async (t) => {
+  if (skip) return t.skip(skip);
+  const one = await openPaged();
+  await one.p.evaluate((src: string) => (window as any).mdRender(src), PLAN);
+  await selectText(one.p, "Confirm the delivery timeline");
+  await one.p.evaluate(() => (window as any).mdAnnotateSelection("highlight", "pink"));
+  const json = await one.p.evaluate(() => (window as any).mdAnnotationsState().json);
+
+  // Reopen the same text.
+  const two = await openPaged();
+  await two.p.evaluate(([j, src]: string[]) => { (window as any).mdSetAnnotations(j); (window as any).mdRender(src); }, [json, PLAN]);
+  assert.deepEqual(await marks(two.p), ["Confirm the delivery timeline"]);
+
+  // Reopen after an agent changed the file while the app was closed (no edit history to follow).
+  const edited = PLAN.replace("## Risks\n", "## Risks\n\n- New risk: staffing.\n").replace("We need the", "We still need the");
+  const three = await openPaged();
+  await three.p.evaluate(([j, src]: string[]) => { (window as any).mdSetAnnotations(j); (window as any).mdRender(src); }, [json, edited]);
+  assert.deepEqual(await marks(three.p), ["Confirm the delivery timeline"]);
+  assert.deepEqual([...one.errors, ...two.errors, ...three.errors], []);
+});
+
+test("notes: a highlight across a page break stays one annotation; change review doesn't remove highlights", async (t) => {
+  if (skip) return t.skip(skip);
+  const { p, errors } = await openPaged();
+  const md = longDoc();
+  await p.evaluate((src: string) => (window as any).mdRender(src), md);
+  // Select from the end of a paragraph on one page into its continuation on the next.
+  const got = await p.evaluate(() => {
+    const cont = document.querySelector("#doc p.pg-cont") as HTMLElement;
+    const line = cont.getAttribute("data-line");
+    const first = document.querySelector('#doc p[data-line="' + line + '"]:not(.pg-cont)') as HTMLElement;
+    const ft = first.lastChild as Text, ct = cont.firstChild as Text;
+    const r = document.createRange();
+    r.setStart(ft, ft.data.length - 12);
+    r.setEnd(ct, 8);
+    getSelection()!.removeAllRanges();
+    getSelection()!.addRange(r);
+    return r.toString();
+  });
+  assert.ok(got.length > 12);
+  await p.evaluate(() => (window as any).mdAnnotateSelection("highlight", "blue"));
+  const r = await p.evaluate(() => ({
+    pieces: new Set(Array.from(document.querySelectorAll("#doc mark.anno")).map((m) => (m.closest(".page") as HTMLElement).dataset.page)).size,
+    ids: new Set(Array.from(document.querySelectorAll("#doc mark.anno")).map((m) => (m as HTMLElement).dataset.anno)).size,
+  }));
+  assert.equal(r.ids, 1);
+  assert.equal(r.pieces, 2);
+  // Showing changes since the last read, then marking as read, keeps personal highlights.
+  await p.evaluate((src: string) => (window as any).mdSetReview({ mode: "unread", baseText: src.replace("The end.", "The beginning."), revisions: [] }), md);
+  assert.equal(await p.evaluate(() => new Set(Array.from(document.querySelectorAll("#doc mark.anno")).map((m) => (m as HTMLElement).dataset.anno)).size), 1);
+  await p.evaluate(() => (window as any).mdSetReview(null));
+  assert.equal(await p.evaluate(() => document.querySelectorAll("#doc mark.anno").length >= 2), true);
+  assert.deepEqual(errors, []);
+});
