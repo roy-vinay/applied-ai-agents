@@ -1,0 +1,44 @@
+# Tech60
+
+Tech news in 60 words, from the source itself, and checked. A small Mac app that keeps a news card on your desktop.
+
+![The Tech60 card with sample stories](docs/img/card-light.png)
+
+## What it does
+
+- **A floating card** on your desktop with the latest tech stories. It scrolls gently, pauses when you point at it, and never takes focus from what you're typing.
+- **New since you looked:** stories that arrived since you last looked at the card get a dot, and the header counts them.
+- **Short summaries from official sources only:** announcements from AI labs and developer platforms (OpenAI, Google DeepMind, Google AI, GitHub Changelog, Apple Developer, Hugging Face) get a summary of up to 60 words, written by Apple's on-device model.
+- **Every summary is checked before you see it.** Plain code confirms that every number and name in the summary appears in the source, and that every sentence is backed by a sentence in the source. One failure and the summary is withheld, so you see the headline only. Click **Why?** to see each summary sentence next to the source text behind it.
+- **Publishers stay headline and link.** Stories from Hacker News, Techmeme, The Verge, and Ars Technica are never summarized; clicking opens the original.
+- **Private:** no account, no tracking. Summaries run on your Mac; nothing is sent to a cloud model.
+
+## Requirements
+
+- macOS 14 or later for the card.
+- Summaries need macOS 26 with Apple Intelligence turned on. Without it, every story shows headline and link.
+
+## Install
+
+1. Download **Tech60-macOS.zip** from the latest build and unzip it.
+2. Drag **Tech60.app** into Applications and open it. The app isn't notarized yet, so the first time macOS blocks it: open **System Settings > Privacy & Security** and click **Open Anyway**.
+3. Tech60 lives in the menu bar (newspaper icon). Use it to show or hide the card, pause, refresh, pin the card above other windows, and choose sources.
+
+## How it gets the news
+
+Only feeds that sites publish themselves (RSS and Atom), plus Hacker News through its official API. Tech60 never scrapes a site that has no feed. For official announcements whose feed carries only a sentence or two, Tech60 reads the announcement page the feed links to, and only to write the summary.
+
+## Status
+
+Version 0.1, an early build. Summaries are **experimental**: the accuracy evaluation in the PRD (at least 200 labeled source documents, published results) hasn't been run yet. Until then, treat each summary as a pointer to the source, and use **Why?** when it matters.
+
+## Build it yourself
+
+```bash
+cd tools/tech60
+swift test
+./scripts/build-app.sh   # builds build/Tech60.app
+./build/Tech60.app/Contents/MacOS/Tech60 --demo   # sample stories, no network
+```
+
+MIT License.

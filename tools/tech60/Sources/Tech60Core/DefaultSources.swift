@@ -1,0 +1,22 @@
+import Foundation
+
+public enum DefaultSources {
+    private static func feed(_ id: String, _ name: String, _ url: String, primary: Bool) -> Source {
+        Source(id: id, name: name, kind: .feed, url: URL(string: url), isPrimary: primary)
+    }
+
+    /// Official sources (summarized) and publishers (headline and link only). Every feed here is one the
+    /// site publishes itself; Tech60 never scrapes a site that has no feed.
+    public static let all: [Source] = [
+        feed("openai", "OpenAI", "https://openai.com/news/rss.xml", primary: true),
+        feed("deepmind", "Google DeepMind", "https://deepmind.google/blog/rss.xml", primary: true),
+        feed("google-ai", "Google AI", "https://blog.google/technology/ai/rss/", primary: true),
+        feed("github-changelog", "GitHub Changelog", "https://github.blog/changelog/feed/", primary: true),
+        feed("apple-developer", "Apple Developer", "https://developer.apple.com/news/rss/news.rss", primary: true),
+        feed("huggingface", "Hugging Face", "https://huggingface.co/blog/feed.xml", primary: true),
+        Source(id: "hn", name: "Hacker News", kind: .hackerNews, url: URL(string: "https://news.ycombinator.com"), isPrimary: false),
+        feed("techmeme", "Techmeme", "https://www.techmeme.com/feed.xml", primary: false),
+        feed("verge", "The Verge", "https://www.theverge.com/rss/index.xml", primary: false),
+        feed("ars", "Ars Technica", "https://feeds.arstechnica.com/arstechnica/index", primary: false),
+    ]
+}
