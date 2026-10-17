@@ -25,6 +25,20 @@ final class AppModel: ObservableObject {
     }
     enum SortMode: String, CaseIterable { case hot = "Hot", latest = "Latest" }
 
+    /// What "More like this" and "Less like this" taught Tech60.
+    @Published var taste: Taste {
+        didSet {
+            if !isDemo, let data = try? JSONEncoder().encode(taste) { UserDefaults.standard.set(data, forKey: "taste") }
+            rebuild()
+        }
+    }
+    /// Stories the reader dismissed with "Less like this".
+    @Published private(set) var hiddenIDs: Set<String> {
+        didSet {
+            if !isDemo { UserDefaults.standard.set(Array(hiddenIDs.suffix(2_000)), forKey: "hiddenStories") }
+            rebuild()
+        }
+    }
     /// A topic tab on the card (a topic id), or nil for Top and Latest.
     @Published var topicTab: String?
     /// Set by the app delegate so the card's settings button can open the settings window.
@@ -57,11 +71,22 @@ final class AppModel: ObservableObject {
     init(isDemo: Bool) {
         self.isDemo = isDemo
         let defaults = UserDefaults.standard
-        if let data = defaults.data(forKey: "sources"), let saved = try? JSONDecoder().decode([Source].self, from: data) {
+        if let data = defaults.data(forKey: "sources"), var saved = try? JSONDecoder().decode([Source].self, from: data) {
+            // Once per default-list version: add new default sources and turn off the noisy ones.
+            if defaults.integer(forKey: "sourcesVersion") < DefaultSources.version {
+                let have = Set(saved.map(\.id))
+                saved += DefaultSources.all.filter { !have.contains($0.id) }
+                for i in saved.indices where DefaultSources.offByDefault.contains(saved[i].id) { saved[i].isEnabled = false }
+                defaults.set(DefaultSources.version, forKey: "sourcesVersion")
+                if let data = try? JSONEncoder().encode(saved) { defaults.set(data, forKey: "sources") }
+            }
             sources = saved
         } else {
             sources = DefaultSources.all
+            defaults.set(DefaultSources.version, forKey: "sourcesVersion")
         }
+        taste = defaults.data(forKey: "taste").flatMap { try? JSONDecoder().decode(Taste.self, from: $0) } ?? Taste()
+        hiddenIDs = Set(defaults.stringArray(forKey: "hiddenStories") ?? [])
         summariesEnabled = defaults.object(forKey: "summariesEnabled") as? Bool ?? true
         sortMode = SortMode(rawValue: defaults.string(forKey: "sortMode") ?? "") ?? .hot
         if isDemo {
@@ -94,19 +119,21 @@ final class AppModel: ObservableObject {
     /// Recent stories from enabled sources, newest first.
     private var recentStories: [Story] {
         let enabled = Set(sources.filter(\.isEnabled).map(\.id))
-        let recent = snapshot.stories.filter { isDemo || enabled.contains($0.sourceID) }
+        let recent = snapshot.stories.filter {
+            (isDemo || enabled.contains($0.sourceID)) && !hiddenIDs.contains($0.id) && !NoiseFilter.isNoise($0)
+        }
         let window = recent.filter { Date().timeIntervalSince($0.displayDate) < 2 * 86_400 }
         return Array((window.isEmpty ? recent : window).prefix(80))
     }
 
     private func rebuild() {
         clusters = Clustering.cluster(recentStories)
-        maxScore = clusters.map { Hotness.score($0, topics: followedTopics) }.max() ?? 1
+        maxScore = clusters.map { Hotness.score($0, topics: followedTopics, taste: taste) }.max() ?? 1
     }
 
     /// How hot a row is next to the hottest one on the card, 0.12 to 1, for the heat ring.
     func heatFraction(_ cluster: StoryCluster) -> Double {
-        min(1, max(0.12, Hotness.score(cluster, topics: followedTopics) / max(maxScore, 0.0001)))
+        min(1, max(0.12, Hotness.score(cluster, topics: followedTopics, taste: taste) / max(maxScore, 0.0001)))
     }
 
     /// The section label above a headline: the first topic it matches, followed topics first.
@@ -141,9 +168,9 @@ final class AppModel: ObservableObject {
         let topics = followedTopics
         if let tab = topicTab, let topic = allTopics.first(where: { $0.id == tab }) {
             return clusters.filter { c in c.stories.contains { !Topics.matches($0, in: [topic]).isEmpty } }
-                .sorted { Hotness.score($0, topics: topics) > Hotness.score($1, topics: topics) }
+                .sorted { Hotness.score($0, topics: topics, taste: taste) > Hotness.score($1, topics: topics, taste: taste) }
         }
-        if sortMode == .hot { return Hotness.hot(clusters, topics: topics) }
+        if sortMode == .hot { return Hotness.hot(clusters, topics: topics, taste: taste) }
         guard !topics.isEmpty else { return clusters }
         let (on, off) = clusters.reduce(into: ([StoryCluster](), [StoryCluster]())) { acc, c in
             if topicNames(for: c).isEmpty { acc.1.append(c) } else { acc.0.append(c) }
@@ -207,7 +234,7 @@ final class AppModel: ObservableObject {
         defer { isSendingBrief = false }
         let since = lastBriefSent ?? now.addingTimeInterval(-24 * 3600)
         await refresh()
-        let picks = Brief.pick(clusters, topics: followedTopics, since: since, now: now)
+        let picks = Brief.pick(clusters, topics: followedTopics, taste: taste, since: since, now: now)
         lastBriefSent = now
         lastBrief = picks.map(\.id)
 
@@ -228,7 +255,7 @@ final class AppModel: ObservableObject {
     /// Opens the last brief on the card.
     func showBrief() {
         if isDemo {
-            briefIDs = Brief.pick(clusters, topics: followedTopics, since: Date().addingTimeInterval(-24 * 3600)).map(\.id)
+            briefIDs = Brief.pick(clusters, topics: followedTopics, taste: taste, since: Date().addingTimeInterval(-24 * 3600)).map(\.id)
         } else {
             briefIDs = lastBrief.isEmpty ? nil : lastBrief
         }
@@ -241,6 +268,19 @@ final class AppModel: ObservableObject {
     private func requestNotificationPermission() {
         guard !isDemo else { return }
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    }
+
+    // MARK: Learning from the reader
+
+    /// "More like this" raises similar stories; "Less like this" lowers them and hides this one.
+    func feedback(_ cluster: StoryCluster, more: Bool) {
+        taste.record(cluster, more: more)
+        if !more { hiddenIDs.formUnion(cluster.stories.map(\.id)) }
+    }
+
+    func resetTaste() {
+        taste = Taste()
+        hiddenIDs = []
     }
 
     // MARK: Topics
@@ -274,6 +314,8 @@ final class AppModel: ObservableObject {
         guard !isDemo, !isRefreshing else { return }
         isRefreshing = true
         snapshot = await engine.refresh(sources: sources)
+        // The editor pass rates new headlines before the card is ranked and summaries are queued.
+        if summariesEnabled, let rated = await engine.rateHeadlines() { snapshot = rated }
         isRefreshing = false
         await prepareTopSummaries()
         loadImages()

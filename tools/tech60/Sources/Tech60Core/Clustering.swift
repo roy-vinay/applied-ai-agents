@@ -106,31 +106,42 @@ public enum Clustering {
 /// several outlets covering it, Hacker News points and comments, Techmeme picking it, or the company posting
 /// it themselves. Heat then cools with age, like Hacker News's own ranking.
 public enum Hotness {
-    /// Heat before cooling. 1 means no signal at all (one outlet, no discussion).
-    public static func heat(_ cluster: StoryCluster, topics: [Topic] = []) -> Double {
+    /// The editor's best rating among the row's stories, if any were rated.
+    public static func editorScore(_ cluster: StoryCluster) -> Int? { cluster.stories.compactMap(\.editorScore).max() }
+
+    /// Heat before cooling. 1 means no signal at all (one outlet, no discussion). Coverage and a Techmeme
+    /// pick count most; Hacker News points are capped so a popular essay can't outrank real news.
+    public static func heat(_ cluster: StoryCluster, topics: [Topic] = [], taste: Taste = Taste()) -> Double {
         let points = Double(cluster.stories.compactMap(\.points).max() ?? 0)
         let comments = Double(cluster.stories.compactMap(\.comments).max() ?? 0)
         var h = 1.0
-        h += Double(cluster.sourceCount - 1) * 2.5
-        h += log10(1 + points) * 2       // 100 points adds 4, 1,000 adds 6
-        h += log10(1 + comments)
-        if cluster.stories.contains(where: { $0.sourceID == "techmeme" }) { h += 1.5 }   // an editor picked it
+        h += Double(cluster.sourceCount - 1) * 3
+        h += min(log10(1 + points) * 1.5, 3.5)      // 100 points adds 3, capped at 3.5
+        h += min(log10(1 + comments) * 0.5, 1)
+        if cluster.stories.contains(where: { $0.sourceID == "techmeme" }) { h += 3 }    // an editor picked it
         if cluster.stories.contains(where: \.isPrimary) { h += 1.5 }
         if !topics.isEmpty, cluster.stories.contains(where: { !Topics.matches($0, in: topics).isEmpty }) { h *= 1.5 }
-        return h
+        switch editorScore(cluster) {
+        case 5?: h *= 1.4
+        case 4?: h *= 1.15
+        case 1?, 2?: h *= 0.6
+        default: break
+        }
+        return h * taste.multiplier(for: cluster)
     }
 
-    public static func score(_ cluster: StoryCluster, topics: [Topic] = [], now: Date = Date()) -> Double {
+    public static func score(_ cluster: StoryCluster, topics: [Topic] = [], taste: Taste = Taste(), now: Date = Date()) -> Double {
         let hours = max(0, now.timeIntervalSince(cluster.newestDate) / 3600)
-        return heat(cluster, topics: topics) / pow(hours + 2, 1.3)
+        return heat(cluster, topics: topics, taste: taste) / pow(hours + 2, 1.3)
     }
 
-    /// The hottest rows, hottest first. Rows with little heat are left out; if that leaves too few,
-    /// the best of the rest fill in so the card is never nearly empty.
-    public static func hot(_ clusters: [StoryCluster], topics: [Topic] = [], now: Date = Date(),
+    /// The hottest rows, hottest first. Rows the editor rated 2 or lower are left out, and so are rows
+    /// with little heat; if that leaves too few, the best of the rest fill in so the card is never nearly empty.
+    public static func hot(_ clusters: [StoryCluster], topics: [Topic] = [], taste: Taste = Taste(), now: Date = Date(),
                            limit: Int = 25, minimumHeat: Double = 3, minimumCount: Int = 8) -> [StoryCluster] {
-        let ranked = clusters.sorted { score($0, topics: topics, now: now) > score($1, topics: topics, now: now) }
-        let hot = ranked.filter { heat($0, topics: topics) >= minimumHeat }
+        let worthy = clusters.filter { (editorScore($0) ?? 3) >= 3 }
+        let ranked = worthy.sorted { score($0, topics: topics, taste: taste, now: now) > score($1, topics: topics, taste: taste, now: now) }
+        let hot = ranked.filter { heat($0, topics: topics, taste: taste) >= minimumHeat }
         if hot.count >= minimumCount { return Array(hot.prefix(limit)) }
         return Array(ranked.prefix(max(minimumCount, hot.count)).prefix(limit))
     }
@@ -138,14 +149,15 @@ public enum Hotness {
 
 /// Picks the few stories worth a notification.
 public enum Brief {
-    public static func score(_ cluster: StoryCluster, topics: [Topic], now: Date = Date()) -> Double {
-        Hotness.score(cluster, topics: topics, now: now)
+    public static func score(_ cluster: StoryCluster, topics: [Topic], taste: Taste = Taste(), now: Date = Date()) -> Double {
+        Hotness.score(cluster, topics: topics, taste: taste, now: now)
     }
 
-    public static func pick(_ clusters: [StoryCluster], topics: [Topic], since: Date, now: Date = Date(), count: Int = 5) -> [StoryCluster] {
+    public static func pick(_ clusters: [StoryCluster], topics: [Topic], taste: Taste = Taste(), since: Date, now: Date = Date(),
+                            count: Int = 5) -> [StoryCluster] {
         let floor = max(since, now.addingTimeInterval(-36 * 3600))
-        let recent = clusters.filter { $0.newestDate >= floor }
-        return Array(recent.sorted { score($0, topics: topics, now: now) > score($1, topics: topics, now: now) }.prefix(count))
+        let recent = clusters.filter { $0.newestDate >= floor && (Hotness.editorScore($0) ?? 3) >= 3 }
+        return Array(recent.sorted { score($0, topics: topics, taste: taste, now: now) > score($1, topics: topics, taste: taste, now: now) }.prefix(count))
     }
 
     /// The notification text: one headline per line.

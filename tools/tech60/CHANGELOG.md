@@ -3,6 +3,12 @@
 
 ## Unreleased
 
+- Better news: Techmeme anchors the feed; TechCrunch, MIT Technology Review, and Platformer added; GitHub Changelog and Apple Developer news off by default.
+- Noise filter: deals, reviews, buying guides, how-tos, gaming, Hacker News posts under 150 points (Show/Ask HN under 400).
+- Hotness re-weighted: coverage and Techmeme picks count most; Hacker News points are capped.
+- On-device editor rates each headline 1 to 5; stories rated 2 or lower leave Top (still in Latest).
+- Right-click a story for More like this or Less like this; reset in Settings, Topics.
+
 - Summaries are ready sooner: the top ten stories on the card are summarized in the background (any source), resting the pointer on a story starts its summary, and the model is loaded at launch. An opened story shows the feed's text at once while its summary finishes.
 
 - App icon (a small front page with the Tech60 ring) and a matching menu bar icon whose corner opens into the ring.

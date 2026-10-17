@@ -14,6 +14,8 @@ public protocol Summarizer: Sendable {
 
 public extension Summarizer {
     func prewarm() {}
+    /// Rates headlines 1-5 (see EditorPrompt). The default rates nothing.
+    func rate(headlines: [String]) async throws -> [Int?] { headlines.map { _ in nil } }
 }
 
 public enum SummaryPrompt {
@@ -44,6 +46,12 @@ public struct NoSummarizer: Summarizer {
 public struct AppleSummarizer: Summarizer {
     public init() {}
     public var name: String { "Apple on-device model" }
+
+    public func rate(headlines: [String]) async throws -> [Int?] {
+        let session = LanguageModelSession(instructions: EditorPrompt.instructions)
+        let response = try await session.respond(to: EditorPrompt.prompt(headlines))
+        return EditorPrompt.parse(response.content, count: headlines.count)
+    }
 
     public func prewarm() {
         guard case .available = SystemLanguageModel.default.availability else { return }

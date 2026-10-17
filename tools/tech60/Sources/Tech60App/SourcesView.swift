@@ -20,7 +20,7 @@ struct SourcesView: View {
 
     private var sourcesTab: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Official sources are summarized in the background. Tap any other story on the card to summarize it on your Mac.")
+            Text("Techmeme anchors the feed: its editors pick what matters. Deals, reviews, how-tos, gaming, and small Hacker News posts are filtered out, and an on-device editor drops minor stories from Top.")
                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             List {
                 ForEach($model.sources) { $source in
@@ -103,6 +103,15 @@ struct TopicsView: View {
                 }
             }
             .frame(minHeight: 280)
+            HStack {
+                Text(model.taste.isEmpty && model.hiddenIDs.isEmpty
+                     ? "Right-click any story for More like this or Less like this."
+                     : "Tech60 is tuning your feed from \(model.taste.terms.count) words you liked or disliked.")
+                    .font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button("Reset") { model.resetTaste() }
+                    .disabled(model.taste.isEmpty && model.hiddenIDs.isEmpty)
+            }
             GroupBox("Add your own topic") {
                 VStack(alignment: .leading, spacing: 8) {
                     TextField("Name, like Robotics", text: $name)

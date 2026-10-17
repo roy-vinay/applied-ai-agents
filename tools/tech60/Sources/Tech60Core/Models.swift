@@ -66,6 +66,8 @@ public struct Story: Codable, Hashable, Identifiable, Sendable {
     public var imageURL: URL?
     /// True once Tech60 has looked for a picture on the page, so it doesn't look again.
     public var imageChecked: Bool?
+    /// The on-device editor's 1-5 rating of whether a tech professional needs this today. Nil until rated.
+    public var editorScore: Int?
 
     public init(id: String, sourceID: String, sourceName: String, title: String, url: URL, published: Date?,
                 firstSeen: Date, sourceText: String, isPrimary: Bool, summary: SummaryState = .none) {

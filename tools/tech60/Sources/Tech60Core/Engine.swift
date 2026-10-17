@@ -107,6 +107,29 @@ public actor Engine {
 
     public func prewarm() { summarizer.prewarm() }
 
+    /// The editor pass: rates up to `limit` unrated recent headlines, 20 per model call.
+    /// A headline the model skips gets a neutral 3, so it isn't asked about again.
+    public func rateHeadlines(limit: Int = 60, now: Date = Date()) async -> Snapshot? {
+        guard await summarizer.availability() == nil else { return nil }
+        let todo = snapshot.stories
+            .filter { $0.editorScore == nil && now.timeIntervalSince($0.displayDate) < 2 * 86_400 && !NoiseFilter.isNoise($0) }
+            .sorted { $0.displayDate > $1.displayDate }
+            .prefix(limit)
+        guard !todo.isEmpty else { return nil }
+        let items = Array(todo)
+        for start in stride(from: 0, to: items.count, by: 20) {
+            let chunk = Array(items[start..<min(start + 20, items.count)])
+            let scores = (try? await summarizer.rate(headlines: chunk.map(\.title))) ?? chunk.map { _ in nil }
+            for (story, score) in zip(chunk, scores) {
+                if let i = snapshot.stories.firstIndex(where: { $0.id == story.id }) {
+                    snapshot.stories[i].editorScore = score ?? 3
+                }
+            }
+        }
+        persist()
+        return snapshot
+    }
+
     /// Summarizes one story because the reader asked for it, from any source and of any age.
     /// Returns the snapshot right away with the story marked pending; call `finishSummary` to run the model.
     public func requestSummary(id: String) async -> Snapshot {
