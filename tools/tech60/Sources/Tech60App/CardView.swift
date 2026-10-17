@@ -455,7 +455,6 @@ struct StoryLine: View {
         .overlay(alignment: .bottom) {
             if !isLast { Rectangle().fill(Palette.rule).frame(height: 1).padding(.horizontal, 18) }
         }
-        .opacity(model.isFaded(cluster) && !hovered ? 0.55 : 1)
         .help(cluster.lead.url.absoluteString)
     }
 }
