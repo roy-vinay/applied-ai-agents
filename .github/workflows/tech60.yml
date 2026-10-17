@@ -23,11 +23,19 @@ jobs:
       - name: Build and test
         run: |
           set -o pipefail
-          { swift build 2>&1 && swift test 2>&1; } | tee build.log || {
-            msg=$(grep -E "error:|failed|XCTAssert" build.log | head -40 | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
-            echo "::error title=Swift build or test failed::$msg"
-            exit 1
+          report() {
+            # One annotation per compiler error or failed assertion, with its file and line.
+            grep -E "(error:|warning: .*FoundationModels)|XCTAssert|failed \\(" "$1" | grep -v "emit-module command failed" | sort -u | head -25 | while IFS= read -r line; do
+              if [[ "$line" =~ ^(/[^:]+):([0-9]+):([0-9]+):\ (error|warning):\ (.*)$ ]]; then
+                f="${BASH_REMATCH[1]#$GITHUB_WORKSPACE/}"
+                echo "::error file=$f,line=${BASH_REMATCH[2]},col=${BASH_REMATCH[3]}::${BASH_REMATCH[5]}"
+              else
+                echo "::error::${line//%/%25}"
+              fi
+            done
           }
+          swift build 2>&1 | tee build.log || { report build.log; exit 1; }
+          swift test 2>&1 | tee test.log || { report test.log; exit 1; }
       - name: Report whether the on-device model framework was compiled in
         run: |
           if grep -rq "import FoundationModels" Sources && xcrun --show-sdk-path | xargs -I{} test -d "{}/System/Library/Frameworks/FoundationModels.framework"; then

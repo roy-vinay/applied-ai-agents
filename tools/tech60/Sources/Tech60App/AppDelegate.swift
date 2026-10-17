@@ -3,39 +3,38 @@ import Combine
 import SwiftUI
 import Tech60Core
 
-/// The floating news card: it never takes focus from what you're typing in.
-final class CardPanel: NSPanel {
-    init(model: AppModel) {
-        super.init(contentRect: NSRect(x: 0, y: 0, width: 380, height: 460),
-                   styleMask: [.nonactivatingPanel, .titled, .closable, .resizable, .fullSizeContentView],
-                   backing: .buffered, defer: false)
-        title = "Tech60"
-        titleVisibility = .hidden
-        titlebarAppearsTransparent = true
-        isMovableByWindowBackground = true
-        hidesOnDeactivate = false
-        isReleasedWhenClosed = false
-        level = .normal
-        standardWindowButton(.miniaturizeButton)?.isHidden = true
-        standardWindowButton(.zoomButton)?.isHidden = true
-        minSize = NSSize(width: 320, height: 300)
-        contentView = NSHostingView(rootView: CardView(model: model))
-        if !setFrameUsingName("Tech60Card") { placeTopRight() }
-        setFrameAutosaveName("Tech60Card")
+/// The floating news card: a panel that never takes focus from what you're typing in.
+@MainActor
+func makeCardPanel(model: AppModel) -> NSPanel {
+    let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 380, height: 460),
+                        styleMask: [.nonactivatingPanel, .titled, .closable, .resizable, .fullSizeContentView],
+                        backing: .buffered, defer: false)
+    panel.title = "Tech60"
+    panel.titleVisibility = .hidden
+    panel.titlebarAppearsTransparent = true
+    panel.isMovableByWindowBackground = true
+    panel.hidesOnDeactivate = false
+    panel.isReleasedWhenClosed = false
+    panel.level = .normal
+    panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
+    panel.standardWindowButton(.zoomButton)?.isHidden = true
+    panel.minSize = NSSize(width: 320, height: 300)
+    panel.contentView = NSHostingView(rootView: CardView(model: model))
+    if !panel.setFrameUsingName("Tech60Card") {
+        if let screen = NSScreen.main?.visibleFrame {
+            panel.setFrameOrigin(NSPoint(x: screen.maxX - panel.frame.width - 24, y: screen.maxY - panel.frame.height - 24))
+        } else {
+            panel.center()
+        }
     }
-
-    override var canBecomeKey: Bool { true }
-
-    private func placeTopRight() {
-        guard let screen = NSScreen.main?.visibleFrame else { center(); return }
-        setFrameOrigin(NSPoint(x: screen.maxX - frame.width - 24, y: screen.maxY - frame.height - 24))
-    }
+    panel.setFrameAutosaveName("Tech60Card")
+    return panel
 }
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var model: AppModel!
-    private var panel: CardPanel!
+    private var panel: NSPanel!
     private var statusItem: NSStatusItem!
     private var sourcesWindow: NSWindow?
     private var countWatcher: Any?
@@ -46,7 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             NSApp.appearance = NSAppearance(named: args[i + 1] == "dark" ? .darkAqua : .aqua)
         }
         model = AppModel(isDemo: args.contains("--demo"))
-        panel = CardPanel(model: model)
+        panel = makeCardPanel(model: model)
         panel.orderFrontRegardless()
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)

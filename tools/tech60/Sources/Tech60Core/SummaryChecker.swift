@@ -122,6 +122,6 @@ public enum SummaryChecker {
 
     static func hasNegation(_ s: String) -> Bool {
         let tokens = s.lowercased().components(separatedBy: CharacterSet.letters.inverted)
-        return tokens.contains(where: negations.contains)
+        return tokens.contains { negations.contains($0) }
     }
 }
