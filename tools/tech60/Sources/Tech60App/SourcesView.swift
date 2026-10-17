@@ -57,7 +57,7 @@ struct SourcesView: View {
         var parts = [source.isPrimary ? "Official, summarized" : "Headline and link"]
         if let s = model.status(for: source) {
             if let e = s.lastError { parts.append("Last check failed: \(e)") }
-            else if let ok = s.lastSuccess { parts.append("Updated \(StoryRow.relative(ok))") }
+            else if let ok = s.lastSuccess { parts.append("Updated \(When.relative(ok))") }
         }
         return parts.joined(separator: " · ")
     }

@@ -24,6 +24,7 @@ public enum StoryMerge {
                               summary: source.isPrimary ? .pending : .none)
             story.points = item.points
             story.comments = item.comments
+            story.imageURL = item.image
             return story
         }
     }
@@ -41,6 +42,7 @@ public enum StoryMerge {
                 // An HN post linking to a story we already have: keep its points as a heat signal.
                 if let points = story.points { updated.points = max(points, old.points ?? 0) }
                 if let comments = story.comments { updated.comments = max(comments, old.comments ?? 0) }
+                if updated.imageURL == nil { updated.imageURL = story.imageURL }
                 if old.sourceID != story.sourceID {
                     byID[old.id] = updated
                     continue

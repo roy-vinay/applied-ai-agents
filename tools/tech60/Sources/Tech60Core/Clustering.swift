@@ -12,6 +12,17 @@ public struct StoryCluster: Identifiable, Hashable, Sendable {
     public var newestDate: Date { stories.map(\.displayDate).max() ?? lead.displayDate }
     public var sourceCount: Int { Set(stories.map(\.sourceID)).count }
 
+    /// The earliest report: who broke it, and when.
+    public var firstReport: Story { stories.min { $0.displayDate < $1.displayDate } ?? lead }
+
+    /// The first picture any source gives, the lead's own first.
+    public var imageURL: URL? { lead.imageURL ?? stories.lazy.compactMap(\.imageURL).first }
+
+    /// Spreading now: three or more outlets, the latest within the last three hours.
+    public func isDeveloping(now: Date = Date()) -> Bool {
+        sourceCount >= 3 && now.timeIntervalSince(newestDate) < 3 * 3600
+    }
+
     /// The story whose summary speaks for the row: one already checked, else an official one, else the lead.
     public var summaryStory: Story {
         stories.first { if case .checked = $0.summary { return true } else { return false } }

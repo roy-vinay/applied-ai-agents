@@ -7,7 +7,7 @@ import UserNotifications
 /// The floating news card: a panel that never takes focus from what you're typing in.
 @MainActor
 func makeCardPanel(model: AppModel) -> NSPanel {
-    let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 400, height: 540),
+    let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 400, height: 640),
                         styleMask: [.nonactivatingPanel, .titled, .closable, .resizable, .fullSizeContentView],
                         backing: .buffered, defer: false)
     panel.title = "Tech60"
@@ -52,6 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
         }
         model = AppModel(isDemo: args.contains("--demo"))
         if !model.isDemo { UNUserNotificationCenter.current().delegate = self }
+        model.openSettings = { [weak self] in self?.showSources() }
         panel = makeCardPanel(model: model)
         panel.orderFrontRegardless()
 
@@ -81,7 +82,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
             menu.addItem(i)
         }
         item(panel.isVisible ? "Hide card" : "Show card", #selector(toggleCard))
-        item(model.isPaused ? "Resume scrolling" : "Pause scrolling", #selector(togglePause))
         item(model.isRefreshing ? "Refreshing…" : "Refresh now", #selector(refreshNow), key: "r")
         item("Mark all as seen", #selector(markSeen))
         if model.hasBrief { item("Show today's brief", #selector(showBrief)) }

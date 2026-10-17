@@ -42,6 +42,13 @@ public enum Topics {
             "export controls", "congress", "senate"]),
     ]
 
+    /// A one-word label for tabs and kickers.
+    public static func shortName(_ topic: Topic) -> String {
+        let names = ["agents": "Agents", "models": "Models", "apple": "Apple", "chips": "Chips", "funding": "Funding",
+                     "devtools": "Dev tools", "security": "Security", "opensource": "Open source", "policy": "Policy"]
+        return names[topic.id] ?? topic.name
+    }
+
     /// A topic the reader typed: "Robotics: robot, robots, humanoid".
     public static func custom(name: String, keywords: String) -> Topic? {
         let name = name.trimmingCharacters(in: .whitespaces)
