@@ -6,7 +6,7 @@ import Tech60Core
 /// The floating news card: a panel that never takes focus from what you're typing in.
 @MainActor
 func makeCardPanel(model: AppModel) -> NSPanel {
-    let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 380, height: 460),
+    let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 380, height: 520),
                         styleMask: [.nonactivatingPanel, .titled, .closable, .resizable, .fullSizeContentView],
                         backing: .buffered, defer: false)
     panel.title = "Tech60"
@@ -16,8 +16,13 @@ func makeCardPanel(model: AppModel) -> NSPanel {
     panel.hidesOnDeactivate = false
     panel.isReleasedWhenClosed = false
     panel.level = .normal
+    panel.standardWindowButton(.closeButton)?.isHidden = true
     panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
     panel.standardWindowButton(.zoomButton)?.isHidden = true
+    // Clear window background so the card's material shows the desktop through it, like a widget.
+    panel.isOpaque = false
+    panel.backgroundColor = .clear
+    panel.hasShadow = true
     panel.minSize = NSSize(width: 320, height: 300)
     panel.contentView = NSHostingView(rootView: CardView(model: model))
     if !panel.setFrameUsingName("Tech60Card") {
