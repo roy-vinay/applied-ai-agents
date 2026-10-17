@@ -58,7 +58,7 @@ jobs:
         run: |
           git config user.name "Vinay Roy"
           git config user.email "roy-vinay@users.noreply.github.com"
-          git add docs/img/card-*.png
+          git add docs/img/*.png
           if git diff --cached --quiet; then echo "No screenshot changes"; exit 0; fi
           git commit -m "Tech60 docs: card screenshots"
           git push origin HEAD:${GITHUB_REF#refs/heads/}

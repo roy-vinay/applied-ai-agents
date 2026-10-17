@@ -1,3 +1,5 @@
+<img src="docs/img/app-icon.png" width="96" alt="Tech60 app icon">
+
 # Tech60
 
 Tech news in 60 words, from the source itself, and checked. A small Mac app that keeps a news card on your desktop.
