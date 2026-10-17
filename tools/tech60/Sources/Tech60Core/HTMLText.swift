@@ -42,7 +42,7 @@ public enum HTMLText {
         s = decodeEntities(s)
         // WordPress feeds end with "The post ... appeared first on ...".
         s = s.replacingOccurrences(of: "(?s)The post .{0,300}? appeared first on .{0,120}?\\.?\\s*$", with: "", options: .regularExpression)
-        s = s.replacingOccurrences(of: "[ \\t\\u{00A0}]+", with: " ", options: .regularExpression)
+        s = s.replacingOccurrences(of: "[ \\t\\u00A0]+", with: " ", options: .regularExpression)
         s = s.replacingOccurrences(of: " *\\n[ \\n]*", with: "\n", options: .regularExpression)
         return s.trimmingCharacters(in: .whitespacesAndNewlines)
     }
