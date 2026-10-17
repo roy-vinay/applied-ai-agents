@@ -8,6 +8,12 @@ public protocol Summarizer: Sendable {
     var name: String { get }
     func availability() async -> String?
     func summarize(title: String, text: String) async throws -> String
+    /// Loads the model ahead of the first summary, so the first one isn't slow.
+    func prewarm()
+}
+
+public extension Summarizer {
+    func prewarm() {}
 }
 
 public enum SummaryPrompt {
@@ -19,7 +25,7 @@ public enum SummaryPrompt {
     """
 
     public static func prompt(title: String, text: String) -> String {
-        "Title: \(title)\n\nText:\n\(String(text.prefix(6_000)))"
+        "Title: \(title)\n\nText:\n\(String(text.prefix(4_000)))"
     }
 }
 
@@ -38,6 +44,11 @@ public struct NoSummarizer: Summarizer {
 public struct AppleSummarizer: Summarizer {
     public init() {}
     public var name: String { "Apple on-device model" }
+
+    public func prewarm() {
+        guard case .available = SystemLanguageModel.default.availability else { return }
+        LanguageModelSession(instructions: SummaryPrompt.instructions).prewarm()
+    }
 
     public func availability() async -> String? {
         switch SystemLanguageModel.default.availability {

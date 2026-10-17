@@ -29,6 +29,8 @@ final class AppModel: ObservableObject {
     @Published var topicTab: String?
     /// Set by the app delegate so the card's settings button can open the settings window.
     var openSettings: () -> Void = {}
+    /// The row under the pointer, so a hover-started summary only runs if the pointer stayed.
+    var hoveredID: String?
     private var maxScore: Double = 1
 
     /// Hour of the daily brief (0-23), or nil when it's off.
@@ -258,6 +260,7 @@ final class AppModel: ObservableObject {
     private func start() async {
         snapshot = await engine.snapshot
         summaryProblem = await engine.summarizerProblem()
+        await engine.prewarm()
         guard !isDemo else { return }
         startBriefClock()
         await refresh()
@@ -272,8 +275,16 @@ final class AppModel: ObservableObject {
         isRefreshing = true
         snapshot = await engine.refresh(sources: sources)
         isRefreshing = false
-        startSummaries()
+        await prepareTopSummaries()
         loadImages()
+    }
+
+    /// Summarizes the top stories in the background, so opening one shows its summary at once.
+    func prepareTopSummaries() async {
+        guard summariesEnabled, !isDemo else { return }
+        let ids = visibleClusters.prefix(10).map(\.summaryStory.id)
+        snapshot = await engine.prioritize(ids: ids)
+        startSummaries()
     }
 
     func markViewed() {
