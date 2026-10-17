@@ -8,6 +8,7 @@ import Tech60Core
 enum Palette {
     static let accent = Color(red: 0.18, green: 0.36, blue: 0.92)
     static let checked = Color(red: 0.13, green: 0.60, blue: 0.40)
+    static let brief = Color(red: 0.93, green: 0.55, blue: 0.13)
     static let sourceColors: [Color] = [
         Color(red: 0.18, green: 0.36, blue: 0.92), Color(red: 0.55, green: 0.33, blue: 0.86),
         Color(red: 0.90, green: 0.42, blue: 0.20), Color(red: 0.10, green: 0.60, blue: 0.62),
@@ -36,28 +37,43 @@ struct CardView: View {
                 .padding(.horizontal, 18)
                 .padding(.top, 16)
                 .padding(.bottom, 12)
+            if model.briefIDs != nil { briefBanner }
             ScrollViewReader { proxy in
                 ScrollView(showsIndicators: false) {
                     LazyVStack(alignment: .leading, spacing: 2) {
-                        if model.visibleStories.isEmpty { empty }
-                        ForEach(Array(model.visibleStories.enumerated()), id: \.element.id) { offset, story in
-                            StoryRow(story: story, isNew: model.isNew(story), isLead: offset == 0,
-                                     isExpanded: expandedID == story.id,
+                        if model.visibleClusters.isEmpty { empty }
+                        ForEach(Array(model.visibleClusters.enumerated()), id: \.element.id) { offset, cluster in
+                            StoryRow(cluster: cluster, isNew: model.isNew(cluster), isLead: offset == 0,
+                                     isExpanded: expandedID == cluster.id,
+                                     isFaded: model.isFaded(cluster),
+                                     topics: model.topicNames(for: cluster),
                                      modelProblem: model.summaryProblem,
-                                     toggle: { toggle(story) },
-                                     open: { model.open(story) })
-                                .id(story.id)
+                                     toggle: { toggle(cluster) },
+                                     open: { model.open($0) })
+                                .id(cluster.id)
                         }
                     }
                     .padding(.horizontal, 8)
                     .padding(.bottom, 8)
                 }
                 .onReceive(tick) { _ in advance(proxy) }
+                .onChange(of: model.briefIDs) { _ in
+                    if let first = model.visibleClusters.first { proxy.scrollTo(first.id, anchor: .top) }
+                }
             }
+            // Fade the last row into the footer instead of cutting it off.
+            .mask(VStack(spacing: 0) {
+                Rectangle()
+                LinearGradient(colors: [.black, .black.opacity(0)], startPoint: .top, endPoint: .bottom).frame(height: 28)
+            })
             footer
         }
         .frame(minWidth: 320, minHeight: 300)
-        .onAppear { if model.isDemo { expandedID = model.visibleStories.first?.id } }
+        .onAppear {
+            guard model.isDemo else { return }
+            if ProcessInfo.processInfo.arguments.contains("--brief") { model.showBrief() }
+            expandedID = model.visibleClusters.first?.id
+        }
         .background(.regularMaterial)
         .onHover { hovering in
             isHovering = hovering
@@ -108,6 +124,24 @@ struct CardView: View {
         }
     }
 
+    private var briefBanner: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "sunrise.fill").foregroundStyle(Palette.brief)
+            Text("Your brief").font(.system(size: 13, weight: .semibold, design: .serif))
+            Text(model.visibleClusters.count == 1 ? "1 story" : "\(model.visibleClusters.count) stories")
+                .font(.system(size: 12)).foregroundStyle(.secondary)
+            Spacer()
+            Button("Show all") { withAnimation { model.closeBrief() } }
+                .buttonStyle(.plain)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Palette.accent)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Palette.brief.opacity(0.13)))
+        .padding(.horizontal, 14)
+        .padding(.bottom, 8)
+    }
+
     private var footer: some View {
         HStack(spacing: 6) {
             if model.isRefreshing {
@@ -140,17 +174,17 @@ struct CardView: View {
         .padding(14)
     }
 
-    private func toggle(_ story: Story) {
-        let opening = expandedID != story.id
+    private func toggle(_ cluster: StoryCluster) {
+        let opening = expandedID != cluster.id
         withAnimation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.86)) {
-            expandedID = opening ? story.id : nil
+            expandedID = opening ? cluster.id : nil
         }
-        if opening { model.summarize(story) }
+        if opening { model.summarize(cluster.summaryStory) }
     }
 
     private func advance(_ proxy: ScrollViewProxy) {
-        let stories = model.visibleStories
-        guard !isHovering, expandedID == nil, !model.isPaused, !reduceMotion, stories.count > 2 else { return }
+        let stories = model.visibleClusters
+        guard !isHovering, expandedID == nil, model.briefIDs == nil, !model.isPaused, !reduceMotion, stories.count > 2 else { return }
         index = (index + 1) % stories.count
         withAnimation(.easeInOut(duration: 0.9)) { proxy.scrollTo(stories[index].id, anchor: .top) }
     }
@@ -180,25 +214,31 @@ struct Wordmark: View {
 
 struct SourceBadge: View {
     let name: String
+    var size: CGFloat = 22
     var body: some View {
         let color = Palette.color(for: name)
         Text(String(name.prefix(1)).uppercased())
-            .font(.system(size: 11, weight: .bold, design: .rounded))
+            .font(.system(size: size * 0.5, weight: .bold, design: .rounded))
             .foregroundStyle(.white)
-            .frame(width: 22, height: 22)
-            .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(color))
+            .frame(width: size, height: size)
+            .background(RoundedRectangle(cornerRadius: size * 0.27, style: .continuous).fill(color))
             .accessibilityHidden(true)
     }
 }
 
 struct StoryRow: View {
-    let story: Story
+    let cluster: StoryCluster
     let isNew: Bool
     let isLead: Bool
     let isExpanded: Bool
+    let isFaded: Bool
+    let topics: [String]
     let modelProblem: String?
     let toggle: () -> Void
-    let open: () -> Void
+    let open: (Story) -> Void
+    private var story: Story { cluster.lead }
+    /// The story whose summary this row shows (may be another source's copy of the same news).
+    private var summarized: Story { cluster.summaryStory }
     @State private var showEvidence = false
     @State private var isHovered = false
 
@@ -217,6 +257,14 @@ struct StoryRow: View {
                         Circle().fill(Palette.accent).frame(width: 6, height: 6)
                             .accessibilityLabel("New")
                     }
+                    if let topic = topics.first {
+                        Text(topic)
+                            .font(.system(size: 10.5, weight: .semibold))
+                            .foregroundStyle(Palette.accent)
+                            .padding(.horizontal, 6).padding(.vertical, 1.5)
+                            .background(Capsule().fill(Palette.accent.opacity(0.11)))
+                            .lineLimit(1)
+                    }
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.down")
                         .font(.system(size: 9, weight: .bold))
@@ -230,11 +278,12 @@ struct StoryRow: View {
                     .lineSpacing(1.5)
                     .lineLimit(isExpanded ? nil : (isLead ? 4 : 3))
                     .fixedSize(horizontal: false, vertical: true)
+                if !cluster.others.isEmpty && !isExpanded { alsoCovered }
                 if isExpanded {
                     summary
                         .transition(.opacity.combined(with: .move(edge: .top)))
                     HStack(spacing: 8) {
-                        Button(action: open) {
+                        Button { open(story) } label: {
                             HStack(spacing: 4) {
                                 Text("Read article")
                                 Image(systemName: "arrow.up.right").font(.system(size: 9, weight: .bold))
@@ -246,7 +295,7 @@ struct StoryRow: View {
                         }
                         .buttonStyle(.plain)
                         .help(story.url.absoluteString)
-                        if case .checked(_, let evidence) = story.summary {
+                        if case .checked(_, let evidence) = summarized.summary {
                             Button { showEvidence.toggle() } label: {
                                 HStack(spacing: 4) {
                                     Image(systemName: "checkmark.seal.fill")
@@ -263,6 +312,7 @@ struct StoryRow: View {
                         }
                     }
                     .padding(.top, 4)
+                    if !cluster.others.isEmpty { otherSources }
                 }
             }
         }
@@ -272,6 +322,7 @@ struct StoryRow: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(Color.primary.opacity(isExpanded ? 0.055 : (isHovered ? 0.045 : (isLead ? 0.03 : 0))))
         )
+        .opacity(isFaded && !isHovered && !isExpanded ? 0.5 : 1)
         .contentShape(Rectangle())
         .onHover { isHovered = $0 }
         .onTapGesture(perform: toggle)
@@ -280,8 +331,55 @@ struct StoryRow: View {
         .accessibilityHint(isExpanded ? "Hides the summary" : "Shows a summary")
     }
 
+    /// Collapsed: the other sources on the same news, as a row of badges.
+    private var alsoCovered: some View {
+        HStack(spacing: 6) {
+            HStack(spacing: -5) {
+                ForEach(cluster.others.prefix(4), id: \.id) { other in
+                    SourceBadge(name: other.sourceName, size: 16)
+                        .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous).stroke(.background, lineWidth: 1.5))
+                }
+            }
+            Text(cluster.others.count == 1 ? "Also in \(cluster.others[0].sourceName)"
+                 : "Also in \(cluster.others.count) more sources")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+        }
+        .padding(.top, 1)
+    }
+
+    /// Expanded: every other source's headline, each opening its own article.
+    private var otherSources: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Also covered by")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.tertiary)
+            ForEach(cluster.others, id: \.id) { other in
+                Button { open(other) } label: {
+                    HStack(alignment: .firstTextBaseline, spacing: 7) {
+                        SourceBadge(name: other.sourceName, size: 16)
+                            .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 4 }
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(other.sourceName)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(Palette.color(for: other.sourceName))
+                            Text(other.title)
+                                .font(.system(size: 12))
+                                .foregroundStyle(.primary)
+                                .lineLimit(2)
+                                .multilineTextAlignment(.leading)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .help(other.url.absoluteString)
+            }
+        }
+        .padding(.top, 8)
+    }
+
     @ViewBuilder private var summary: some View {
-        switch story.summary {
+        switch summarized.summary {
         case .checked(let text, _):
             Text(text)
                 .font(.system(size: 12.5))
@@ -307,7 +405,7 @@ struct StoryRow: View {
 
     /// No checked summary: show what the feed itself says, labeled as such, plus why there's no summary.
     @ViewBuilder private func fallback(note: String?) -> some View {
-        let excerpt = Self.excerpt(story.sourceText)
+        let excerpt = Self.excerpt(summarized.sourceText.isEmpty ? story.sourceText : summarized.sourceText)
         VStack(alignment: .leading, spacing: 6) {
             if !excerpt.isEmpty {
                 Text(excerpt)

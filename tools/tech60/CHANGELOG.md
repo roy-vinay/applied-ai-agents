@@ -1,5 +1,14 @@
 # Changelog
 
+
+## Unreleased
+
+- Same news from several sources is grouped into one row.
+- Follow topics (built-in or your own words); matching stories go first and the rest are dimmed.
+- Daily brief notification at a time you pick, with the top five stories since the last one.
+- Refresh button on the card; tap any story for an on-demand checked summary.
+- Redesigned card: serif headlines, source colors, translucent panel.
+
 ## 0.1.0
 
 - First build: a floating news card and a menu-bar item.

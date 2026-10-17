@@ -19,3 +19,4 @@ shoot() { # name, extra app arguments...
 }
 shoot card-light -Appearance light
 shoot card-dark -Appearance dark
+shoot card-brief -Appearance light --brief

@@ -2,6 +2,7 @@ import AppKit
 import Combine
 import SwiftUI
 import Tech60Core
+import UserNotifications
 
 /// The floating news card: a panel that never takes focus from what you're typing in.
 @MainActor
@@ -37,7 +38,7 @@ func makeCardPanel(model: AppModel) -> NSPanel {
 }
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUserNotificationCenterDelegate {
     private var model: AppModel!
     private var panel: NSPanel!
     private var statusItem: NSStatusItem!
@@ -50,6 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             NSApp.appearance = NSAppearance(named: args[i + 1] == "dark" ? .darkAqua : .aqua)
         }
         model = AppModel(isDemo: args.contains("--demo"))
+        if !model.isDemo { UNUserNotificationCenter.current().delegate = self }
         panel = makeCardPanel(model: model)
         panel.orderFrontRegardless()
 
@@ -82,10 +84,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         item(model.isPaused ? "Resume scrolling" : "Pause scrolling", #selector(togglePause))
         item(model.isRefreshing ? "Refreshing…" : "Refresh now", #selector(refreshNow), key: "r")
         item("Mark all as seen", #selector(markSeen))
+        if model.hasBrief { item("Show today's brief", #selector(showBrief)) }
         menu.addItem(.separator())
         item("Keep card above other windows", #selector(togglePin), on: panel.level == .floating)
         item("Short summaries (on-device)", #selector(toggleSummaries), on: model.summariesEnabled)
-        item("Sources…", #selector(showSources), key: ",")
+        item("Sources, topics, and brief…", #selector(showSources), key: ",")
         menu.addItem(.separator())
         item("Quit Tech60", #selector(quit), key: "q")
     }
@@ -97,12 +100,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func togglePin() { panel.level = panel.level == .floating ? .normal : .floating }
     @objc private func toggleSummaries() { model.summariesEnabled.toggle() }
     @objc private func quit() { NSApp.terminate(nil) }
+    @objc private func showBrief() {
+        model.showBrief()
+        panel.orderFrontRegardless()
+    }
+
+    // Clicking the brief notification opens the brief on the card.
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
+                                            withCompletionHandler completionHandler: @escaping () -> Void) {
+        Task { @MainActor in self.showBrief() }
+        completionHandler()
+    }
+
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+                                            withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .list, .sound])
+    }
 
     @objc private func showSources() {
         if sourcesWindow == nil {
-            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 460, height: 560),
+            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 480, height: 600),
                              styleMask: [.titled, .closable], backing: .buffered, defer: false)
-            w.title = "Tech60 sources"
+            w.title = "Tech60 settings"
             w.isReleasedWhenClosed = false
             w.contentView = NSHostingView(rootView: SourcesView(model: model))
             w.center()
