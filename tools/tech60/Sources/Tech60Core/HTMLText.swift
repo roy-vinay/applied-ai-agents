@@ -78,4 +78,44 @@ public enum HTMLText {
         return nil
         #endif
     }
+
+    /// An https URL, or nil. Pictures are only loaded over https.
+    public static func httpsURL(_ raw: String) -> URL? {
+        let s = decodeEntities(raw.trimmingCharacters(in: .whitespacesAndNewlines))
+        guard let url = URL(string: s), url.scheme?.lowercased() == "https", url.host != nil else { return nil }
+        return url
+    }
+
+    /// The first <img src> in a piece of feed HTML.
+    public static func firstImage(inHTML html: String) -> URL? {
+        guard let r = html.range(of: "<img[^>]+src=[\"']([^\"']+)[\"']", options: [.regularExpression, .caseInsensitive]) else { return nil }
+        let tag = String(html[r])
+        guard let q = tag.range(of: "src=[\"']", options: [.regularExpression, .caseInsensitive]) else { return nil }
+        let rest = tag[q.upperBound...]
+        return httpsURL(String(rest.prefix { $0 != "\"" && $0 != "'" }))
+    }
+
+    /// The picture a page gives for link previews (og:image or twitter:image).
+    public static func previewImage(inHTML html: String) -> URL? {
+        let head = String(html.prefix(200_000))
+        let pattern = "<meta[^>]+(?:property|name)=[\"'](?:og:image(?::secure_url)?|twitter:image)[\"'][^>]*>"
+        var search = head.startIndex..<head.endIndex
+        while let r = head.range(of: pattern, options: [.regularExpression, .caseInsensitive], range: search) {
+            let tag = String(head[r])
+            if let c = tag.range(of: "content=[\"']", options: [.regularExpression, .caseInsensitive]) {
+                let value = tag[c.upperBound...].prefix { $0 != "\"" && $0 != "'" }
+                if let url = httpsURL(String(value)) { return url }
+            }
+            search = r.upperBound..<head.endIndex
+        }
+        // Some pages put content before property.
+        let reversed = "<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+(?:property|name)=[\"'](?:og:image|twitter:image)[\"']"
+        if let r = head.range(of: reversed, options: [.regularExpression, .caseInsensitive]) {
+            let tag = String(head[r])
+            if let c = tag.range(of: "content=[\"']", options: [.regularExpression, .caseInsensitive]) {
+                return httpsURL(String(tag[c.upperBound...].prefix { $0 != "\"" && $0 != "'" }))
+            }
+        }
+        return nil
+    }
 }

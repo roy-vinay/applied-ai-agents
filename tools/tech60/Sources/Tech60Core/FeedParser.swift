@@ -13,8 +13,12 @@ public struct FeedItem: Equatable, Sendable {
     /// Hacker News points and comment count, when the story came from there.
     public var points: Int?
     public var comments: Int?
+    /// The story's picture, when the feed names one.
+    public var image: URL?
 
-    public init(id: String, title: String, link: URL?, published: Date?, text: String, points: Int? = nil, comments: Int? = nil) {
+    public init(id: String, title: String, link: URL?, published: Date?, text: String, points: Int? = nil, comments: Int? = nil,
+                image: URL? = nil) {
+        self.image = image
         self.id = id
         self.title = title
         self.link = link
@@ -38,7 +42,7 @@ public enum FeedParser {
     }
 
     final class Delegate: NSObject, XMLParserDelegate {
-        struct Partial { var id = "", title = "", link = "", published = "", updated = "", summary = "", content = "" }
+        struct Partial { var id = "", title = "", link = "", published = "", updated = "", summary = "", content = "", image = "" }
         let now: Date
         var items: [FeedItem] = []
         var current: Partial?
@@ -57,6 +61,12 @@ public enum FeedParser {
                 depthInItem = 0
             } else if current != nil {
                 depthInItem += 1
+                // Pictures: media:content, media:thumbnail, or an image enclosure.
+                if ["media:content", "media:thumbnail", "enclosure"].contains(name), current?.image.isEmpty == true,
+                   let url = attributes["url"] {
+                    let type = (attributes["type"] ?? attributes["medium"] ?? "image").lowercased()
+                    if type.hasPrefix("image") { current?.image = url }
+                }
                 if name == "link", let href = attributes["href"] {
                     let rel = attributes["rel"] ?? "alternate"
                     if rel == "alternate", current?.link.isEmpty == true { current?.link = href }
@@ -105,8 +115,10 @@ public enum FeedParser {
             let content = HTMLText.plain(p.content)
             let published = FeedDates.parse(p.published, now: now) ?? FeedDates.parse(p.updated, now: now)
             let id = p.id.isEmpty ? (link?.absoluteString ?? title) : p.id
+            var image = HTMLText.httpsURL(p.image)
+            if image == nil { image = HTMLText.firstImage(inHTML: p.content + p.summary) }
             items.append(FeedItem(id: id, title: title, link: link, published: published,
-                                  text: content.count > summary.count ? content : summary))
+                                  text: content.count > summary.count ? content : summary, image: image))
         }
     }
 }

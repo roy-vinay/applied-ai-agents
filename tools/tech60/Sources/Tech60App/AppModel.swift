@@ -25,6 +25,12 @@ final class AppModel: ObservableObject {
     }
     enum SortMode: String, CaseIterable { case hot = "Hot", latest = "Latest" }
 
+    /// A topic tab on the card (a topic id), or nil for Top and Latest.
+    @Published var topicTab: String?
+    /// Set by the app delegate so the card's settings button can open the settings window.
+    var openSettings: () -> Void = {}
+    private var maxScore: Double = 1
+
     /// Hour of the daily brief (0-23), or nil when it's off.
     @Published var briefHour: Int? {
         didSet {
@@ -93,6 +99,36 @@ final class AppModel: ObservableObject {
 
     private func rebuild() {
         clusters = Clustering.cluster(recentStories)
+        maxScore = clusters.map { Hotness.score($0, topics: followedTopics) }.max() ?? 1
+    }
+
+    /// How hot a row is next to the hottest one on the card, 0.12 to 1, for the heat ring.
+    func heatFraction(_ cluster: StoryCluster) -> Double {
+        min(1, max(0.12, Hotness.score(cluster, topics: followedTopics) / max(maxScore, 0.0001)))
+    }
+
+    /// The section label above a headline: the first topic it matches, followed topics first.
+    func kicker(for cluster: StoryCluster) -> String? {
+        let order = followedTopics + allTopics.filter { !followedTopicIDs.contains($0.id) }
+        for topic in order where cluster.stories.contains(where: { !Topics.matches($0, in: [topic]).isEmpty }) {
+            return Topics.shortName(topic)
+        }
+        return nil
+    }
+
+    /// Tabs: followed topics, else a few useful defaults.
+    var tabTopics: [Topic] {
+        let followed = followedTopics
+        if !followed.isEmpty { return followed }
+        return Topics.builtIn.filter { ["models", "agents", "security", "funding"].contains($0.id) }
+    }
+
+    /// Fetches link-preview pictures for the rows on screen.
+    func loadImages() {
+        guard !isDemo else { return }
+        let ids = visibleClusters.prefix(12).flatMap { c in c.imageURL == nil ? c.stories.map(\.id) : [] }
+        guard !ids.isEmpty else { return }
+        Task { snapshot = await engine.fetchImages(ids: ids) }
     }
 
     /// What the card shows: the open brief, else stories on followed topics first, then everything else.
@@ -101,6 +137,10 @@ final class AppModel: ObservableObject {
             return ids.compactMap { id in clusters.first { $0.id == id || $0.stories.contains { $0.id == id } } }
         }
         let topics = followedTopics
+        if let tab = topicTab, let topic = allTopics.first(where: { $0.id == tab }) {
+            return clusters.filter { c in c.stories.contains { !Topics.matches($0, in: [topic]).isEmpty } }
+                .sorted { Hotness.score($0, topics: topics) > Hotness.score($1, topics: topics) }
+        }
         if sortMode == .hot { return Hotness.hot(clusters, topics: topics) }
         guard !topics.isEmpty else { return clusters }
         let (on, off) = clusters.reduce(into: ([StoryCluster](), [StoryCluster]())) { acc, c in
@@ -233,6 +273,7 @@ final class AppModel: ObservableObject {
         snapshot = await engine.refresh(sources: sources)
         isRefreshing = false
         startSummaries()
+        loadImages()
     }
 
     func markViewed() {

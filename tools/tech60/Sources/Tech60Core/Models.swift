@@ -62,6 +62,10 @@ public struct Story: Codable, Hashable, Identifiable, Sendable {
     /// Hacker News points and comments: from the HN listing itself, or from an HN post linking to this story.
     public var points: Int?
     public var comments: Int?
+    /// The story's picture, from the feed or the page's link preview.
+    public var imageURL: URL?
+    /// True once Tech60 has looked for a picture on the page, so it doesn't look again.
+    public var imageChecked: Bool?
 
     public init(id: String, sourceID: String, sourceName: String, title: String, url: URL, published: Date?,
                 firstSeen: Date, sourceText: String, isPrimary: Bool, summary: SummaryState = .none) {

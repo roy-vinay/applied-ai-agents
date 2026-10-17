@@ -108,6 +108,33 @@ public actor Engine {
         return snapshot
     }
 
+    /// Looks up link-preview pictures for stories the card is about to show. At most `limit` page loads.
+    public func fetchImages(ids: [String], limit: Int = 8) async -> Snapshot {
+        let wanted = ids.compactMap { id in snapshot.stories.first { $0.id == id } }
+            .filter { $0.imageURL == nil && $0.imageChecked != true && $0.url.scheme == "https" && $0.url.host != "news.ycombinator.com" }
+            .prefix(limit)
+        guard !wanted.isEmpty else { return snapshot }
+        let found = await withTaskGroup(of: (String, URL?).self) { group in
+            for story in wanted {
+                group.addTask { [client] in
+                    guard let data = try? await client.get(story.url, maxBytes: 4_000_000) else { return (story.id, nil) }
+                    return (story.id, HTMLText.previewImage(inHTML: String(decoding: data, as: UTF8.self)))
+                }
+            }
+            var out: [(String, URL?)] = []
+            for await r in group { out.append(r) }
+            return out
+        }
+        for (id, url) in found {
+            if let i = snapshot.stories.firstIndex(where: { $0.id == id }) {
+                snapshot.stories[i].imageURL = url
+                snapshot.stories[i].imageChecked = true
+            }
+        }
+        persist()
+        return snapshot
+    }
+
     private func summarize(_ original: Story) async {
         inFlight.insert(original.id)
         defer { inFlight.remove(original.id) }
