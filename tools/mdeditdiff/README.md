@@ -16,13 +16,13 @@ last read it, highlighted in the document, with each agent's note, and one click
 was removed. Your agents ask the same history what changed and get back only the changed parts, word by
 word, instead of re-reading the whole file.
 
-![The mdEditDiff Mac app showing a plan with five changes since you last read it: added words highlighted in green, a removed question struck through with a Restore button, a new decision, and a review bar crediting the planner agent](docs/img/app-changes.png)
+![The mdEditDiff Mac app showing a plan with five changes since you last read it: added words highlighted in green, a removed question struck through with a Restore button, a new decision, and a review bar crediting the planner agent](https://raw.githubusercontent.com/roy-vinay/applied-ai-agents/main/tools/mdeditdiff/docs/img/app-changes.png)
 
 [Get it](#get-it) · [See it in action](#see-it-in-action) · [The Mac app](#the-mac-app) · [Use it with an agent](#use-it-with-an-agent) · [Contribute](#contribute)
 
 The same story from the agents' side, in a terminal:
 
-![mdEditDiff in a terminal: a planner agent writes plan.md, a person edits it, the planner revises it, and the implementer asks what changed and gets back four precise changes with who reported them](docs/img/walkthrough.svg)
+![mdEditDiff in a terminal: a planner agent writes plan.md, a person edits it, the planner revises it, and the implementer asks what changed and gets back four precise changes with who reported them](https://raw.githubusercontent.com/roy-vinay/applied-ai-agents/main/tools/mdeditdiff/docs/img/walkthrough.svg)
 
 ## The problem
 
@@ -111,9 +111,11 @@ Requires macOS 14 (Sonoma) or later, on Apple silicon or Intel.
 Requires Node.js 20 or later (check with `node -v`; get it from [nodejs.org](https://nodejs.org)).
 
 ```bash
-npm install -g https://github.com/roy-vinay/applied-ai-agents/releases/latest/download/mdeditdiff-cli.tgz
+npm install -g mdeditdiff
 mdeditdiff --help
 ```
+
+Or run it without installing: `npx mdeditdiff --help`.
 
 Connect it to Claude Code:
 
@@ -140,7 +142,7 @@ It walks through six steps: a planner agent writes `plan.md`, an implementer rea
 telling anyone, the planner checks what changed before revising, the implementer asks what changed and gets
 back four precise changes, and the full history shows who did what.
 
-To see the Mac app side, open [`examples/plan.md`](examples/plan.md) in mdEditDiff, switch to Edit (⌘2), change a
+To see the Mac app side, open [`examples/plan.md`](https://github.com/roy-vinay/applied-ai-agents/blob/main/tools/mdeditdiff/examples/plan.md) in mdEditDiff, switch to Edit (⌘2), change a
 step, and save. With the command-line tool installed, then run:
 
 ```bash
@@ -199,7 +201,7 @@ All of this uses the shared history from the command-line tool, so install it to
 ([Get it](#the-command-line-tool-and-mcp-server)). Without it the app still reads and edits, but doesn't
 track changes.
 
-![mdEditDiff in Read mode, showing a formatted plan with headings, a numbered list, a table and a quote](docs/img/app-read.png)
+![mdEditDiff in Read mode, showing a formatted plan with headings, a numbered list, a table and a quote](https://raw.githubusercontent.com/roy-vinay/applied-ai-agents/main/tools/mdeditdiff/docs/img/app-read.png)
 
 ### Three modes
 
@@ -231,7 +233,7 @@ type a page number to go there, and use − and + to zoom.
 - **Prefer one long page?** Choose **View > Continuous Scroll**. Thumbnails hide with **View > Page
   Thumbnails** (⌥⌘2) or the ▤ button. The app remembers these choices.
 
-![mdEditDiff in Split mode: the Markdown source on the left and the formatted preview on the right](docs/img/app-split.png)
+![mdEditDiff in Split mode: the Markdown source on the left and the formatted preview on the right](https://raw.githubusercontent.com/roy-vinay/applied-ai-agents/main/tools/mdeditdiff/docs/img/app-split.png)
 
 ### Highlights and notes
 
@@ -249,7 +251,7 @@ highlight it, or choose **Add Note**. You can also right-click the selection, or
   guess; it waits under **Needs Reattachment** until you select the right text and choose **Reattach to
   Selection**.
 - **Private and separate.** They're kept by the app on your Mac, never inside the Markdown file, and
-  agents never see them. See [docs/ANNOTATIONS.md](docs/ANNOTATIONS.md) for where and how.
+  agents never see them. See [docs/ANNOTATIONS.md](https://github.com/roy-vinay/applied-ai-agents/blob/main/tools/mdeditdiff/docs/ANNOTATIONS.md) for where and how.
 - Each color also has its own underline style (solid, double, dotted, dashed, wavy), so they can be told
   apart without color.
 
@@ -314,7 +316,7 @@ defaults write io.github.roy-vinay.mdeditdiff Appearance dark         # or light
 defaults write io.github.roy-vinay.mdeditdiff MarkReadOnClose -bool false   # keep changes unread after closing
 ```
 
-![mdEditDiff in Read mode with the dark appearance](docs/img/app-read-dark.png)
+![mdEditDiff in Read mode with the dark appearance](https://raw.githubusercontent.com/roy-vinay/applied-ai-agents/main/tools/mdeditdiff/docs/img/app-read-dark.png)
 
 ### Roadmap
 
@@ -355,7 +357,7 @@ Word changes are shown as [-removed-] {+added+}.
 ```
 
 Four precise changes, each with its section, instead of the whole plan. Unchanged sections are never
-repeated. Add `--json` for structured output ([format](docs/FORMAT.md)).
+repeated. Add `--json` for structured output ([format](https://github.com/roy-vinay/applied-ai-agents/blob/main/tools/mdeditdiff/docs/FORMAT.md)).
 
 ## Use it with an agent
 
@@ -409,7 +411,7 @@ mdeditdiff checkpoint plan.md --author implementer --note "Split step 4 into two
   without losing revisions.
 - **Limits.** Only Markdown files (`.md`, `.markdown`, `.mdx` and similar) are accepted. Each file keeps up
   to 500 revisions; the oldest are pruned first, except versions a reader still uses as its bookmark.
-- **Diff details** and the JSON response format are in [docs/FORMAT.md](docs/FORMAT.md).
+- **Diff details** and the JSON response format are in [docs/FORMAT.md](https://github.com/roy-vinay/applied-ai-agents/blob/main/tools/mdeditdiff/docs/FORMAT.md).
 
 ## What it can and can't tell you
 

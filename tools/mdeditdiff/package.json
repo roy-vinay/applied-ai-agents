@@ -8,7 +8,8 @@
     "test": "npm run build && npm run bundle && node --test dist/test/*.test.js",
     "prepare": "npm run build",
     "walkthrough": "npm run build && ./examples/walkthrough.sh",
-    "bundle": "esbuild src/diff.ts --bundle --format=iife --global-name=MDDiff --target=es2020 --outfile=app/Sources/MDEditDiffApp/Resources/Preview/mdeditdiff-diff.js --banner:js=\"// Generated from tools/mdeditdiff/src/diff.ts by 'npm run bundle'. Do not edit.\""
+    "bundle": "esbuild src/diff.ts --bundle --format=iife --global-name=MDDiff --target=es2020 --outfile=app/Sources/MDEditDiffApp/Resources/Preview/mdeditdiff-diff.js --banner:js=\"// Generated from tools/mdeditdiff/src/diff.ts by 'npm run bundle'. Do not edit.\"",
+    "prepublishOnly": "npm test"
   },
   "keywords": [
     "mcp",
@@ -38,7 +39,7 @@
   },
   "files": [
     "dist/src",
-    "docs",
+    "docs/*.md",
     "README.md",
     "LICENSE"
   ],
@@ -49,5 +50,9 @@
     "type": "git",
     "url": "https://github.com/roy-vinay/applied-ai-agents.git",
     "directory": "tools/mdeditdiff"
+  },
+  "homepage": "https://github.com/roy-vinay/applied-ai-agents/tree/main/tools/mdeditdiff#readme",
+  "bugs": {
+    "url": "https://github.com/roy-vinay/applied-ai-agents/issues"
   }
 }
