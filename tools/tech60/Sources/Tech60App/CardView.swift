@@ -71,7 +71,6 @@ struct CardView: View {
         .frame(minWidth: 320, minHeight: 300)
         .onAppear {
             guard model.isDemo else { return }
-            if ProcessInfo.processInfo.arguments.contains("--brief") { model.showBrief() }
             expandedID = model.visibleClusters.first?.id
         }
         .background(.regularMaterial)
@@ -166,7 +165,8 @@ struct CardView: View {
 
     private var empty: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(model.isRefreshing ? "Fetching the latest stories" : "No stories yet")
+            Text(model.briefIDs != nil ? "Nothing new since your last brief"
+                 : model.isRefreshing ? "Fetching the latest stories" : "No stories yet")
                 .font(.system(size: 15, weight: .semibold, design: .serif))
             Text("Choose sources from the newspaper icon in the menu bar.")
                 .font(.system(size: 12.5)).foregroundStyle(.secondary)

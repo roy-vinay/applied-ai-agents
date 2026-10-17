@@ -64,6 +64,12 @@ final class AppModel: ObservableObject {
         } else {
             engine = Engine(file: SnapshotFile.standard(), summarizer: Summarizers.onDevice())
         }
+        if isDemo {
+            // Build the sample card synchronously so screenshots never catch it empty.
+            snapshot = Demo.snapshot()
+            rebuild()
+            if ProcessInfo.processInfo.arguments.contains("--brief") { showBrief() }
+        }
         Task { await self.start() }
     }
 
