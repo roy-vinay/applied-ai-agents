@@ -1,6 +1,7 @@
-<img src="docs/img/app-icon.png" width="88" alt="Tech60 app icon">
-
-# Tech60
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/tech60-masthead-dark.svg">
+  <img src="../../.github/assets/tech60-masthead-light.svg" width="100%" alt="Tech60: a tech news front page for your Mac desktop. By Vinay Roy.">
+</picture>
 
 A tech news front page that lives on your Mac desktop. It shows only stories with real signal, ranks them by how
 much attention they're getting, and gives each one a short summary that must pass rule-based checks against

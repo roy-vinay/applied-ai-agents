@@ -1,6 +1,7 @@
-# Failure Files
-
-**Public AI failures, turned into experiments.**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../.github/assets/failure-files-masthead-dark.svg">
+  <img src="../.github/assets/failure-files-masthead-light.svg" width="100%" alt="Failure Files: public AI failures, turned into experiments. By Vinay Roy.">
+</picture>
 
 When a company's AI assistant fails in public, the story usually ends with the headline. Failure Files
 picks it up from there. Each file is a short case study of a documented incident, followed by an
