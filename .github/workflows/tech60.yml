@@ -70,10 +70,10 @@ jobs:
           TAG=tech60-latest
           NOTES="Latest Tech60 build from main ($(git rev-parse --short HEAD)). Download Tech60-macOS.zip, double-click it, and move Tech60.app to Applications. The app isn't notarized yet: the first time, right-click it and choose Open."
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" --notes "$NOTES" --target "$GITHUB_SHA"
+            gh release edit "$TAG" --notes "$NOTES" --target "$GITHUB_SHA" --prerelease=false --latest
             git push -f origin "HEAD:refs/tags/$TAG"
           else
-            gh release create "$TAG" --title "Tech60 (latest build)" --notes "$NOTES" --prerelease --target "$GITHUB_SHA"
+            gh release create "$TAG" --title "Tech60 (latest build)" --notes "$NOTES" --latest --target "$GITHUB_SHA"
           fi
           gh release upload "$TAG" build/Tech60-macOS.zip --clobber
       - uses: actions/upload-artifact@v4
