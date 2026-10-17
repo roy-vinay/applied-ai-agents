@@ -1,0 +1,2 @@
+# Keep the Mac tools out of the language bar so it reflects the agent code.
+tools/** linguist-vendored
