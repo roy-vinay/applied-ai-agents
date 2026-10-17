@@ -17,14 +17,14 @@ final class HotTests: XCTestCase {
             s("d", "ars", "A review of a mid-range office chair", hoursAgo: 0.2),
             s("e", "hn", "Show HN: My weekend Forth interpreter", hoursAgo: 0.5, points: 4),
         ])
-        let hot = Hotness.hot(clusters, minimumCount: 1)
+        let hot = Hotness.hot(clusters)
         XCTAssertEqual(hot.first?.lead.id, "a")
         XCTAssertFalse(hot.contains { $0.lead.id == "d" }, "one outlet, no discussion: not trending")
     }
 
-    func testFillsInWhenLittleIsHot() {
-        let clusters = Clustering.cluster([s("a", "ars", "Chair review"), s("b", "verge", "Phone case review")])
-        XCTAssertEqual(Hotness.hot(clusters, minimumCount: 8).count, 2)
+    func testNoFillerOnQuietDays() {
+        let clusters = Clustering.cluster([s("a", "ars", "A quiet chair story"), s("b", "hn", "Butlerian Jihad", points: 225)])
+        XCTAssertTrue(Hotness.hot(clusters).isEmpty, "no signal, no slot in Top")
     }
 
     func testHNPointsCarryOverWhenHNLinksToAStoryWeHave() {

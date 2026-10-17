@@ -195,7 +195,7 @@ public actor Engine {
             story.summary = .withheld(reason: "Tech60 couldn't find readable text on this page. It may load its content with scripts. Open the article to read it.")
         } else {
             do {
-                let text = try await summarizer.summarize(title: story.title, text: story.sourceText)
+                let text = SummaryText.clean(try await summarizer.summarize(title: story.title, text: story.sourceText))
                 let result = SummaryChecker.check(summary: text, source: story.title + "\n" + story.sourceText)
                 story.summary = result.passed
                     ? .checked(text: text, evidence: result.evidence)

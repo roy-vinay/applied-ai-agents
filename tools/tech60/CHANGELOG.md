@@ -3,6 +3,11 @@
 
 ## Unreleased
 
+- Top has no filler: only stories with real signal (two or more outlets, a Techmeme pick, an official post, or 400+ Hacker News points). On quiet days it's shorter and says so.
+- Encyclopedia, fan wiki, and similar reference pages are never treated as news.
+- The on-device editor's prompt now defines news as recent and rates reference pages, history, fiction, and evergreen essays as not news.
+- Summaries are cleaned of Markdown and stray headings.
+
 - Better news: Techmeme anchors the feed; TechCrunch, MIT Technology Review, and Platformer added; GitHub Changelog and Apple Developer news off by default.
 - Noise filter: deals, reviews, buying guides, how-tos, gaming, Hacker News posts under 150 points (Show/Ask HN under 400).
 - Hotness re-weighted: coverage and Techmeme picks count most; Hacker News points are capped.

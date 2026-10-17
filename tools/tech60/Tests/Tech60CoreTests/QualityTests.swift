@@ -40,9 +40,9 @@ final class QualityTests: XCTestCase {
 
     func testEditorDropsLowRatedFromTop() {
         var low = s("Company updates its logo", source: "techcrunch"); low.editorScore = 1
-        var high = s("Major chip export rules change", source: "techcrunch"); high.editorScore = 5
+        var high = s("Major chip export rules change", source: "techmeme"); high.editorScore = 5
         let clusters = Clustering.cluster([low, high])
-        let top = Hotness.hot(clusters, minimumCount: 8)
+        let top = Hotness.hot(clusters)
         XCTAssertEqual(top.map(\.lead.title), ["Major chip export rules change"])
     }
 
@@ -61,5 +61,23 @@ final class QualityTests: XCTestCase {
         let essay = StoryCluster(stories: [s("An essay on undo history in text editors", source: "hn", points: 3_000)])
         let news = StoryCluster(stories: [s("Chip export rules tightened", source: "techmeme"), s("US tightens chip export rules", source: "verge")])
         XCTAssertGreaterThan(Hotness.heat(news), Hotness.heat(essay))
+    }
+}
+
+final class SignalTests: XCTestCase {
+    func testWikiPagesAreNotNews() {
+        var story = Story(id: "w", sourceID: "hn", sourceName: "Hacker News", title: "Butlerian Jihad",
+                          url: URL(string: "https://dune.fandom.com/wiki/Butlerian_Jihad")!, published: Date(), firstSeen: Date(),
+                          sourceText: "", isPrimary: false)
+        story.points = 900
+        XCTAssertTrue(NoiseFilter.isNoise(story))
+        story.url = URL(string: "https://en.wikipedia.org/wiki/Butlerian_Jihad")!
+        XCTAssertTrue(NoiseFilter.isNoise(story))
+    }
+
+    func testSummaryMarkdownIsCleaned() {
+        XCTAssertEqual(SummaryText.clean("**The Butlerian Jihad**\n\nThe Butlerian Jihad, also known as the **Great Revolt**, began in 201 B.G."),
+                       "The Butlerian Jihad, also known as the Great Revolt, began in 201 B.G.")
+        XCTAssertEqual(SummaryText.clean("Atlas 2 ships today. It costs the same."), "Atlas 2 ships today. It costs the same.")
     }
 }
