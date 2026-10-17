@@ -2,13 +2,20 @@
 
 [![evals](https://github.com/roy-vinay/applied-ai-agents/actions/workflows/evals.yml/badge.svg)](https://github.com/roy-vinay/applied-ai-agents/actions/workflows/evals.yml)
 
-Working AI agents for real business problems, each with the guardrails and evals that make it
-trustworthy, and the product decision behind it written down.
+Applied AI projects, with explicit safeguards, evaluations, and trade-offs.
 
-Every project here starts the same way: a real problem, the smallest version that works, evals on the
-behavior that matters, then a write-up of the trade-offs. Clone any folder, run it, and pull it apart.
+Each project starts from a real problem, builds the smallest version that works, tests the behavior that
+matters, and writes down what was traded away. Results come with their method and caveats, and claims stop
+where the evidence does.
 
-## Run one now
+**Start here**
+
+- **Build and evaluate agents:** [run the guarded support agent](#build-and-evaluate-agents) in under a minute, no API key needed.
+- **Explore failure experiments:** [Failure Files](#explore-failure-experiments), public AI incidents reproduced and mitigations measured.
+- **Try the tools:** [Tech60 and mdEditDiff](#try-the-tools), two Mac apps.
+- **Read the reasoning:** [decisions and roadmap](#read-the-decisions-and-roadmap).
+
+## Build and evaluate agents
 
 The fastest start needs no API key and no dependencies:
 
@@ -19,7 +26,7 @@ python demo.py               # four scenarios with the full tool trace
 python -m evals.run_evals    # 12 trajectory evals, the same suite CI runs
 ```
 
-## Production patterns
+### Production patterns
 
 The parts that keep an agent safe once real users and real money are involved.
 
@@ -41,25 +48,17 @@ The parts that keep an agent safe once real users and real money are involved.
 | Turn ran past 8 model calls | Injected model failure, every trial | 100/100 | 0/100 |
 | Legitimate refund wrongly blocked (false positive) | Ordinary requests | 0/100 | 0/100 |
 
-## Agents
+### Agents
 
-| Project | What it does | Live | Stack |
-| --- | --- | --- | --- |
-| [MCP chat](agents/mcp-chat) | Terminal chat app showing the Model Context Protocol end to end: an MCP client and server over stdio, with @document mentions and /commands. | | Python, MCP |
-
-## Tools
-
-Tools for people who work alongside AI, each with the checks that make its AI output trustworthy.
-
-| Tool | What it does | Stack |
+| Project | What it does | Stack |
 | --- | --- | --- |
-| [mdEditDiff](tools/mdeditdiff) | Free, open-source (MIT). An editor for people, a diff for agents. Agents ask what changed in a shared Markdown file since they last looked and get back only the changed parts, word by word, with who reported them, instead of re-reading whole plans. People get a native Mac app that reads and edits Markdown, with Read, Edit and Split modes and saves that never touch what they didn't change. [Download the Mac app or install the CLI and MCP server](tools/mdeditdiff#get-it). | TypeScript, MCP, Swift |
-| [Tech60](tools/tech60) | Free, open-source (MIT). A tech news front page for the Mac desktop that only shows stories with real signal and gives each a short summary from Apple's on-device model, checked against the source before you see it: every number and name must appear in the source, every sentence must be backed by one. An on-device editor rates each headline and can only demote, never promote. [Download for Mac](tools/tech60#install). | Swift, SwiftUI, Apple Foundation Models |
+| [MCP chat](agents/mcp-chat) | Terminal chat app showing the Model Context Protocol end to end: an MCP client and server over stdio, with @document mentions and /commands. | Python, MCP |
 
-## Failure Files
+## Explore failure experiments
 
-Case studies with experiments: a documented public AI incident, the failure mode behind it reproduced in a
-fictional system, and mitigations measured one at a time. [All files and method](failure-files).
+**Failure Files** take a documented public AI incident, reproduce the failure mode in a fictional system, and
+measure mitigations one at a time. Every file uses the shared terms in [METHODS.md](METHODS.md).
+[All files](failure-files).
 
 **[FF-01: Can you stop a support chatbot from making up policy?](failure-files/ff-01-unsupported-policy-claims)**
 The failure behind the 2024 Air Canada chatbot case, tested in four phases. Rules alone either missed too
@@ -70,13 +69,27 @@ failures and wrongly blocked 6%, for about 2 cents across 600 answers.
 The lesson of the 2025 Replit database deletion, tested on a data bot. Without its rules, the larger model
 handed over customer emails on every try; with them, no model broke one.
 
-## Decisions
+## Try the tools
+
+Two free, open-source Mac apps. Both are early.
+
+**[Tech60](tools/tech60)**: a tech news front page for the Mac desktop. It shows only stories with signal
+(several outlets, a Techmeme pick, or the company's own post) and gives each a short summary from Apple's
+on-device model. Rule-based checks withhold a summary whose numbers or names don't appear in the source, or
+whose sentences don't overlap a source sentence. Those checks catch some errors, not all; the accuracy
+evaluation hasn't been run yet. [Download for Mac](https://github.com/roy-vinay/applied-ai-agents/releases/download/tech60-latest/Tech60-macOS.zip)
+(macOS 14 or later), or [read how it works](tools/tech60).
+
+**[mdEditDiff](https://github.com/roy-vinay/mdeditdiff)**: an editor for people and a diff for agents. Agents
+ask what changed in a shared Markdown file since they last looked and get back only the changed parts; people
+get a native Mac app for reading and editing Markdown. It lives in
+[its own repository](https://github.com/roy-vinay/mdeditdiff), with the app, CLI, and MCP server.
+
+## Read the decisions and roadmap
 
 The reasoning behind the builds lives in **[ai-decision-log](https://github.com/roy-vinay/ai-decision-log)**:
 one-page memos on applied AI product choices, with the numbers, the decision, and what would change it.
 Start with [D-002: How many evals are enough?](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-002-how-many-evals-are-enough.md).
-
-## Roadmap
 
 What's shipped, what's next, and the hypothesis behind each: [ROADMAP.md](ROADMAP.md).
 
