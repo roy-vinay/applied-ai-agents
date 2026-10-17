@@ -114,11 +114,11 @@ public actor Engine {
         var story = original
         if story.sourceText.count < 300,
            let data = try? await client.get(story.url, maxBytes: 3_000_000),
-           let page = HTMLText.articleText(fromHTML: data), page.count > story.sourceText.count {
+           let page = HTMLText.articleText(fromHTML: data, minimum: 1), page.count > story.sourceText.count {
             story.sourceText = page
         }
-        if story.sourceText.count < 300 {
-            story.summary = .withheld(reason: "The page gives too little text to summarize. Open the article to read it.")
+        if story.sourceText.count < 150 {
+            story.summary = .withheld(reason: "Tech60 couldn't find readable text on this page. It may load its content with scripts. Open the article to read it.")
         } else {
             do {
                 let text = try await summarizer.summarize(title: story.title, text: story.sourceText)

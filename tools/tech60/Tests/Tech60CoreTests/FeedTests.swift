@@ -100,3 +100,14 @@ final class MergeTests: XCTestCase {
         XCTAssertTrue(StoryMerge.merge(existing: old, incoming: [], now: t0.addingTimeInterval(8 * 86_400)).isEmpty)
     }
 }
+
+final class PageTextTests: XCTestCase {
+    func testScriptRenderedPageFallsBackToDescription() {
+        let html = """
+        <html><head><meta name="description" content="Llmspeed shows how fast a local language model would run on different Macs and GPUs before you buy one."></head>
+        <body><div id="root"></div><script>render()</script></body></html>
+        """
+        let text = HTMLText.articleText(fromHTML: Data(html.utf8), minimum: 1)
+        XCTAssertEqual(text?.hasPrefix("Llmspeed shows how fast"), true)
+    }
+}

@@ -58,7 +58,20 @@ public enum HTMLText {
                 .filter { $0.count > 40 }
         }
         var paras = paragraphs("//article//p | //main//p")
-        if paras.joined().count < minimum { paras = paragraphs("//p") }
+        if paras.joined().count < 300 { paras = paragraphs("//p") }
+        if paras.joined().count < 300 {
+            // Pages that render with scripts (many Show HN projects) have few paragraphs; fall back to
+            // the description the page gives for link previews, plus its headings and list items.
+            let meta = ((try? doc.nodes(forXPath: "//meta[@name='description' or @property='og:description' or @name='twitter:description']/@content")) ?? [])
+                .compactMap { $0.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            let headings = ((try? doc.nodes(forXPath: "//h1 | //h2 | //h3 | //li")) ?? [])
+                .compactMap { $0.stringValue?.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression) }
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { $0.count > 25 }
+            var seen = Set<String>()
+            paras = (meta + paras + headings).filter { seen.insert($0).inserted }
+        }
         let text = paras.joined(separator: "\n")
         return text.count >= minimum ? String(text.prefix(12_000)) : nil
         #else
