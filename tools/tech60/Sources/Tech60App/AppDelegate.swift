@@ -57,7 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
         panel.orderFrontRegardless()
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "newspaper", accessibilityDescription: "Tech60")
+        statusItem.button?.image = MenuBarIcon.make()
         statusItem.button?.imagePosition = .imageLeading
         let menu = NSMenu()
         menu.delegate = self
@@ -129,5 +129,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
         }
         NSApp.activate(ignoringOtherApps: true)
         sourcesWindow?.makeKeyAndOrderFront(nil)
+    }
+}
+
+/// The menu bar glyph: a small front page whose top corner opens into the Tech60 ring.
+/// Drawn as a template image so macOS tints it for light and dark menu bars.
+enum MenuBarIcon {
+    static func make() -> NSImage {
+        let image = NSImage(size: NSSize(width: 18, height: 18), flipped: true) { _ in
+            NSColor.black.set()
+            // Page outline, with a gap cut where the ring sits.
+            NSGraphicsContext.saveGraphicsState()
+            let clip = NSBezierPath(rect: NSRect(x: 0, y: 0, width: 18, height: 18))
+            clip.appendOval(in: NSRect(x: 13.9 - 4, y: 4.1 - 4, width: 8, height: 8))
+            clip.windingRule = .evenOdd
+            clip.addClip()
+            let page = NSBezierPath(roundedRect: NSRect(x: 2.8, y: 2.3, width: 12.4, height: 13.4), xRadius: 2.6, yRadius: 2.6)
+            page.lineWidth = 1.6
+            page.stroke()
+            NSGraphicsContext.restoreGraphicsState()
+
+            // The ring, open at 82%, starting at 12 o'clock.
+            let ring = NSBezierPath()
+            for i in 0...40 {
+                let a = -CGFloat.pi / 2 + CGFloat(i) / 40 * 2 * .pi * 0.8
+                let p = NSPoint(x: 13.9 + 2.5 * cos(a), y: 4.1 + 2.5 * sin(a))
+                i == 0 ? ring.move(to: p) : ring.line(to: p)
+            }
+            ring.lineWidth = 1.5
+            ring.lineCapStyle = .round
+            ring.stroke()
+
+            // Masthead and three lines of text.
+            for (x, y, w, h) in [(5.1, 5.2, 4.4, 1.9), (5.1, 8.6, 7.8, 1.2), (5.1, 10.8, 7.8, 1.2), (5.1, 13.0, 5.2, 1.2)] as [(CGFloat, CGFloat, CGFloat, CGFloat)] {
+                NSBezierPath(roundedRect: NSRect(x: x, y: y, width: w, height: h), xRadius: 0.6, yRadius: 0.6).fill()
+            }
+            return true
+        }
+        image.isTemplate = true
+        image.accessibilityDescription = "Tech60"
+        return image
     }
 }

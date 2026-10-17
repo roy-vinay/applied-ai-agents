@@ -6,6 +6,7 @@
 	<key>CFBundleExecutable</key><string>Tech60</string>
 	<key>CFBundleIdentifier</key><string>io.github.roy-vinay.tech60</string>
 	<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+	<key>CFBundleIconFile</key><string>AppIcon</string>
 	<key>CFBundleName</key><string>Tech60</string>
 	<key>CFBundleDisplayName</key><string>Tech60</string>
 	<key>CFBundlePackageType</key><string>APPL</string>

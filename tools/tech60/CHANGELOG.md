@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+- App icon (a small front page with the Tech60 ring) and a matching menu bar icon whose corner opens into the ring.
+
 - New "Edition" design: serif masthead with date and edition, section tabs, lead story with picture, thumbnails, heat rings without numbers, "first reported" times, and a story page with summary and coverage. Follows macOS light and dark.
 - Pictures come from the feed (media:content, enclosures, inline images) or the page's link preview.
 
