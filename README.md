@@ -49,11 +49,12 @@ The parts that keep an agent safe once real users and real money are involved.
 
 ## Tools
 
-Tools for people who work alongside AI agents.
+Tools for people who work alongside AI, each with the checks that make its AI output trustworthy.
 
 | Tool | What it does | Stack |
 | --- | --- | --- |
 | [mdEditDiff](tools/mdeditdiff) | Free, open-source (MIT). An editor for people, a diff for agents. Agents ask what changed in a shared Markdown file since they last looked and get back only the changed parts, word by word, with who reported them, instead of re-reading whole plans. People get a native Mac app that reads and edits Markdown, with Read, Edit and Split modes and saves that never touch what they didn't change. [Download the Mac app or install the CLI and MCP server](tools/mdeditdiff#get-it). | TypeScript, MCP, Swift |
+| [Tech60](tools/tech60) | Free, open-source (MIT). A tech news front page for the Mac desktop that only shows stories with real signal and gives each a short summary from Apple's on-device model, checked against the source before you see it: every number and name must appear in the source, every sentence must be backed by one. An on-device editor rates each headline and can only demote, never promote. [Download for Mac](tools/tech60#install). | Swift, SwiftUI, Apple Foundation Models |
 
 ## Failure Files
 

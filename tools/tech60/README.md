@@ -1,53 +1,112 @@
-<img src="docs/img/app-icon.png" width="96" alt="Tech60 app icon">
+<img src="docs/img/app-icon.png" width="88" alt="Tech60 app icon">
 
 # Tech60
 
-Tech news in 60 words, from the source itself, and checked. A small Mac app that keeps a news card on your desktop.
+A tech news front page that lives on your Mac desktop. It shows only stories with real signal, ranks them by how
+much attention they're getting, and gives each one a short summary that is checked against the source before
+you see it. Everything runs on your Mac.
 
-![The Tech60 card with sample stories](docs/img/card-light.png)
+<p>
+  <img src="docs/img/card-light.png" width="32%" alt="Front page: masthead, lead story with photo, ranked stories">
+  <img src="docs/img/card-story.png" width="32%" alt="An opened story: checked summary and coverage, earliest first">
+  <img src="docs/img/card-dark.png" width="32%" alt="The front page in dark mode">
+</p>
 
-## What it does
+**[Download for Mac](https://github.com/roy-vinay/applied-ai-agents/releases/download/tech60-latest/Tech60-macOS.zip)** · macOS 14 or later · free, MIT
 
-- **A floating card** on your desktop with the latest tech stories. It scrolls gently, pauses when you point at it, and never takes focus from what you're typing.
-- **New since you looked:** stories that arrived since you last looked at the card get a dot, and the header counts them.
-- **Short summaries from official sources only:** announcements from AI labs and developer platforms (OpenAI, Google DeepMind, Google AI, GitHub Changelog, Apple Developer, Hugging Face) get a summary of up to 60 words, written by Apple's on-device model.
-- **Every summary is checked before you see it.** Plain code confirms that every number and name in the summary appears in the source, and that every sentence is backed by a sentence in the source. One failure and the summary is withheld, so you see the headline only. Click **Checked** to see each summary sentence next to the source text behind it.
-- **Tap any story for its summary.** Official announcements are summarized in the background. Publisher and Hacker News stories are summarized only when you tap them, on your Mac, with the same checks. **Read article** opens the original.
-- **Reads like a newspaper.** A masthead with today's date and edition, section tabs (Top, Latest, and your topics), a lead story with its picture, and the rest with thumbnails. A small ring shows how hot each story is, and every story says when it was first reported and by whom. Open one for its checked summary and the full coverage, earliest first. Light and dark follow macOS.
-- **Only news worth your time.** Techmeme anchors the feed. Deals, reviews, how-tos, gaming, and small Hacker News posts are filtered out, and an on-device editor rates every headline on whether a tech professional needs it today; minor stories stay out of Top. Right-click any story for More like this or Less like this.
-- **Hot or Latest.** Hot (the default) ranks stories by heat: how many outlets cover it, Hacker News points and comments, and whether Techmeme picked it, cooling with age. Quiet single-outlet stories are left out. Latest shows everything, newest first.
-- **One row per story, not per source.** When the company's post, The Verge, and Hacker News all cover the same launch, you see one row with the other sources tucked inside.
-- **Topics you follow.** Pick topics like AI agents, Apple, or chips (or add your own words). Matching stories move to the top and the rest are dimmed.
-- **Daily brief.** Pick a time and get one notification with the five stories that matter most since your last brief. Click it to see them on the card.
-- **Refresh any time.** Tech60 checks sources every 15 minutes; the refresh button on the card (or ⌘R) checks now.
-- **Private:** no account, no tracking. Summaries run on your Mac; nothing is sent to a cloud model.
+## The problem
 
-## Requirements
+Keeping up with tech means checking Techmeme, Hacker News, and a handful of company blogs, then skimming past
+deals, reviews, and the same launch written up five times. AI summaries could help, but a summary that invents
+a number is worse than no summary. And there is no good tech news widget for the Mac desktop.
 
-- macOS 14 or later for the card.
-- Summaries need macOS 26 with Apple Intelligence turned on. Without it, every story shows headline and link.
+Tech60 is the smallest version that fixes those three things: pick what matters, say it briefly, and never say
+anything the source didn't.
 
-## Install
+## How it decides what's news
 
-1. Download **[Tech60-macOS.zip](https://github.com/roy-vinay/applied-ai-agents/releases/download/tech60-latest/Tech60-macOS.zip)** (the latest build from main) and double-click it.
-2. Drag **Tech60.app** into Applications and open it. The app isn't notarized yet, so the first time macOS blocks it: open **System Settings > Privacy & Security** and click **Open Anyway**.
-3. Tech60 lives in the menu bar (newspaper icon). Use it to show or hide the card, pause, refresh, pin the card above other windows, and open **Sources, topics, and brief**.
+```
+ feeds and HN API  →  noise filter  →  same story, one row  →  heat  →  on-device editor  →  Top
+```
 
-## How it gets the news
+1. **Sources.** Feeds that sites publish themselves, plus Hacker News through its official API. Techmeme
+   anchors the mix because its editors already pick what matters. Company posts (OpenAI, Google DeepMind,
+   Google AI, Hugging Face) are the primary sources; TechCrunch, MIT Technology Review, Platformer, The Verge,
+   and Ars Technica add coverage. Tech60 never scrapes a site without a feed.
+2. **Noise filter.** Drops deals, reviews, buying guides, how-tos, gaming, and reference pages like Wikipedia
+   or fan wikis. Hacker News stories need 150 points; Show HN and Ask HN need 400.
+3. **One row per story.** When the company post, The Verge, and Hacker News cover the same launch, they become
+   one row. Headlines are matched on their distinctive words; words that appear in many headlines that day
+   count for less, so two different Apple stories don't merge.
+4. **Heat.** Each extra outlet and a Techmeme pick count most. Hacker News points help but are capped, so a
+   popular essay can't outrank real news. Heat cools with age, like Hacker News's own ranking.
+5. **The editor.** Apple's on-device model rates each new headline 1 to 5 on one question: would a technology
+   professional need to know this today? Anything rated 2 or lower stays out of Top and the daily brief.
+6. **Top.** Only rows with real signal: two or more outlets, a Techmeme pick, the company's own post, or 400+
+   Hacker News points. There is no filler. On a quiet morning Top is short and says so; Latest has everything.
 
-Only feeds that sites publish themselves (RSS and Atom), plus Hacker News through its official API. Tech60 never scrapes a site that has no feed. For official announcements whose feed carries only a sentence or two, Tech60 reads the announcement page the feed links to, and only to write the summary.
+You tune it with a right-click: **More like this** or **Less like this** adjusts the weight of that story's
+words and source, and stays on your Mac.
+
+## How summaries stay honest
+
+Summaries come from Apple's on-device model (macOS 26 with Apple Intelligence). Before one is shown, plain code
+checks it against the source text:
+
+- every number and every proper name in the summary appears in the source,
+- every sentence shares at least half its content words with a sentence in the source,
+- no negation appears that the source doesn't have,
+- and it is 60 words or fewer.
+
+One failure and the summary is withheld; you see the feed's own text instead, labeled as such. **See how**
+shows each summary sentence next to the source sentence behind it.
+
+The top ten stories are summarized in the background after each refresh, and resting the pointer on a story
+starts its summary, so most open instantly.
+
+## What else is on the card
+
+- A newspaper layout: masthead with the date and edition, section tabs for Top, Latest, and topics you follow,
+  a lead story with its picture, and thumbnails for the rest.
+- A heat ring on every story, **Developing** when three or more outlets pick a story up within three hours, and
+  when it was first reported and by whom.
+- New since you looked: a dot on new stories and a count in the masthead and menu bar.
+- A daily brief: one notification at the time you choose with the five stories that matter most.
+- Light and dark follow macOS. No account, no tracking, no cloud model.
+
+## Decisions and trade-offs
+
+- **Headlines and links only for publishers.** Tech60 summarizes a publisher's story only when you open it, on
+  your Mac, and always links to the original.
+- **The editor can only remove, never add.** A model that promotes stories could be gamed by clickbait;
+  one that only demotes fails safe.
+- **No filler in Top.** A short Top on a slow day is more honest than padding it with whatever is left.
+- **Rules before models.** The noise filter and the summary checks are plain code with tests, so a false
+  positive can be traced to a line.
 
 ## Status
 
-Version 0.1, an early build. Summaries are **experimental**: the accuracy evaluation in the PRD (at least 200 labeled source documents, published results) hasn't been run yet. Until then, treat each summary as a pointer to the source, and use **Why?** when it matters.
+Early, version 0.1. 45 unit tests run in CI on every change, covering feed parsing, clustering, heat, the noise
+filter, the editor's parsing, and the summary checks. The accuracy evaluation of the summaries themselves (at
+least 200 labeled source documents, with published results) hasn't been run yet, so treat each summary as a
+pointer to the source until then.
+
+## Install
+
+1. Download **[Tech60-macOS.zip](https://github.com/roy-vinay/applied-ai-agents/releases/download/tech60-latest/Tech60-macOS.zip)**
+   (always the latest build from main) and double-click it.
+2. Move **Tech60.app** to Applications and open it. The app isn't notarized yet, so the first time, right-click
+   it and choose **Open**.
+3. The card appears on your desktop and the Tech60 icon in the menu bar. Settings (sources, topics, daily
+   brief) are behind the slider button on the card.
 
 ## Build it yourself
 
 ```bash
 cd tools/tech60
-swift test
-./scripts/build-app.sh   # builds build/Tech60.app
+swift test                                        # 45 tests
+./scripts/build-app.sh                            # build/Tech60.app, icon included
 ./build/Tech60.app/Contents/MacOS/Tech60 --demo   # sample stories, no network
 ```
 
-MIT License.
+Swift and SwiftUI, Swift Package Manager, no dependencies. MIT License.
