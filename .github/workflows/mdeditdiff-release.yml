@@ -1,7 +1,10 @@
 name: mdeditdiff-release
 # Publishes a GitHub Release whenever main has an mdEditDiff version that hasn't been released yet.
 # To release: bump the version in package.json, src/version.ts and app/Info.plist, add a CHANGELOG
-# entry, and merge to main. The workflow creates the tag mdeditdiff-v<version> and the release.
+# entry, and merge to main. The workflow creates the tag mdeditdiff-v<version> and the release,
+# then publishes the CLI to npm with trusted publishing (no npm token stored in the repo).
+# One-time setup: publish the first version by hand, then on npmjs.com open the mdeditdiff package's
+# Settings > Trusted Publisher and add roy-vinay/applied-ai-agents with workflow mdeditdiff-release.yml.
 on:
   push:
     branches: [main]
@@ -10,6 +13,7 @@ on:
       - ".github/workflows/mdeditdiff-release.yml"
 permissions:
   contents: write
+  id-token: write # npm trusted publishing and provenance
 concurrency:
   group: mdeditdiff-release
   cancel-in-progress: false
@@ -24,6 +28,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          registry-url: https://registry.npmjs.org
       - name: Read the version and skip if already released
         id: version
         env:
@@ -70,7 +75,7 @@ jobs:
             echo "**Command-line tool and MCP server** (Node.js 20 or later):"
             echo
             echo '```bash'
-            echo "npm install -g https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/mdeditdiff-cli.tgz"
+            echo "npm install -g mdeditdiff@${VERSION}"
             echo "claude mcp add mdeditdiff -- mdeditdiff mcp   # optional: connect it to Claude Code"
             echo '```'
             echo
@@ -87,3 +92,12 @@ jobs:
         run: |
           gh release create "$TAG" mdEditDiff-macOS.zip mdeditdiff-cli.tgz SHA256SUMS.txt \
             --target "$GITHUB_SHA" --title "mdEditDiff $VERSION" --notes-file release-notes.md
+      - name: Publish to npm
+        if: steps.version.outputs.skip != 'true'
+        run: |
+          if npm view "mdeditdiff@$VERSION" version >/dev/null 2>&1; then
+            echo "mdeditdiff@$VERSION is already on npm; nothing to do."
+            exit 0
+          fi
+          npm install -g npm@latest # trusted publishing needs npm 11.5.1 or later
+          npm publish --provenance --access public
