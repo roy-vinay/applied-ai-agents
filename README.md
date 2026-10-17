@@ -8,6 +8,15 @@ Each project starts from a real problem, builds the smallest version that works,
 matters, and writes down what was traded away. Results come with their method and caveats, and claims stop
 where the evidence does.
 
+## Mac app downloads
+
+| App | Download | Status |
+| --- | --- | --- |
+| **Tech60** | [Download for Mac](https://github.com/roy-vinay/applied-ai-agents/releases/download/tech60-latest/Tech60-macOS.zip) · [Release notes](https://github.com/roy-vinay/applied-ai-agents/releases/tag/tech60-latest) | **Pre-release**; macOS 14+, on-device summaries require macOS 26 with Apple Intelligence. |
+| **mdEditDiff** | [Download v0.5.3 for Mac](https://github.com/roy-vinay/applied-ai-agents/releases/download/mdeditdiff-v0.5.3/mdEditDiff-macOS.zip) · [Release notes](https://github.com/roy-vinay/applied-ai-agents/releases/tag/mdeditdiff-v0.5.3) | Early release; macOS 14+. |
+
+Both apps are not yet notarized; follow the first-launch instructions in their documentation.
+
 **Start here**
 
 - **Build and evaluate agents:** [run the guarded support agent](#build-and-evaluate-agents) in under a minute, no API key needed.
@@ -82,8 +91,11 @@ evaluation hasn't been run yet. [Download for Mac](https://github.com/roy-vinay/
 
 **[mdEditDiff](https://github.com/roy-vinay/mdeditdiff)**: an editor for people and a diff for agents. Agents
 ask what changed in a shared Markdown file since they last looked and get back only the changed parts; people
-get a native Mac app for reading and editing Markdown. It lives in
-[its own repository](https://github.com/roy-vinay/mdeditdiff), with the app, CLI, and MCP server.
+get a native Mac app for reading and editing Markdown. The [app, CLI, MCP server, and releases](tools/mdeditdiff) are maintained in this repository.
+The separate [mdeditdiff repository](https://github.com/roy-vinay/mdeditdiff) hosts the
+[product website and browser demos](https://roy-vinay.github.io/mdeditdiff/) only. Website downloads
+and demo assets are updated manually when a release is promoted; the demo records its source release
+in [demo/engine/VERSION](https://github.com/roy-vinay/mdeditdiff/blob/main/demo/engine/VERSION).
 
 ## Read the decisions and roadmap
 
