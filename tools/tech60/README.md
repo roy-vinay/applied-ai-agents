@@ -3,12 +3,12 @@
 # Tech60
 
 A tech news front page that lives on your Mac desktop. It shows only stories with real signal, ranks them by how
-much attention they're getting, and gives each one a short summary that is checked against the source before
-you see it. Everything runs on your Mac.
+much attention they're getting, and gives each one a short summary that must pass rule-based checks against
+the source before you see it. Everything runs on your Mac.
 
 <p>
   <img src="docs/img/card-light.png" width="32%" alt="Front page: masthead, lead story with photo, ranked stories">
-  <img src="docs/img/card-story.png" width="32%" alt="An opened story: checked summary and coverage, earliest first">
+  <img src="docs/img/card-story.png" width="32%" alt="An opened story: summary and coverage, earliest first">
   <img src="docs/img/card-dark.png" width="32%" alt="The front page in dark mode">
 </p>
 
@@ -20,8 +20,8 @@ Keeping up with tech means checking Techmeme, Hacker News, and a handful of comp
 deals, reviews, and the same launch written up five times. AI summaries could help, but a summary that invents
 a number is worse than no summary. And there is no good tech news widget for the Mac desktop.
 
-Tech60 is the smallest version that fixes those three things: pick what matters, say it briefly, and never say
-anything the source didn't.
+Tech60 is the smallest version that tries to fix those three things: pick what matters, say it briefly, and
+withhold a summary when simple checks show it straying from the source.
 
 ## How it decides what's news
 
@@ -48,7 +48,7 @@ anything the source didn't.
 You tune it with a right-click: **More like this** or **Less like this** adjusts the weight of that story's
 words and source, and stays on your Mac.
 
-## How summaries stay honest
+## How summaries are checked
 
 Summaries come from Apple's on-device model (macOS 26 with Apple Intelligence). Before one is shown, plain code
 checks it against the source text:
@@ -60,6 +60,10 @@ checks it against the source text:
 
 One failure and the summary is withheld; you see the feed's own text instead, labeled as such. **See how**
 shows each summary sentence next to the source sentence behind it.
+
+These checks catch invented numbers and names and sentences with no basis in the source. They don't catch
+everything: a summary can pass and still leave out context or shift emphasis. How often that happens hasn't been
+measured yet (see Status).
 
 The top ten stories are summarized in the background after each refresh, and resting the pointer on a story
 starts its summary, so most open instantly.
