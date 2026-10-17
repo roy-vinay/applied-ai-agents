@@ -180,6 +180,7 @@ struct CardView: View {
                 ForEach(model.tabTopics) { topic in
                     tab(Topics.shortName(topic), selected: model.topicTab == topic.id) {
                         model.topicTab = topic.id; model.closeBrief(); model.loadImages()
+                        Task { await model.prepareTopSummaries() }
                     }
                 }
             }
@@ -385,7 +386,7 @@ struct LeadStory: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .onHover { hovered = $0 }
+        .onHover { hovered = $0; model.hoveredID = $0 ? cluster.id : nil; if $0 { prefetch(cluster, model) } }
         .overlay(alignment: .bottom) { Rectangle().fill(Palette.rule).frame(height: 1).padding(.horizontal, 18) }
         .help(cluster.lead.url.absoluteString)
     }
@@ -451,11 +452,22 @@ struct StoryLine: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .onHover { hovered = $0 }
+        .onHover { hovered = $0; model.hoveredID = $0 ? cluster.id : nil; if $0 { prefetch(cluster, model) } }
         .overlay(alignment: .bottom) {
             if !isLast { Rectangle().fill(Palette.rule).frame(height: 1).padding(.horizontal, 18) }
         }
         .help(cluster.lead.url.absoluteString)
+    }
+}
+
+/// Starts the summary when the pointer rests on a story, so it's often ready by the time it's opened.
+@MainActor
+func prefetch(_ cluster: StoryCluster, _ model: AppModel) {
+    let id = cluster.id
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+        guard model.hoveredID == id, let current = model.clusters.first(where: { $0.id == id }),
+              current.summaryStory.summary == .none else { return }
+        model.summarize(current.summaryStory)
     }
 }
 
@@ -549,13 +561,22 @@ struct StoryDetail: View {
             .font(.system(size: 12, weight: .semibold))
             .foregroundStyle(Palette.checked)
         case .pending:
-            HStack(spacing: 7) {
-                ProgressView().controlSize(.small)
-                Text("Summarizing on your Mac")
+            // Never a blank wait: show what the feed says right away, and swap in the summary when it's checked.
+            let excerpt = Self.excerpt(summarized.sourceText.isEmpty ? cluster.lead.sourceText : summarized.sourceText)
+            if !excerpt.isEmpty {
+                Text(excerpt)
+                    .font(.system(size: 14.5, design: .serif))
+                    .lineSpacing(3)
+                    .foregroundStyle(Palette.body)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
             }
-            .font(.system(size: 12.5))
+            HStack(spacing: 7) {
+                ProgressView().controlSize(.mini)
+                Text(excerpt.isEmpty ? "Writing a checked summary on your Mac" : "From the feed. A checked summary is on its way.")
+            }
+            .font(.system(size: 11.5))
             .foregroundStyle(Palette.secondary)
-            .padding(.vertical, 6)
         case .withheld(let reason):
             fallback(note: reason)
         case .none:

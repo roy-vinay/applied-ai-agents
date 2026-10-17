@@ -41,3 +41,29 @@ final class OnDemandTests: XCTestCase {
         XCTAssertEqual(marked.stories[0].summary, .withheld(reason: "No model here."))
     }
 }
+
+final class PriorityTests: XCTestCase {
+    private struct Echo: Summarizer {
+        var name: String { "Echo" }
+        func availability() async -> String? { nil }
+        func summarize(title: String, text: String) async throws -> String { "x" }
+    }
+
+    func testTopStoriesAreQueuedFirstFromAnySource() async {
+        func s(_ id: String, primary: Bool) -> Story {
+            Story(id: id, sourceID: id, sourceName: id, title: id, url: URL(string: "https://e.com/\(id)")!, published: Date(),
+                  firstSeen: Date(), sourceText: "", isPrimary: primary, summary: primary ? .pending : .none)
+        }
+        let engine = Engine(file: nil, summarizer: Echo(), initial: Snapshot(stories: [s("official", primary: true), s("verge", primary: false)]))
+        let snap = await engine.prioritize(ids: ["verge"])
+        XCTAssertEqual(snap.stories.first { $0.id == "verge" }?.summary, .pending, "a publisher story at the top gets queued")
+    }
+
+    func testNoModelQueuesNothing() async {
+        let story = Story(id: "a", sourceID: "a", sourceName: "a", title: "a", url: URL(string: "https://e.com/a")!, published: Date(),
+                          firstSeen: Date(), sourceText: "", isPrimary: false)
+        let engine = Engine(file: nil, summarizer: NoSummarizer(reason: "none"), initial: Snapshot(stories: [story]))
+        let snap = await engine.prioritize(ids: ["a"])
+        XCTAssertEqual(snap.stories[0].summary, .none)
+    }
+}

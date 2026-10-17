@@ -7,6 +7,8 @@ public actor Engine {
     private let summarizer: Summarizer
     private let file: SnapshotFile?
     private var inFlight: Set<String> = []
+    /// Stories to summarize first: the ones at the top of the card.
+    private var priority: [String] = []
 
     public init(file: SnapshotFile?, client: HTTPClient = HTTPClient(), summarizer: Summarizer, initial: Snapshot? = nil) {
         self.file = file
@@ -78,10 +80,32 @@ public actor Engine {
     /// Summarizes the next pending official story. Returns nil when there's nothing to do or no model.
     public func summarizeNext() async -> Snapshot? {
         guard await summarizer.availability() == nil,
-              let story = snapshot.stories.first(where: { $0.summary == .pending && !inFlight.contains($0.id) }) else { return nil }
+              let story = nextPending() else { return nil }
         await summarize(story)
         return snapshot
     }
+
+    private func nextPending() -> Story? {
+        for id in priority {
+            if let s = snapshot.stories.first(where: { $0.id == id }), s.summary == .pending, !inFlight.contains(id) { return s }
+        }
+        return snapshot.stories.first { $0.summary == .pending && !inFlight.contains($0.id) }
+    }
+
+    /// Queues summaries for the stories the card shows first, from any source, so they're ready before
+    /// the reader opens them. Does nothing when no model is available.
+    public func prioritize(ids: [String]) async -> Snapshot {
+        guard await summarizer.availability() == nil else { return snapshot }
+        priority = ids
+        for id in ids {
+            if let i = snapshot.stories.firstIndex(where: { $0.id == id }), snapshot.stories[i].summary == .none {
+                snapshot.stories[i].summary = .pending
+            }
+        }
+        return snapshot
+    }
+
+    public func prewarm() { summarizer.prewarm() }
 
     /// Summarizes one story because the reader asked for it, from any source and of any age.
     /// Returns the snapshot right away with the story marked pending; call `finishSummary` to run the model.

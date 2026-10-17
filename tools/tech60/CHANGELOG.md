@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+- Summaries are ready sooner: the top ten stories on the card are summarized in the background (any source), resting the pointer on a story starts its summary, and the model is loaded at launch. An opened story shows the feed's text at once while its summary finishes.
+
 - App icon (a small front page with the Tech60 ring) and a matching menu bar icon whose corner opens into the ring.
 
 - New "Edition" design: serif masthead with date and edition, section tabs, lead story with picture, thumbnails, heat rings without numbers, "first reported" times, and a story page with summary and coverage. Follows macOS light and dark.
