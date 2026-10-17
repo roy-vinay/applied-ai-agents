@@ -85,15 +85,17 @@ struct CardView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .center, spacing: 10) {
+        HStack(alignment: .center, spacing: 8) {
             Wordmark()
-            Spacer(minLength: 8)
+            SortToggle(mode: $model.sortMode)
+            Spacer(minLength: 6)
             if model.newCount > 0 {
                 Text("\(model.newCount) new")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .padding(.horizontal, 8).padding(.vertical, 4)
                     .background(Capsule().fill(Palette.accent))
+                    .fixedSize()
                     .help("\(model.newCount) new since you last looked")
             }
             Button { model.refreshNow() } label: {
@@ -190,6 +192,31 @@ struct CardView: View {
     }
 }
 
+/// Hot or Latest, as a small two-part switch.
+struct SortToggle: View {
+    @Binding var mode: AppModel.SortMode
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(AppModel.SortMode.allCases, id: \.self) { m in
+                Button { withAnimation(.easeOut(duration: 0.15)) { mode = m } } label: {
+                    HStack(spacing: 3) {
+                        if m == .hot { Image(systemName: "flame.fill").font(.system(size: 9)) }
+                        Text(m.rawValue)
+                    }
+                    .font(.system(size: 11, weight: .semibold))
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .foregroundStyle(mode == m ? Color.primary : Color.secondary)
+                    .background(Capsule().fill(mode == m ? Color.primary.opacity(0.1) : .clear))
+                }
+                .buttonStyle(.plain)
+                .help(m == .hot ? "Stories many outlets and readers are talking about" : "Newest stories first")
+            }
+        }
+        .padding(2)
+        .background(Capsule().fill(Color.primary.opacity(0.05)))
+    }
+}
+
 /// "Tech" in rounded bold, "60" inside a dial: sixty words, at a glance.
 struct Wordmark: View {
     var body: some View {
@@ -253,6 +280,15 @@ struct StoryRow: View {
                     Text(Self.relative(story.displayDate))
                         .font(.system(size: 11.5))
                         .foregroundStyle(.tertiary)
+                    if let points = cluster.stories.compactMap(\.points).max(), points >= 20 {
+                        HStack(spacing: 2) {
+                            Image(systemName: "arrowtriangle.up.fill").font(.system(size: 7))
+                            Text("\(points)")
+                        }
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                        .help("\(points) points on Hacker News")
+                    }
                     if isNew {
                         Circle().fill(Palette.accent).frame(width: 6, height: 6)
                             .accessibilityLabel("New")

@@ -10,13 +10,18 @@ public struct FeedItem: Equatable, Sendable {
     public var published: Date?
     /// Plain text from the feed: the longer of its summary and its full content.
     public var text: String
+    /// Hacker News points and comment count, when the story came from there.
+    public var points: Int?
+    public var comments: Int?
 
-    public init(id: String, title: String, link: URL?, published: Date?, text: String) {
+    public init(id: String, title: String, link: URL?, published: Date?, text: String, points: Int? = nil, comments: Int? = nil) {
         self.id = id
         self.title = title
         self.link = link
         self.published = published
         self.text = text
+        self.points = points
+        self.comments = comments
     }
 }
 

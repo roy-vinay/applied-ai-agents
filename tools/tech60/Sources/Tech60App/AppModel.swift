@@ -19,6 +19,12 @@ final class AppModel: ObservableObject {
             rebuild()
         }
     }
+    /// Hot ranks by heat (coverage, Hacker News, Techmeme) and hides quiet stories; Latest is newest first.
+    @Published var sortMode: SortMode {
+        didSet { UserDefaults.standard.set(sortMode.rawValue, forKey: "sortMode") }
+    }
+    enum SortMode: String, CaseIterable { case hot = "Hot", latest = "Latest" }
+
     /// Hour of the daily brief (0-23), or nil when it's off.
     @Published var briefHour: Int? {
         didSet {
@@ -49,6 +55,7 @@ final class AppModel: ObservableObject {
             sources = DefaultSources.all
         }
         summariesEnabled = defaults.object(forKey: "summariesEnabled") as? Bool ?? true
+        sortMode = SortMode(rawValue: defaults.string(forKey: "sortMode") ?? "") ?? .hot
         if isDemo {
             followedTopicIDs = ["models", "security"]
             customTopics = []
@@ -94,6 +101,7 @@ final class AppModel: ObservableObject {
             return ids.compactMap { id in clusters.first { $0.id == id || $0.stories.contains { $0.id == id } } }
         }
         let topics = followedTopics
+        if sortMode == .hot { return Hotness.hot(clusters, topics: topics) }
         guard !topics.isEmpty else { return clusters }
         let (on, off) = clusters.reduce(into: ([StoryCluster](), [StoryCluster]())) { acc, c in
             if topicNames(for: c).isEmpty { acc.1.append(c) } else { acc.0.append(c) }

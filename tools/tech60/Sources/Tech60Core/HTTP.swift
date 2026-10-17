@@ -35,6 +35,8 @@ public enum HackerNews {
         let deleted: Bool?
         /// The author's own post, for Show HN and Ask HN.
         let text: String?
+        let score: Int?
+        let descendants: Int?
     }
 
     public static func topStories(count: Int = 20, client: HTTPClient) async throws -> [FeedItem] {
@@ -52,7 +54,8 @@ public enum HackerNews {
                               item.dead != true, item.deleted != true, let title = item.title else { return (id, nil) }
                         let link = item.url.flatMap(URL.init(string:)) ?? URL(string: "https://news.ycombinator.com/item?id=\(id)")
                         let date = item.time.map { Date(timeIntervalSince1970: TimeInterval($0)) }
-                        return (id, FeedItem(id: String(id), title: title, link: link, published: date, text: HTMLText.plain(item.text ?? "")))
+                        return (id, FeedItem(id: String(id), title: title, link: link, published: date, text: HTMLText.plain(item.text ?? ""),
+                                                     points: item.score, comments: item.descendants))
                     }
                 }
                 var out: [(Int, FeedItem)] = []

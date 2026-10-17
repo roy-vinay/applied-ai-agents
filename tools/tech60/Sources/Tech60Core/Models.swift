@@ -59,6 +59,9 @@ public struct Story: Codable, Hashable, Identifiable, Sendable {
     public var sourceText: String
     public var isPrimary: Bool
     public var summary: SummaryState
+    /// Hacker News points and comments: from the HN listing itself, or from an HN post linking to this story.
+    public var points: Int?
+    public var comments: Int?
 
     public init(id: String, sourceID: String, sourceName: String, title: String, url: URL, published: Date?,
                 firstSeen: Date, sourceText: String, isPrimary: Bool, summary: SummaryState = .none) {
