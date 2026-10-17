@@ -24,9 +24,9 @@ Tech news in 60 words, from the source itself, and checked. A small Mac app that
 
 ## Install
 
-1. Download **Tech60-macOS.zip** from the latest build and unzip it.
+1. Download **[Tech60-macOS.zip](https://github.com/roy-vinay/applied-ai-agents/releases/download/tech60-latest/Tech60-macOS.zip)** (the latest build from main) and double-click it.
 2. Drag **Tech60.app** into Applications and open it. The app isn't notarized yet, so the first time macOS blocks it: open **System Settings > Privacy & Security** and click **Open Anyway**.
-3. Tech60 lives in the menu bar (newspaper icon). Use it to show or hide the card, pause, refresh, pin the card above other windows, and choose sources.
+3. Tech60 lives in the menu bar (newspaper icon). Use it to show or hide the card, pause, refresh, pin the card above other windows, and open **Sources, topics, and brief**.
 
 ## How it gets the news
 
