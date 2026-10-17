@@ -118,7 +118,7 @@ public enum Hotness {
         h += Double(cluster.sourceCount - 1) * 3
         h += min(log10(1 + points) * 1.5, 3.5)      // 100 points adds 3, capped at 3.5
         h += min(log10(1 + comments) * 0.5, 1)
-        if cluster.stories.contains(where: { $0.sourceID == "techmeme" }) { h += 3 }    // an editor picked it
+        if cluster.stories.contains(where: { $0.sourceID.lowercased() == "techmeme" }) { h += 3 }    // an editor picked it
         if cluster.stories.contains(where: \.isPrimary) { h += 1.5 }
         if !topics.isEmpty, cluster.stories.contains(where: { !Topics.matches($0, in: topics).isEmpty }) { h *= 1.5 }
         switch editorScore(cluster) {
@@ -135,15 +135,21 @@ public enum Hotness {
         return heat(cluster, topics: topics, taste: taste) / pow(hours + 2, 1.3)
     }
 
-    /// The hottest rows, hottest first. Rows the editor rated 2 or lower are left out, and so are rows
-    /// with little heat; if that leaves too few, the best of the rest fill in so the card is never nearly empty.
+    /// Real signal that a story matters: more than one outlet, a Techmeme pick, the company's own post,
+    /// or a very big Hacker News story.
+    public static func hasSignal(_ cluster: StoryCluster) -> Bool {
+        cluster.sourceCount >= 2
+            || cluster.stories.contains { $0.sourceID.lowercased() == "techmeme" || $0.isPrimary }
+            || (cluster.stories.compactMap(\.points).max() ?? 0) >= 400
+    }
+
+    /// The hottest rows, hottest first: only rows with real signal that the editor didn't rate 2 or lower.
+    /// No filler: on a quiet day Top is simply shorter.
     public static func hot(_ clusters: [StoryCluster], topics: [Topic] = [], taste: Taste = Taste(), now: Date = Date(),
-                           limit: Int = 25, minimumHeat: Double = 3, minimumCount: Int = 8) -> [StoryCluster] {
-        let worthy = clusters.filter { (editorScore($0) ?? 3) >= 3 }
+                           limit: Int = 25) -> [StoryCluster] {
+        let worthy = clusters.filter { hasSignal($0) && (editorScore($0) ?? 3) >= 3 }
         let ranked = worthy.sorted { score($0, topics: topics, taste: taste, now: now) > score($1, topics: topics, taste: taste, now: now) }
-        let hot = ranked.filter { heat($0, topics: topics, taste: taste) >= minimumHeat }
-        if hot.count >= minimumCount { return Array(hot.prefix(limit)) }
-        return Array(ranked.prefix(max(minimumCount, hot.count)).prefix(limit))
+        return Array(ranked.prefix(limit))
     }
 }
 

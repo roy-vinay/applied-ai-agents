@@ -25,7 +25,14 @@ public enum NoiseFilter {
         try? NSRegularExpression(pattern: $0, options: [.caseInsensitive])
     }
 
+    /// Reference and entertainment sites: an encyclopedia page or a fan wiki is never news.
+    public static let notNewsHosts = ["wikipedia.org", "wikimedia.org", "wiktionary.org", "wikiquote.org", "fandom.com",
+                                      "wikia.com", "imdb.com", "goodreads.com", "tvtropes.org", "britannica.com",
+                                      "archive.org", "gutenberg.org"]
+
     public static func isNoise(_ story: Story) -> Bool {
+        if let host = story.url.host?.lowercased(),
+           notNewsHosts.contains(where: { host == $0 || host.hasSuffix("." + $0) }) { return true }
         if story.sourceID == "hn" {
             let lower = story.title.lowercased()
             let isPost = ["show hn", "ask hn", "tell hn", "launch hn"].contains { lower.hasPrefix($0) }
@@ -43,8 +50,11 @@ public enum EditorPrompt {
     public static let instructions = """
     You are the editor of a short daily technology briefing for working professionals: engineers, product \
     leaders, and founders. For each numbered headline, rate from 1 to 5 whether a technology professional \
-    needs to know it today. 5: major industry news everyone will discuss. 4: important to many people in tech. \
-    3: useful to some. 2: niche or minor. 1: not news (deals, reviews, how-tos, trivia, opinion with no news). \
+    needs to know it today. News means something that happened, was announced, or was released in the last \
+    few days. 5: major industry news everyone will discuss. 4: important to many people in tech. 3: useful to \
+    some. 2: niche or minor news. 1: not news at all, including encyclopedia or wiki pages, history, fiction, \
+    books and films, evergreen essays, personal blog posts with no news, deals, reviews, how-tos, and trivia. \
+    A headline that only mentions AI or technology is not news by itself. \
     Reply with one line per headline in the form "number: score" and nothing else.
     """
 
@@ -96,5 +106,26 @@ public struct Taste: Codable, Equatable, Sendable {
         let sourceScore = Set(cluster.stories.map(\.sourceID)).reduce(0) { $0 + (sources[$1] ?? 0) }
         let total = max(-3, min(3, termScore * 0.5 + sourceScore))
         return max(0.5, min(2, exp(0.25 * total)))
+    }
+}
+
+/// Cleans model output before it's checked and shown: no Markdown, no heading line, one paragraph.
+public enum SummaryText {
+    public static func clean(_ raw: String) -> String {
+        var text = raw.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "__", with: "")
+            .replacingOccurrences(of: "`", with: "")
+        var lines = text.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        lines = lines.map { line in
+            var l = line
+            while let first = l.first, "#*-•>".contains(first) { l = String(l.dropFirst()).trimmingCharacters(in: .whitespaces) }
+            return l
+        }
+        // A short first line with no sentence ending is a heading the model added; drop it.
+        if lines.count > 1, let first = lines.first, first.split(separator: " ").count <= 8,
+           let last = first.last, !".!?".contains(last) {
+            lines.removeFirst()
+        }
+        text = lines.joined(separator: " ")
+        return text.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression).trimmingCharacters(in: .whitespaces)
     }
 }

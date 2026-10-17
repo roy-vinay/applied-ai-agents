@@ -38,9 +38,11 @@ public enum Demo {
                   points: 412, comments: 188),
             story("s5", "Security blog", "Sample: browser vendors patch a zero-day exploited in the wild", minutesAgo: 70, seenMinutesAgo: 300,
                   primary: false),
+            story("s5b", "Tech publication", "Sample: zero-day exploited in the wild gets browser patches",
+                  minutesAgo: 65, seenMinutesAgo: 300, primary: false),
             story("s3", "Hacker News", "Sample: a deep dive into how text editors store undo history", minutesAgo: 90, seenMinutesAgo: 300,
-                  primary: false, points: 236, comments: 71),
-            story("s4", "Tech publication", "Sample: chipmaker reports quarterly results", minutesAgo: 130, seenMinutesAgo: 300,
+                  primary: false, points: 480, comments: 171),
+            story("s4", "Techmeme", "Sample: chipmaker reports quarterly results", minutesAgo: 130, seenMinutesAgo: 300,
                   primary: false),
         ], lastViewed: now.addingTimeInterval(-60 * 60), status: [:])
     }

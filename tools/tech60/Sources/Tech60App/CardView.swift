@@ -125,6 +125,17 @@ struct CardView: View {
                             StoryLine(cluster: cluster, model: model, isLast: offset == rows.count - 1) { show(cluster) }
                         }
                     }
+                    if isTop, !rows.isEmpty {
+                        // No filler: Top ends when the real news does.
+                        Button { model.sortMode = .latest } label: {
+                            Text("That's the news so far today. ") + Text("See everything in Latest").foregroundColor(Palette.accent)
+                        }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Palette.secondary)
+                        .padding(.horizontal, 18)
+                        .padding(.top, 14)
+                    }
                 }
                 .padding(.bottom, 12)
             }
@@ -134,6 +145,8 @@ struct CardView: View {
             })
         }
     }
+
+    private var isTop: Bool { model.briefIDs == nil && model.topicTab == nil && model.sortMode == .hot }
 
     private var masthead: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -223,9 +236,11 @@ struct CardView: View {
     private var empty: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(model.briefIDs != nil ? "Nothing new since your last brief"
-                 : model.isRefreshing ? "Fetching the latest stories" : "No stories here yet")
+                 : model.isRefreshing ? "Fetching the latest stories"
+                 : isTop ? "Nothing big yet today" : "No stories here yet")
                 .font(.system(size: 17, weight: .semibold, design: .serif))
-            Text(model.topicTab != nil ? "Nothing on this topic in the last two days." : "Choose sources with the settings button above.")
+            Text(model.topicTab != nil ? "Nothing on this topic in the last two days."
+                 : isTop ? "Top only shows stories several outlets are covering. Latest has everything." : "Choose sources with the settings button above.")
                 .font(.system(size: 12.5)).foregroundStyle(Palette.secondary)
         }
         .padding(18)
@@ -370,7 +385,7 @@ struct LeadStory: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.leading)
                 if case .checked(let text, _) = cluster.summaryStory.summary {
-                    Text(text)
+                    Text(SummaryText.clean(text))
                         .font(.system(size: 13.5, design: .serif))
                         .foregroundStyle(Palette.body)
                         .lineSpacing(2)
@@ -561,7 +576,7 @@ struct StoryDetail: View {
     @ViewBuilder private var summary: some View {
         switch summarized.summary {
         case .checked(let text, let evidence):
-            Text(text)
+            Text(SummaryText.clean(text))
                 .font(.system(size: 15, design: .serif))
                 .lineSpacing(3.5)
                 .foregroundStyle(Palette.ink)
