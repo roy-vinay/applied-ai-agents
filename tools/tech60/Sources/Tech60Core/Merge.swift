@@ -18,10 +18,13 @@ public enum StoryMerge {
     public static func stories(from items: [FeedItem], source: Source, now: Date) -> [Story] {
         items.compactMap { item in
             guard let url = item.link else { return nil }
-            return Story(id: "\(source.id)|\(item.id)", sourceID: source.id, sourceName: source.name, title: item.title,
-                         url: url, published: item.published, firstSeen: now,
-                         sourceText: source.isPrimary ? item.text : "", isPrimary: source.isPrimary,
-                         summary: source.isPrimary ? .pending : .none)
+            var story = Story(id: "\(source.id)|\(item.id)", sourceID: source.id, sourceName: source.name, title: item.title,
+                              url: url, published: item.published, firstSeen: now,
+                              sourceText: source.isPrimary || source.kind == .hackerNews ? item.text : "", isPrimary: source.isPrimary,
+                              summary: source.isPrimary ? .pending : .none)
+            story.points = item.points
+            story.comments = item.comments
+            return story
         }
     }
 
@@ -35,6 +38,13 @@ public enum StoryMerge {
             let key = normalized(story.url)
             if let old = byID[story.id] ?? urlToID[key].flatMap({ byID[$0] }) {
                 var updated = old
+                // An HN post linking to a story we already have: keep its points as a heat signal.
+                if let points = story.points { updated.points = max(points, old.points ?? 0) }
+                if let comments = story.comments { updated.comments = max(comments, old.comments ?? 0) }
+                if old.sourceID != story.sourceID {
+                    byID[old.id] = updated
+                    continue
+                }
                 updated.title = story.title
                 updated.published = story.published ?? old.published
                 if story.isPrimary, story.sourceText != old.sourceText, story.sourceText.count > old.sourceText.count {

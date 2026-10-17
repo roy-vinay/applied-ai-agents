@@ -7,7 +7,7 @@ import UserNotifications
 /// The floating news card: a panel that never takes focus from what you're typing in.
 @MainActor
 func makeCardPanel(model: AppModel) -> NSPanel {
-    let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 380, height: 520),
+    let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 400, height: 540),
                         styleMask: [.nonactivatingPanel, .titled, .closable, .resizable, .fullSizeContentView],
                         backing: .buffered, defer: false)
     panel.title = "Tech60"

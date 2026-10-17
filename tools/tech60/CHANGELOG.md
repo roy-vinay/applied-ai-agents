@@ -3,6 +3,10 @@
 
 ## Unreleased
 
+- Hot view (default): stories ranked by coverage, Hacker News points and comments, and Techmeme picks; quiet stories hidden. Latest view keeps newest first.
+- Hacker News points show on each row, and carry over when HN links to a story Tech60 already has.
+- Show HN and Ask HN posts now keep the author's text for summaries.
+
 - Same news from several sources is grouped into one row.
 - Follow topics (built-in or your own words); matching stories go first and the rest are dimmed.
 - Daily brief notification at a time you pick, with the top five stories since the last one.

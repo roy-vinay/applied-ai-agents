@@ -91,16 +91,44 @@ public enum Clustering {
     }
 }
 
+/// How hot a story is right now. Heat comes from signals other people create, not from the clock:
+/// several outlets covering it, Hacker News points and comments, Techmeme picking it, or the company posting
+/// it themselves. Heat then cools with age, like Hacker News's own ranking.
+public enum Hotness {
+    /// Heat before cooling. 1 means no signal at all (one outlet, no discussion).
+    public static func heat(_ cluster: StoryCluster, topics: [Topic] = []) -> Double {
+        let points = Double(cluster.stories.compactMap(\.points).max() ?? 0)
+        let comments = Double(cluster.stories.compactMap(\.comments).max() ?? 0)
+        var h = 1.0
+        h += Double(cluster.sourceCount - 1) * 2.5
+        h += log10(1 + points) * 2       // 100 points adds 4, 1,000 adds 6
+        h += log10(1 + comments)
+        if cluster.stories.contains(where: { $0.sourceID == "techmeme" }) { h += 1.5 }   // an editor picked it
+        if cluster.stories.contains(where: \.isPrimary) { h += 1.5 }
+        if !topics.isEmpty, cluster.stories.contains(where: { !Topics.matches($0, in: topics).isEmpty }) { h *= 1.5 }
+        return h
+    }
+
+    public static func score(_ cluster: StoryCluster, topics: [Topic] = [], now: Date = Date()) -> Double {
+        let hours = max(0, now.timeIntervalSince(cluster.newestDate) / 3600)
+        return heat(cluster, topics: topics) / pow(hours + 2, 1.3)
+    }
+
+    /// The hottest rows, hottest first. Rows with little heat are left out; if that leaves too few,
+    /// the best of the rest fill in so the card is never nearly empty.
+    public static func hot(_ clusters: [StoryCluster], topics: [Topic] = [], now: Date = Date(),
+                           limit: Int = 25, minimumHeat: Double = 3, minimumCount: Int = 8) -> [StoryCluster] {
+        let ranked = clusters.sorted { score($0, topics: topics, now: now) > score($1, topics: topics, now: now) }
+        let hot = ranked.filter { heat($0, topics: topics) >= minimumHeat }
+        if hot.count >= minimumCount { return Array(hot.prefix(limit)) }
+        return Array(ranked.prefix(max(minimumCount, hot.count)).prefix(limit))
+    }
+}
+
 /// Picks the few stories worth a notification.
 public enum Brief {
-    /// Stories covered by more sources, matching a followed topic, or from the company itself rank higher.
     public static func score(_ cluster: StoryCluster, topics: [Topic], now: Date = Date()) -> Double {
-        let matched = cluster.stories.contains { !Topics.matches($0, in: topics).isEmpty }
-        let hours = max(0, now.timeIntervalSince(cluster.newestDate) / 3600)
-        return Double(cluster.sourceCount - 1) * 2
-            + (matched ? 3 : 0)
-            + (cluster.stories.contains(where: \.isPrimary) ? 1 : 0)
-            - hours / 12
+        Hotness.score(cluster, topics: topics, now: now)
     }
 
     public static func pick(_ clusters: [StoryCluster], topics: [Topic], since: Date, now: Date = Date(), count: Int = 5) -> [StoryCluster] {

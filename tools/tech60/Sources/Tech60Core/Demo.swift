@@ -13,15 +13,18 @@ public enum Demo {
         let summary2 = "Example Cloud now lets developers run scheduled jobs in 12 regions, as often as once a minute, billed per second."
 
         func story(_ id: String, _ source: String, _ title: String, minutesAgo: Double, seenMinutesAgo: Double,
-                   text: String = "", summary: String? = nil, primary: Bool) -> Story {
+                   text: String = "", summary: String? = nil, primary: Bool, points: Int? = nil, comments: Int? = nil) -> Story {
             var state: SummaryState = .none
             if let summary {
                 let check = SummaryChecker.check(summary: summary, source: title + "\n" + text)
                 state = check.passed ? .checked(text: summary, evidence: check.evidence) : .withheld(reason: check.reason ?? "")
             }
-            return Story(id: id, sourceID: source, sourceName: source, title: title,
-                         url: URL(string: "https://example.com/\(id)")!, published: now.addingTimeInterval(-minutesAgo * 60),
-                         firstSeen: now.addingTimeInterval(-seenMinutesAgo * 60), sourceText: text, isPrimary: primary, summary: state)
+            var s = Story(id: id, sourceID: source, sourceName: source, title: title,
+                          url: URL(string: "https://example.com/\(id)")!, published: now.addingTimeInterval(-minutesAgo * 60),
+                          firstSeen: now.addingTimeInterval(-seenMinutesAgo * 60), sourceText: text, isPrimary: primary, summary: state)
+            s.points = points
+            s.comments = comments
+            return s
         }
 
         return Snapshot(stories: [
@@ -31,11 +34,12 @@ public enum Demo {
                   text: source2, summary: summary2, primary: true),
             story("s1b", "Tech publication", "Sample Labs' Atlas 2 coding model brings a 400,000 token context window",
                   minutesAgo: 8, seenMinutesAgo: 6, primary: false),
-            story("s1c", "Hacker News", "Sample: Atlas 2 coding model (example.com)", minutesAgo: 5, seenMinutesAgo: 4, primary: false),
+            story("s1c", "Hacker News", "Sample: Atlas 2 coding model (example.com)", minutesAgo: 5, seenMinutesAgo: 4, primary: false,
+                  points: 412, comments: 188),
             story("s5", "Security blog", "Sample: browser vendors patch a zero-day exploited in the wild", minutesAgo: 70, seenMinutesAgo: 300,
                   primary: false),
             story("s3", "Hacker News", "Sample: a deep dive into how text editors store undo history", minutesAgo: 90, seenMinutesAgo: 300,
-                  primary: false),
+                  primary: false, points: 236, comments: 71),
             story("s4", "Tech publication", "Sample: chipmaker reports quarterly results", minutesAgo: 130, seenMinutesAgo: 300,
                   primary: false),
         ], lastViewed: now.addingTimeInterval(-60 * 60), status: [:])
