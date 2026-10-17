@@ -1,0 +1,68 @@
+name: tech60
+on:
+  push:
+    paths: ["tools/tech60/**", ".github/workflows/tech60.yml"]
+  pull_request:
+    paths: ["tools/tech60/**", ".github/workflows/tech60.yml"]
+jobs:
+  app:
+    runs-on: macos-15
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: tools/tech60
+    steps:
+      - uses: actions/checkout@v5
+      - name: Use the newest Xcode (for Apple's on-device model framework)
+        run: |
+          XC=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$XC" ]; then sudo xcode-select -s "$XC"; fi
+          xcodebuild -version
+          swift --version
+      - name: Build and test
+        run: |
+          set -o pipefail
+          report() {
+            # One annotation per compiler error or failed assertion, with its file and line.
+            grep -E "(error:|warning: .*FoundationModels)|XCTAssert|failed \\(" "$1" | grep -v "emit-module command failed" | sort -u | head -25 | while IFS= read -r line; do
+              if [[ "$line" =~ ^(/[^:]+):([0-9]+):([0-9]+):\ (error|warning):\ (.*)$ ]]; then
+                f="${BASH_REMATCH[1]#$GITHUB_WORKSPACE/}"
+                echo "::error file=$f,line=${BASH_REMATCH[2]},col=${BASH_REMATCH[3]}::${BASH_REMATCH[5]}"
+              else
+                echo "::error::${line//%/%25}"
+              fi
+            done
+          }
+          swift build 2>&1 | tee build.log || { report build.log; exit 1; }
+          swift test 2>&1 | tee test.log || { report test.log; exit 1; }
+      - name: Report whether the on-device model framework was compiled in
+        run: |
+          if grep -rq "import FoundationModels" Sources && xcrun --show-sdk-path | xargs -I{} test -d "{}/System/Library/Frameworks/FoundationModels.framework"; then
+            echo "::notice title=Summaries::FoundationModels SDK present; on-device summaries compiled in."
+          else
+            echo "::warning title=Summaries::FoundationModels SDK not found on this runner; the app builds without summaries."
+          fi
+      - name: Package the app
+        run: ./scripts/build-app.sh
+      - name: Launch smoke test
+        run: |
+          ./build/Tech60.app/Contents/MacOS/Tech60 --demo &
+          PID=$!
+          sleep 8
+          if kill -0 $PID 2>/dev/null; then echo "App is running"; kill $PID; else echo "::error title=Launch failed::The app exited within 8 seconds"; exit 1; fi
+      - name: Screenshots
+        run: ./scripts/screenshots.sh
+      - name: Commit screenshots to the branch (not main)
+        if: github.event_name == 'push' && github.ref != 'refs/heads/main'
+        run: |
+          git config user.name "Vinay Roy"
+          git config user.email "vroy@berkeley.edu"
+          git add docs/img/card-*.png
+          if git diff --cached --quiet; then echo "No screenshot changes"; exit 0; fi
+          git commit -m "Tech60 docs: card screenshots"
+          git push origin HEAD:${GITHUB_REF#refs/heads/}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tech60-macOS
+          path: tools/tech60/build/Tech60-macOS.zip
