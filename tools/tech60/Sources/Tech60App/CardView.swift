@@ -389,6 +389,7 @@ struct LeadStory: View {
         .onHover { hovered = $0; model.hoveredID = $0 ? cluster.id : nil; if $0 { prefetch(cluster, model) } }
         .overlay(alignment: .bottom) { Rectangle().fill(Palette.rule).frame(height: 1).padding(.horizontal, 18) }
         .help(cluster.lead.url.absoluteString)
+        .contextMenu { FeedbackMenu(cluster: cluster, model: model) }
     }
 }
 
@@ -457,6 +458,7 @@ struct StoryLine: View {
             if !isLast { Rectangle().fill(Palette.rule).frame(height: 1).padding(.horizontal, 18) }
         }
         .help(cluster.lead.url.absoluteString)
+        .contextMenu { FeedbackMenu(cluster: cluster, model: model) }
     }
 }
 
@@ -468,6 +470,22 @@ func prefetch(_ cluster: StoryCluster, _ model: AppModel) {
         guard model.hoveredID == id, let current = model.clusters.first(where: { $0.id == id }),
               current.summaryStory.summary == .none else { return }
         model.summarize(current.summaryStory)
+    }
+}
+
+/// Right-click on a story: teach Tech60 what you want more or less of.
+struct FeedbackMenu: View {
+    let cluster: StoryCluster
+    let model: AppModel
+    var body: some View {
+        Button { model.feedback(cluster, more: true) } label: { Label("More like this", systemImage: "hand.thumbsup") }
+        Button { model.feedback(cluster, more: false) } label: { Label("Less like this", systemImage: "hand.thumbsdown") }
+        Divider()
+        Button("Open in browser") { model.open(cluster.lead) }
+        Button("Copy link") {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(cluster.lead.url.absoluteString, forType: .string)
+        }
     }
 }
 
