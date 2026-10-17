@@ -9,8 +9,9 @@ Tech news in 60 words, from the source itself, and checked. A small Mac app that
 - **A floating card** on your desktop with the latest tech stories. It scrolls gently, pauses when you point at it, and never takes focus from what you're typing.
 - **New since you looked:** stories that arrived since you last looked at the card get a dot, and the header counts them.
 - **Short summaries from official sources only:** announcements from AI labs and developer platforms (OpenAI, Google DeepMind, Google AI, GitHub Changelog, Apple Developer, Hugging Face) get a summary of up to 60 words, written by Apple's on-device model.
-- **Every summary is checked before you see it.** Plain code confirms that every number and name in the summary appears in the source, and that every sentence is backed by a sentence in the source. One failure and the summary is withheld, so you see the headline only. Click **Why?** to see each summary sentence next to the source text behind it.
-- **Publishers stay headline and link.** Stories from Hacker News, Techmeme, The Verge, and Ars Technica are never summarized; clicking opens the original.
+- **Every summary is checked before you see it.** Plain code confirms that every number and name in the summary appears in the source, and that every sentence is backed by a sentence in the source. One failure and the summary is withheld, so you see the headline only. Click **Checked** to see each summary sentence next to the source text behind it.
+- **Tap any story for its summary.** Official announcements are summarized in the background. Publisher and Hacker News stories are summarized only when you tap them, on your Mac, with the same checks. **Read article** opens the original.
+- **Refresh any time.** Tech60 checks sources every 15 minutes; the refresh button on the card (or ⌘R) checks now.
 - **Private:** no account, no tracking. Summaries run on your Mac; nothing is sent to a cloud model.
 
 ## Requirements

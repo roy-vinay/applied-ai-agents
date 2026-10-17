@@ -26,6 +26,7 @@ struct CardView: View {
     @State private var isHovering = false
     @State private var index = 0
     @State private var hoverStart: Date?
+    @State private var expandedID: String?
     private let tick = Timer.publish(every: 8, on: .main, in: .common).autoconnect()
     private var reduceMotion: Bool { NSWorkspace.shared.accessibilityDisplayShouldReduceMotion }
 
@@ -40,7 +41,11 @@ struct CardView: View {
                     LazyVStack(alignment: .leading, spacing: 2) {
                         if model.visibleStories.isEmpty { empty }
                         ForEach(Array(model.visibleStories.enumerated()), id: \.element.id) { offset, story in
-                            StoryRow(story: story, isNew: model.isNew(story), isLead: offset == 0) { model.open(story) }
+                            StoryRow(story: story, isNew: model.isNew(story), isLead: offset == 0,
+                                     isExpanded: expandedID == story.id,
+                                     modelProblem: model.summaryProblem,
+                                     toggle: { toggle(story) },
+                                     open: { model.open(story) })
                                 .id(story.id)
                         }
                     }
@@ -52,6 +57,7 @@ struct CardView: View {
             footer
         }
         .frame(minWidth: 320, minHeight: 300)
+        .onAppear { if model.isDemo { expandedID = model.visibleStories.first?.id } }
         .background(.regularMaterial)
         .onHover { hovering in
             isHovering = hovering
@@ -75,6 +81,21 @@ struct CardView: View {
                     .background(Capsule().fill(Palette.accent))
                     .help("\(model.newCount) new since you last looked")
             }
+            Button { model.refreshNow() } label: {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 10, weight: .bold))
+                    .rotationEffect(.degrees(model.isRefreshing ? 360 : 0))
+                    .animation(model.isRefreshing && !reduceMotion
+                               ? .linear(duration: 0.9).repeatForever(autoreverses: false) : .default,
+                               value: model.isRefreshing)
+                    .frame(width: 24, height: 24)
+                    .background(Circle().fill(Color.primary.opacity(0.07)))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .disabled(model.isRefreshing)
+            .keyboardShortcut("r", modifiers: .command)
+            .help("Check sources for new stories")
             Button { model.isPaused.toggle() } label: {
                 Image(systemName: model.isPaused ? "play.fill" : "pause.fill")
                     .font(.system(size: 10, weight: .bold))
@@ -94,7 +115,11 @@ struct CardView: View {
                 Text("Checking sources")
             } else {
                 Image(systemName: "checkmark.seal.fill").foregroundStyle(Palette.checked)
-                Text("Summaries are checked against their source")
+                Text("Tap a story for its summary")
+                Spacer()
+                if let updated = model.lastUpdated {
+                    Text("Updated \(StoryRow.relative(updated))")
+                }
             }
             Spacer()
         }
@@ -115,9 +140,17 @@ struct CardView: View {
         .padding(14)
     }
 
+    private func toggle(_ story: Story) {
+        let opening = expandedID != story.id
+        withAnimation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.86)) {
+            expandedID = opening ? story.id : nil
+        }
+        if opening { model.summarize(story) }
+    }
+
     private func advance(_ proxy: ScrollViewProxy) {
         let stories = model.visibleStories
-        guard !isHovering, !model.isPaused, !reduceMotion, stories.count > 2 else { return }
+        guard !isHovering, expandedID == nil, !model.isPaused, !reduceMotion, stories.count > 2 else { return }
         index = (index + 1) % stories.count
         withAnimation(.easeInOut(duration: 0.9)) { proxy.scrollTo(stories[index].id, anchor: .top) }
     }
@@ -162,6 +195,9 @@ struct StoryRow: View {
     let story: Story
     let isNew: Bool
     let isLead: Bool
+    let isExpanded: Bool
+    let modelProblem: String?
+    let toggle: () -> Void
     let open: () -> Void
     @State private var showEvidence = false
     @State private var isHovered = false
@@ -181,50 +217,126 @@ struct StoryRow: View {
                         Circle().fill(Palette.accent).frame(width: 6, height: 6)
                             .accessibilityLabel("New")
                     }
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.tertiary)
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                        .opacity(isHovered || isExpanded ? 1 : 0)
                 }
                 Text(story.title)
                     .font(.system(size: isLead ? 17.5 : 14.5, weight: .semibold, design: .serif))
                     .foregroundStyle(.primary)
                     .lineSpacing(1.5)
-                    .lineLimit(isLead ? 4 : 3)
+                    .lineLimit(isExpanded ? nil : (isLead ? 4 : 3))
                     .fixedSize(horizontal: false, vertical: true)
-                if case .checked(let text, let evidence) = story.summary {
-                    Text(text)
-                        .font(.system(size: 12.5))
-                        .lineSpacing(2)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 1)
-                    Button { showEvidence.toggle() } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark.seal.fill")
-                            Text("Checked")
-                            Text("See sources").foregroundStyle(Palette.accent)
+                if isExpanded {
+                    summary
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    HStack(spacing: 8) {
+                        Button(action: open) {
+                            HStack(spacing: 4) {
+                                Text("Read article")
+                                Image(systemName: "arrow.up.right").font(.system(size: 9, weight: .bold))
+                            }
+                            .font(.system(size: 11.5, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .background(Capsule().fill(Palette.accent))
                         }
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Palette.checked)
-                        .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(Capsule().fill(Palette.checked.opacity(0.12)))
+                        .buttonStyle(.plain)
+                        .help(story.url.absoluteString)
+                        if case .checked(_, let evidence) = story.summary {
+                            Button { showEvidence.toggle() } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "checkmark.seal.fill")
+                                    Text("Checked")
+                                }
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Palette.checked)
+                                .padding(.horizontal, 8).padding(.vertical, 4)
+                                .background(Capsule().fill(Palette.checked.opacity(0.12)))
+                            }
+                            .buttonStyle(.plain)
+                            .help("See the source text behind each sentence")
+                            .popover(isPresented: $showEvidence, arrowEdge: .trailing) { EvidenceView(evidence: evidence) }
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .help("See the source text behind each sentence")
-                    .popover(isPresented: $showEvidence, arrowEdge: .trailing) { EvidenceView(evidence: evidence) }
+                    .padding(.top, 4)
                 }
             }
-            Spacer(minLength: 0)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, isLead ? 12 : 10)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.primary.opacity(isHovered ? 0.06 : (isLead ? 0.035 : 0)))
+                .fill(Color.primary.opacity(isExpanded ? 0.055 : (isHovered ? 0.045 : (isLead ? 0.03 : 0))))
         )
         .contentShape(Rectangle())
         .onHover { isHovered = $0 }
-        .onTapGesture(perform: open)
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isLink)
-        .help(story.url.absoluteString)
+        .onTapGesture(perform: toggle)
+        .accessibilityElement(children: .contain)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint(isExpanded ? "Hides the summary" : "Shows a summary")
+    }
+
+    @ViewBuilder private var summary: some View {
+        switch story.summary {
+        case .checked(let text, _):
+            Text(text)
+                .font(.system(size: 12.5))
+                .lineSpacing(2.5)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
+                .padding(.top, 2)
+        case .pending:
+            HStack(spacing: 7) {
+                ProgressView().controlSize(.small)
+                Text("Summarizing on your Mac")
+            }
+            .font(.system(size: 12))
+            .foregroundStyle(.secondary)
+            .padding(.vertical, 4)
+        case .withheld(let reason):
+            fallback(note: reason)
+        case .none:
+            fallback(note: modelProblem)
+        }
+    }
+
+    /// No checked summary: show what the feed itself says, labeled as such, plus why there's no summary.
+    @ViewBuilder private func fallback(note: String?) -> some View {
+        let excerpt = Self.excerpt(story.sourceText)
+        VStack(alignment: .leading, spacing: 6) {
+            if !excerpt.isEmpty {
+                Text(excerpt)
+                    .font(.system(size: 12.5))
+                    .lineSpacing(2.5)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+                Text("From the feed, not an AI summary.")
+                    .font(.system(size: 10.5)).foregroundStyle(.tertiary)
+            }
+            if let note {
+                Label(note, systemImage: "info.circle")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.top, 2)
+    }
+
+    static func excerpt(_ text: String) -> String {
+        let clean = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard clean.count > 280 else { return clean }
+        let cut = clean.prefix(280)
+        if let end = cut.lastIndex(where: { ".!?".contains($0) }), cut.distance(from: cut.startIndex, to: end) > 120 {
+            return String(cut[...end])
+        }
+        return cut.trimmingCharacters(in: .whitespaces) + "…"
     }
 
     static func relative(_ date: Date) -> String {

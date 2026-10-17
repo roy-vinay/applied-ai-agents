@@ -42,6 +42,8 @@ final class AppModel: ObservableObject {
         return Array((window.isEmpty ? recent : window).prefix(60))
     }
 
+    var lastUpdated: Date? { snapshot.status.values.compactMap(\.lastSuccess).max() }
+
     var newCount: Int { visibleStories.filter(snapshot.isNew).count }
     func isNew(_ story: Story) -> Bool { snapshot.isNew(story) }
 
@@ -72,6 +74,17 @@ final class AppModel: ObservableObject {
         guard let scheme = story.url.scheme?.lowercased(), scheme == "https" || scheme == "http" else { return }
         NSWorkspace.shared.open(story.url)
     }
+
+    /// The reader opened a story: summarize it now if it has no summary yet.
+    func summarize(_ story: Story) {
+        guard !isDemo else { return }
+        Task {
+            snapshot = await engine.requestSummary(id: story.id)
+            snapshot = await engine.finishSummary(id: story.id)
+        }
+    }
+
+    func refreshNow() { Task { await refresh() } }
 
     private func startSummaries() {
         guard summariesEnabled, !isDemo, summaryTask == nil else { return }

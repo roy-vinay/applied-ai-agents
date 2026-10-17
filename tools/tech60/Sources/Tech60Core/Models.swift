@@ -37,7 +37,7 @@ public struct SummaryEvidence: Codable, Hashable, Sendable {
 }
 
 public enum SummaryState: Codable, Hashable, Sendable {
-    /// Not eligible: the story is from a publisher or Hacker News.
+    /// Not summarized in the background (publisher or Hacker News); the reader can still ask for one.
     case none
     /// Eligible and waiting for the on-device model.
     case pending

@@ -6,6 +6,7 @@ public actor Engine {
     private let client: HTTPClient
     private let summarizer: Summarizer
     private let file: SnapshotFile?
+    private var inFlight: Set<String> = []
 
     public init(file: SnapshotFile?, client: HTTPClient = HTTPClient(), summarizer: Summarizer, initial: Snapshot? = nil) {
         self.file = file
@@ -77,30 +78,63 @@ public actor Engine {
     /// Summarizes the next pending official story. Returns nil when there's nothing to do or no model.
     public func summarizeNext() async -> Snapshot? {
         guard await summarizer.availability() == nil,
-              let index = snapshot.stories.firstIndex(where: { $0.summary == .pending }) else { return nil }
-        var story = snapshot.stories[index]
+              let story = snapshot.stories.first(where: { $0.summary == .pending && !inFlight.contains($0.id) }) else { return nil }
+        await summarize(story)
+        return snapshot
+    }
 
+    /// Summarizes one story because the reader asked for it, from any source and of any age.
+    /// Returns the snapshot right away with the story marked pending; call `finishSummary` to run the model.
+    public func requestSummary(id: String) async -> Snapshot {
+        guard let i = snapshot.stories.firstIndex(where: { $0.id == id }) else { return snapshot }
+        switch snapshot.stories[i].summary {
+        case .checked: return snapshot
+        case .pending where inFlight.contains(id): return snapshot
+        default: break
+        }
+        if let problem = await summarizer.availability() {
+            snapshot.stories[i].summary = .withheld(reason: problem)
+        } else {
+            snapshot.stories[i].summary = .pending
+        }
+        return snapshot
+    }
+
+    /// Runs the model for a story the reader asked about. Returns the updated snapshot.
+    public func finishSummary(id: String) async -> Snapshot {
+        if let story = snapshot.stories.first(where: { $0.id == id }), story.summary == .pending, !inFlight.contains(id) {
+            await summarize(story)
+        }
+        return snapshot
+    }
+
+    private func summarize(_ original: Story) async {
+        inFlight.insert(original.id)
+        defer { inFlight.remove(original.id) }
+        var story = original
         if story.sourceText.count < 300,
            let data = try? await client.get(story.url, maxBytes: 3_000_000),
-           let page = HTMLText.articleText(fromHTML: data) {
+           let page = HTMLText.articleText(fromHTML: data), page.count > story.sourceText.count {
             story.sourceText = page
         }
         if story.sourceText.count < 300 {
-            story.summary = .withheld(reason: "The source gives too little text to summarize.")
+            story.summary = .withheld(reason: "The page gives too little text to summarize. Open the article to read it.")
         } else {
             do {
                 let text = try await summarizer.summarize(title: story.title, text: story.sourceText)
                 let result = SummaryChecker.check(summary: text, source: story.title + "\n" + story.sourceText)
                 story.summary = result.passed
                     ? .checked(text: text, evidence: result.evidence)
-                    : .withheld(reason: result.reason ?? "Failed a check.")
+                    : .withheld(reason: "The summary didn't pass the source check (\(result.reason ?? "unknown")), so it isn't shown.")
             } catch {
                 story.summary = .withheld(reason: "The on-device model couldn't summarize it (\(error.localizedDescription)).")
             }
         }
-        if let i = snapshot.stories.firstIndex(where: { $0.id == story.id }) { snapshot.stories[i] = story }
+        if let i = snapshot.stories.firstIndex(where: { $0.id == story.id }) {
+            snapshot.stories[i].sourceText = story.sourceText
+            snapshot.stories[i].summary = story.summary
+        }
         persist()
-        return snapshot
     }
 
     private func persist() {
