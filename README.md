@@ -1,8 +1,9 @@
-# Applied AI Agents
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/masthead-dark.svg">
+  <img src=".github/assets/masthead-light.svg" width="100%" alt="Applied AI Agents: applied AI projects, with explicit safeguards, evaluations, and trade-offs. By Vinay Roy.">
+</picture>
 
 [![evals](https://github.com/roy-vinay/applied-ai-agents/actions/workflows/evals.yml/badge.svg)](https://github.com/roy-vinay/applied-ai-agents/actions/workflows/evals.yml)
-
-Applied AI projects, with explicit safeguards, evaluations, and trade-offs.
 
 Each project starts from a real problem, builds the smallest version that works, tests the behavior that
 matters, and writes down what was traded away. Results come with their method and caveats, and claims stop
@@ -22,7 +23,7 @@ Both apps are not yet notarized; follow the first-launch instructions in their d
 - **Build and evaluate agents:** [run the guarded support agent](#build-and-evaluate-agents) in under a minute, no API key needed.
 - **Explore failure experiments:** [Failure Files](#explore-failure-experiments), public AI incidents reproduced and mitigations measured.
 - **Try the tools:** [Tech60 and mdEditDiff](#try-the-tools), two Mac apps.
-- **Read the reasoning:** [decisions and roadmap](#read-the-decisions-and-roadmap).
+- **Read the decisions and roadmap:** [decisions and roadmap](#read-the-decisions-and-roadmap).
 
 ## Build and evaluate agents
 
