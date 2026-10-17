@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A3B40"/><stop offset="1" stop-color="#0E0E10"/></linearGradient>
-<linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.10"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
-<rect x="100" y="100" width="824" height="824" rx="185" fill="url(#g2)"/>
-<rect x="100" y="100" width="824" height="824" rx="185" fill="url(#sheen)"/><rect x="101.5" y="101.5" width="821" height="821" rx="184" fill="none" stroke="#fff" stroke-opacity="0.14" stroke-width="3"/>
-<text x="512" y="610" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-weight="800" font-size="360" fill="#FFFFFF" letter-spacing="-14">md</text>
-<rect x="300" y="680" width="200" height="36" rx="18" fill="#4CD38A"/>
-<rect x="540" y="680" width="184" height="36" rx="18" fill="#FF7A7A"/>
-<rect x="530" y="694" width="204" height="8" rx="4" fill="#FFFFFF"/>
-</svg>
