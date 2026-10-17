@@ -105,7 +105,7 @@ What's shipped, what's next, and the hypothesis behind each: [ROADMAP.md](ROADMA
 
 ## About
 
-Built by [Vinay Roy](https://github.com/roy-vinay). VP of Product at [Burq.ai](https://burq.ai), leading Product, Design and AI.
+Built by [Vinay Roy](https://github.com/roy-vinay). VP of Product at [Burq.ai](https://burq.ai), leading Product and AI.
 
 Before Burq, I was the founding product leader at an AI SaaS startup, taking it from zero to product-market fit and building multi-agent systems in production. Before that, I led a global team of about 80 across Product, Data Science and Analytics at Vista, the private aviation group behind VistaJet and XO.<br>
 Earlier: marketplace growth at Zeus Living, macOS and iOS features at Apple (including Sidecar), and engineering teams at Qualcomm and NVIDIA.
