@@ -91,6 +91,11 @@ For seven years I was Head Instructor for the AI/ML executive program at UC Berk
 
 San Jose, CA · [LinkedIn](https://www.linkedin.com/in/royvinay)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/roy-vinay/roy-vinay/main/dark_mode.svg">
+  <img alt="ASCII portrait of Vinay Roy. VP of Product at Burq.ai; builds AI, agents, evals and decision systems." src="https://raw.githubusercontent.com/roy-vinay/roy-vinay/main/light_mode.svg" width="985">
+</picture>
+
 ## License
 
 MIT, unless a project folder says otherwise.
