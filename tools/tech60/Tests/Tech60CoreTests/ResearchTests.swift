@@ -99,6 +99,12 @@ final class ResearchTests: XCTestCase {
         XCTAssertTrue(StoryMerge.merge(existing: [paper], incoming: [], now: now).isEmpty)
     }
 
+    func testPapersCountFromWhenTech60SawThemNotWhenTheyWereSubmitted() {
+        var paper = StoryMerge.stories(from: [item("2410.01234")], source: arxiv, now: now)[0]
+        paper.published = now.addingTimeInterval(-4 * 86_400)
+        XCTAssertEqual(StoryMerge.merge(existing: [paper], incoming: [], now: now.addingTimeInterval(3600)).count, 1)
+    }
+
     func testResearchFeedIsFetchedAtMostEverySixHours() async {
         var snapshot = Snapshot()
         snapshot.status["arxiv"] = SourceStatus(lastAttempt: now, lastSuccess: now)

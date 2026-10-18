@@ -73,7 +73,11 @@ public enum StoryMerge {
             }
         }
         return byID.values
-            .filter { now.timeIntervalSince($0.displayDate) < ($0.isResearch == true && $0.points == nil ? min(retention, Research.retention) : retention) }
+            // Papers nobody has picked up stay two days from when Tech60 first saw them. (A paper's own date is
+            // when it was submitted, often days before arXiv announces it.)
+            .filter { $0.isResearch == true && $0.points == nil
+                ? now.timeIntervalSince($0.firstSeen) < min(retention, Research.retention)
+                : now.timeIntervalSince($0.displayDate) < retention }
             .sorted { $0.displayDate > $1.displayDate }
             .prefix(limit)
             .map { $0 }

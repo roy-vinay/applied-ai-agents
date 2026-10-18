@@ -249,7 +249,7 @@ struct CardView: View {
                  : isTop ? "Nothing big yet today" : "No stories here yet")
                 .font(.system(size: 17, weight: .semibold, design: .serif))
             Text(model.topicTab != nil ? "Nothing on this topic in the last two days."
-                 : model.sortMode == .research ? "New AI papers from arXiv arrive once a day."
+                 : model.sortMode == .research ? model.researchStatus
                  : isTop ? "Top only shows stories several outlets are covering. Latest has everything." : "Choose sources with the settings button above.")
                 .font(.system(size: 12.5)).foregroundStyle(Palette.secondary)
         }
