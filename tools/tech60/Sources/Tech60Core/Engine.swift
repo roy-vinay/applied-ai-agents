@@ -26,7 +26,8 @@ public actor Engine {
         // Research feeds update once a day, so they're fetched at most every six hours.
         let enabled = sources.filter { source in
             guard source.isEnabled else { return false }
-            guard source.kind == .research, let last = snapshot.status[source.id]?.lastSuccess else { return true }
+            guard source.kind == .research, let last = snapshot.status[source.id]?.lastSuccess,
+                  snapshot.stories.contains(where: { $0.sourceID == source.id }) else { return true }
             return now.timeIntervalSince(last) >= Research.refreshInterval
         }
         var incoming: [Story] = []
