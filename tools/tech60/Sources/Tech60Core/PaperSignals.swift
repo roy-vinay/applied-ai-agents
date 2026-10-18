@@ -81,7 +81,8 @@ public enum PaperSignals {
     public static func isNotable(_ s: Story) -> Bool {
         if inTheNews(s) || s.paperVenue != nil { return true }
         let a = s.paperApplicability ?? 0, g = s.paperGeneralizability ?? 0
-        if a >= 4 && g >= 3 { return true }
+        if a >= 4 { return true }                      // practical
+        if a >= 3 && g >= 4 { return true }            // useful and broadly tested
         if s.paperHasCode == true && (a >= 3 || s.paperApplicability == nil) { return true }
         return false
     }
@@ -135,19 +136,37 @@ public enum PaperRatingPrompt {
         public var generalizability: Int
     }
 
+    /// Reads the model's lines leniently: the group can be any form of a group's name ("Agent", "multi-agent",
+    /// "RAG"), and the two scores are the first two digits from 1 to 5 after it.
     public static func parse(_ text: String, count: Int) -> [Rating?] {
         var out = [Rating?](repeating: nil, count: count)
-        let regex = try! NSRegularExpression(pattern: #"^\s*(\d+)\s*[:.)\-]\s*([a-z]+)\s*,\s*([1-5])\s*,\s*([1-5])\b"#,
-                                             options: [.caseInsensitive])
+        let lead = try! NSRegularExpression(pattern: #"^\s*(?:paper\s*)?(\d+)\s*[:.)\-]\s*(.+)$"#, options: [.caseInsensitive])
         for line in text.split(whereSeparator: \.isNewline) {
             let s = String(line).replacingOccurrences(of: "**", with: "")
             let ns = s as NSString
-            guard let m = regex.firstMatch(in: s, range: NSRange(location: 0, length: ns.length)),
-                  let n = Int(ns.substring(with: m.range(at: 1))), (1...count).contains(n),
-                  let group = PaperGroup(rawValue: ns.substring(with: m.range(at: 2)).lowercased()),
-                  let a = Int(ns.substring(with: m.range(at: 3))), let g = Int(ns.substring(with: m.range(at: 4))) else { continue }
-            out[n - 1] = Rating(group: group, applicability: a, generalizability: g)
+            guard let m = lead.firstMatch(in: s, range: NSRange(location: 0, length: ns.length)),
+                  let n = Int(ns.substring(with: m.range(at: 1))), (1...count).contains(n) else { continue }
+            let rest = ns.substring(with: m.range(at: 2)).lowercased()
+            guard let group = group(in: rest) else { continue }
+            let digits = rest.compactMap { $0.wholeNumberValue }.filter { (1...5).contains($0) }
+            guard digits.count >= 2 else { continue }
+            out[n - 1] = Rating(group: group, applicability: digits[0], generalizability: digits[1])
         }
         return out
+    }
+
+    private static let synonyms: [(String, PaperGroup)] = [
+        ("multi-agent", .agents), ("agent", .agents), ("orchestrat", .agents), ("model", .models), ("training", .models),
+        ("reason", .reasoning), ("retriev", .retrieval), ("rag", .retrieval), ("knowledge", .retrieval), ("eval", .evaluation),
+        ("benchmark", .evaluation), ("safe", .safety), ("security", .safety), ("align", .safety), ("efficien", .efficiency),
+        ("multimodal", .multimodal), ("multi-modal", .multimodal), ("vision", .multimodal), ("speech", .multimodal),
+        ("appli", .applied),
+    ]
+
+    static func group(in text: String) -> PaperGroup? {
+        let first = text.split(whereSeparator: { $0 == "," || $0 == ";" || $0 == "|" }).first.map(String.init) ?? text
+        for g in PaperGroup.allCases where first.contains(g.rawValue) { return g }
+        for (word, g) in synonyms where first.contains(word) { return g }
+        return nil
     }
 }
