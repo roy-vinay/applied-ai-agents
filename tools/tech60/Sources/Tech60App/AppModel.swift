@@ -145,6 +145,9 @@ final class AppModel: ObservableObject {
         let s = snapshot.status[source.id]
         if let error = s?.lastError { return "\(source.name) didn't answer: \(error) Tech60 will try again soon." }
         if s?.lastSuccess == nil { return "Fetching new papers from \(source.name)." }
+        if !researchShowAll, !researchPapers(notableOnly: false).isEmpty {
+            return "No notable papers yet. Choose All to see every new paper."
+        }
         return "\(source.name) sent no new papers. Tech60 checks again every few hours."
     }
 
@@ -156,12 +159,50 @@ final class AppModel: ObservableObject {
 
     /// The Research tab: new papers, newest first, one per row.
     var researchClusters: [StoryCluster] {
+        var papers = researchPapers(notableOnly: !researchShowAll)
+        if let g = researchGroup { papers = papers.filter { $0.paperGroup == g.rawValue } }
+        return papers.prefix(100).map { StoryCluster(stories: [$0]) }
+    }
+
+    /// Research shows notable papers by default; "All" shows every new one.
+    @Published var researchShowAll = false
+    /// A group chip in Research, or nil for every group.
+    @Published var researchGroup: PaperGroup?
+
+    /// Groups that match followed news topics, so Research lifts them a little.
+    var followedPaperGroups: Set<PaperGroup> {
+        Set(followedTopicIDs.compactMap { id -> PaperGroup? in
+            switch id {
+            case "agents": return .agents
+            case "models": return .models
+            case "security": return .safety
+            case "devtools": return .applied
+            default: return nil
+            }
+        })
+    }
+
+    /// Papers from enabled research feeds: notable ones best first, or all of them newest first.
+    func researchPapers(notableOnly: Bool) -> [Story] {
         let enabled = Set(sources.filter { $0.kind == .research && $0.isEnabled }.map(\.id))
-        return snapshot.stories
-            .filter { $0.isResearch == true && enabled.contains($0.sourceID) && !hiddenIDs.contains($0.id) }
-            .sorted { $0.displayDate > $1.displayDate }
-            .prefix(100)
-            .map { StoryCluster(stories: [$0]) }
+        let papers = snapshot.stories.filter { $0.isResearch == true && enabled.contains($0.sourceID) && !hiddenIDs.contains($0.id) }
+        guard notableOnly else { return papers.sorted { $0.displayDate > $1.displayDate } }
+        let followed = followedPaperGroups
+        return papers.filter(PaperSignals.isNotable).sorted {
+            let a = PaperSignals.score($0, followed: followed), b = PaperSignals.score($1, followed: followed)
+            return a != b ? a > b : $0.displayDate > $1.displayDate
+        }
+    }
+
+    /// Group chips for Research: groups with papers in the current view, followed groups first, with counts.
+    struct GroupCount: Identifiable { let group: PaperGroup; let count: Int; var id: String { group.rawValue } }
+    var researchGroupCounts: [GroupCount] {
+        let papers = researchPapers(notableOnly: !researchShowAll)
+        let followed = followedPaperGroups
+        return PaperGroup.allCases.compactMap { g in
+            let n = papers.filter { $0.paperGroup == g.rawValue }.count
+            return n > 0 ? GroupCount(group: g, count: n) : nil
+        }.sorted { followed.contains($0.group) && !followed.contains($1.group) }
     }
 
     private func rebuild() {
@@ -176,6 +217,7 @@ final class AppModel: ObservableObject {
 
     /// The section label above a headline: the first topic it matches, followed topics first.
     func kicker(for cluster: StoryCluster) -> String? {
+        if cluster.lead.isResearch == true, let g = cluster.lead.paperGroup.flatMap(PaperGroup.init(rawValue:)) { return g.name }
         let order = followedTopics + allTopics.filter { !followedTopicIDs.contains($0.id) }
         for topic in order where cluster.stories.contains(where: { !Topics.matches($0, in: [topic]).isEmpty }) {
             return Topics.shortName(topic)
@@ -355,6 +397,7 @@ final class AppModel: ObservableObject {
         snapshot = await engine.refresh(sources: sources)
         // The editor pass rates new headlines before the card is ranked and summaries are queued.
         if summariesEnabled, let rated = await engine.rateHeadlines() { snapshot = rated }
+        if summariesEnabled, let rated = await engine.ratePapers() { snapshot = rated }
         isRefreshing = false
         await prepareTopSummaries()
         loadImages()

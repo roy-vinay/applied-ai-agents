@@ -123,6 +123,7 @@ struct CardView: View {
         VStack(alignment: .leading, spacing: 0) {
             masthead
             if model.briefIDs != nil { briefBanner }
+            if model.briefIDs == nil, model.topicTab == nil, model.sortMode == .research { ResearchFilters(model: model) }
             ScrollView(showsIndicators: false) {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     let rows = model.visibleClusters
@@ -396,6 +397,7 @@ struct LeadStory: View {
                         .padding(.bottom, 2)
                 }
                 Kicker(cluster: cluster, model: model, long: true)
+                if cluster.lead.isResearch == true { PaperTags(story: cluster.lead) }
                 Text(cluster.lead.title)
                     .font(.system(size: 21, weight: .bold, design: .serif))
                     .lineSpacing(1)
@@ -471,6 +473,7 @@ struct StoryLine: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .multilineTextAlignment(.leading)
                     Kicker(cluster: cluster, model: model, long: false)
+                    if cluster.lead.isResearch == true { PaperTags(story: cluster.lead) }
                 }
                 Spacer(minLength: 0)
                 if cluster.imageURL != nil || model.isDemo {
@@ -742,6 +745,65 @@ struct SourceBadge: View {
             .frame(width: size, height: size)
             .background(RoundedRectangle(cornerRadius: size * 0.27, style: .continuous).fill(color))
             .accessibilityHidden(true)
+    }
+}
+
+/// Research filters: Notable or All, then one chip per group with its count.
+struct ResearchFilters: View {
+    @ObservedObject var model: AppModel
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                chip("Notable", selected: !model.researchShowAll) { model.researchShowAll = false; model.researchGroup = nil }
+                    .help("Accepted at a conference, in the news, code released, or rated practical by the on-device model")
+                chip("All", selected: model.researchShowAll) { model.researchShowAll = true; model.researchGroup = nil }
+                Rectangle().fill(Palette.rule).frame(width: 1, height: 14).padding(.horizontal, 3)
+                ForEach(model.researchGroupCounts) { item in
+                    chip("\(item.group.name) \(item.count)", selected: model.researchGroup == item.group) {
+                        model.researchGroup = model.researchGroup == item.group ? nil : item.group
+                        Task { await model.prepareTopSummaries() }
+                    }
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 8)
+        }
+        .overlay(alignment: .bottom) { Rectangle().fill(Palette.rule).frame(height: 1) }
+    }
+
+    private func chip(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 11.5, weight: .semibold))
+                .foregroundStyle(selected ? Palette.paper : Palette.ink)
+                .padding(.horizontal, 9).padding(.vertical, 4)
+                .background(Capsule().fill(selected ? Palette.ink : Palette.chip))
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// Why a paper made the cut: venue, news, code, and the on-device model's read.
+struct PaperTags: View {
+    let story: Story
+
+    var body: some View {
+        let tags = PaperSignals.tags(story)
+        if !tags.isEmpty {
+            HStack(spacing: 5) {
+                ForEach(tags, id: \.self) { tag in
+                    Text(tag)
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .foregroundStyle(Palette.secondary)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .overlay(Capsule().stroke(Palette.rule))
+                        .help(tag == "Practical" || tag == "Broad" ? "The on-device model's read of the abstract" : "")
+                }
+            }
+        }
     }
 }
 

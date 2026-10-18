@@ -21,6 +21,10 @@ public extension Summarizer {
     func prewarmExplainer() {}
     /// Rates headlines 1-5 (see EditorPrompt). The default rates nothing.
     func rate(headlines: [String]) async throws -> [Int?] { headlines.map { _ in nil } }
+    /// Rates papers (see PaperRatingPrompt). The default rates nothing.
+    func ratePapers(_ papers: [(title: String, abstract: String)]) async throws -> [PaperRatingPrompt.Rating?] {
+        papers.map { _ in nil }
+    }
     /// Summarizers without a paper prompt use their summary.
     func explain(title: String, text: String) async throws -> String { try await summarize(title: title, text: text) }
 }
@@ -82,6 +86,12 @@ public struct AppleSummarizer: Summarizer {
         let session = LanguageModelSession(instructions: SummaryPrompt.instructions)
         let response = try await session.respond(to: SummaryPrompt.prompt(title: title, text: text))
         return response.content.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    public func ratePapers(_ papers: [(title: String, abstract: String)]) async throws -> [PaperRatingPrompt.Rating?] {
+        let session = LanguageModelSession(instructions: PaperRatingPrompt.instructions)
+        let response = try await session.respond(to: PaperRatingPrompt.prompt(papers))
+        return PaperRatingPrompt.parse(response.content, count: papers.count)
     }
 
     public func explain(title: String, text: String) async throws -> String {

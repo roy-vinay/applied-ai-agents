@@ -203,3 +203,58 @@ final class ExplainerUpgradeTests: XCTestCase {
         XCTAssertEqual(up[3].summary, .checked(text: "News summary.", evidence: []))
     }
 }
+
+final class PaperSignalsTests: XCTestCase {
+    func testVenue() {
+        XCTAssertEqual(PaperSignals.venue(fromComment: "Accepted at NeurIPS 2026. Code at github.com/x/y"), "NeurIPS 2026")
+        XCTAssertEqual(PaperSignals.venue(fromComment: "ICLR'26 camera ready"), "ICLR 2026")
+        XCTAssertEqual(PaperSignals.venue(fromComment: "Published in TMLR"), "TMLR")
+        XCTAssertNil(PaperSignals.venue(fromComment: "Submitted to ICML 2027"))
+        XCTAssertNil(PaperSignals.venue(fromComment: "12 pages, 4 figures"))
+    }
+
+    func testKeywordGroups() {
+        XCTAssertEqual(PaperSignals.keywordGroup(title: "Multi-agent orchestration for tool use", abstract: ""), .agents)
+        XCTAssertEqual(PaperSignals.keywordGroup(title: "Jailbreak attacks on chat models", abstract: "We study safety."), .safety)
+        XCTAssertEqual(PaperSignals.keywordGroup(title: "A new benchmark for code", abstract: "We evaluate models."), .evaluation)
+    }
+
+    func testRatingParse() {
+        let r = PaperRatingPrompt.parse("1: agents, 4, 3\n2. Safety, 2, 5\n3: unknown, 3, 3\n**4: efficiency, 5, 1**", count: 4)
+        XCTAssertEqual(r[0], PaperRatingPrompt.Rating(group: .agents, applicability: 4, generalizability: 3))
+        XCTAssertEqual(r[1]?.group, .safety)
+        XCTAssertNil(r[2], "unknown groups are skipped")
+        XCTAssertEqual(r[3]?.applicability, 5)
+    }
+
+    func testNotableAndTags() {
+        var s = Story(id: "a", sourceID: "arxiv", sourceName: "arXiv", title: "T", url: URL(string: "https://arxiv.org/abs/1")!,
+                      published: nil, firstSeen: Date(), sourceText: "", isPrimary: false)
+        s.isResearch = true
+        XCTAssertFalse(PaperSignals.isNotable(s))
+        s.paperApplicability = 4; s.paperGeneralizability = 3
+        XCTAssertTrue(PaperSignals.isNotable(s))
+        s.paperApplicability = 2; s.paperVenue = "NeurIPS 2026"
+        XCTAssertTrue(PaperSignals.isNotable(s))
+        XCTAssertEqual(PaperSignals.tags(s), ["NeurIPS 2026"])
+        s.paperHasCode = true; s.points = 300
+        XCTAssertEqual(PaperSignals.tags(s), ["NeurIPS 2026", "On Hacker News", "Code"])
+    }
+
+    func testArxivCommentIsParsedIntoSignals() throws {
+        let xml = """
+        <feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+        <entry><id>http://arxiv.org/abs/2410.01234v1</id><published>2026-10-16T17:59:59Z</published>
+          <title>Multi-agent orchestration with tool use</title>
+          <summary>We coordinate agents. Code: https://github.com/x/y</summary>
+          <arxiv:comment>Accepted at ICLR 2027</arxiv:comment>
+          <link href="http://arxiv.org/abs/2410.01234v1" rel="alternate" type="text/html"/></entry>
+        </feed>
+        """
+        let arxiv = Source(id: "arxiv", name: "arXiv", kind: .research, url: nil, isPrimary: false)
+        let s = StoryMerge.stories(from: try FeedParser.parse(Data(xml.utf8)), source: arxiv, now: Date())[0]
+        XCTAssertEqual(s.paperVenue, "ICLR 2027")
+        XCTAssertEqual(s.paperHasCode, true)
+        XCTAssertEqual(s.paperGroup, "agents")
+    }
+}

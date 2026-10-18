@@ -26,6 +26,10 @@ public enum StoryMerge {
                                   title: item.title.split(whereSeparator: \.isWhitespace).joined(separator: " "), url: page, published: item.published, firstSeen: now, sourceText: Research.abstract(item.text),
                                   isPrimary: false)
                 paper.isResearch = true
+                let abstract = paper.sourceText
+                paper.paperGroup = PaperSignals.keywordGroup(title: paper.title, abstract: abstract).rawValue
+                paper.paperVenue = PaperSignals.venue(fromComment: item.comment)
+                paper.paperHasCode = PaperSignals.hasCode(abstract + " " + item.comment)
                 return paper
             }
             var story = Story(id: "\(source.id)|\(item.id)", sourceID: source.id, sourceName: source.name, title: item.title,

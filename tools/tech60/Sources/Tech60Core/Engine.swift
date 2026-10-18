@@ -148,6 +148,31 @@ public actor Engine {
         return snapshot
     }
 
+    /// The paper triage pass: groups and rates up to `limit` new papers, 15 per model call. A paper the
+    /// model skips keeps its keyword group and is marked rated, so it isn't asked about again.
+    public func ratePapers(limit: Int = 150) async -> Snapshot? {
+        guard await summarizer.availability() == nil else { return nil }
+        let todo = snapshot.stories.filter { $0.isResearch == true && $0.paperRated != true }
+            .sorted { $0.firstSeen > $1.firstSeen }.prefix(limit)
+        guard !todo.isEmpty else { return nil }
+        let items = Array(todo)
+        for start in stride(from: 0, to: items.count, by: 15) {
+            let chunk = Array(items[start..<min(start + 15, items.count)])
+            let ratings = (try? await summarizer.ratePapers(chunk.map { ($0.title, $0.sourceText) })) ?? chunk.map { _ in nil }
+            for (story, rating) in zip(chunk, ratings) {
+                guard let i = snapshot.stories.firstIndex(where: { $0.id == story.id }) else { continue }
+                if let r = rating {
+                    snapshot.stories[i].paperGroup = r.group.rawValue
+                    snapshot.stories[i].paperApplicability = r.applicability
+                    snapshot.stories[i].paperGeneralizability = r.generalizability
+                }
+                snapshot.stories[i].paperRated = true
+            }
+        }
+        persist()
+        return snapshot
+    }
+
     /// Summarizes one story because the reader asked for it, from any source and of any age.
     /// Returns the snapshot right away with the story marked pending; call `finishSummary` to run the model.
     public func requestSummary(id: String) async -> Snapshot {
