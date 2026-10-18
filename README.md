@@ -83,8 +83,8 @@ whose sentences don't overlap a source sentence. Those checks catch some errors,
 evaluation hasn't been run yet. [Download for Mac](https://github.com/roy-vinay/applied-ai-agents/releases/download/tech60-latest/Tech60-macOS.zip)
 (macOS 14 or later), or [read how it works](tools/tech60).
 
-**[mdEditDiff](https://github.com/roy-vinay/mdeditdiff)**: an editor for people and a diff for agents. Agents
-ask what changed in a shared Markdown file since they last looked and get back only the changed parts; people
+**[mdEditDiff](https://github.com/roy-vinay/mdeditdiff)**: shows what changed in a Markdown file since each
+person or agent last read it, across sessions and coding tools. Agents get back only the changed parts; people
 get a native Mac app for reading and editing Markdown. The app, CLI, MCP server, releases, and
 [website](https://roy-vinay.github.io/mdeditdiff/) all live in [its own repository](https://github.com/roy-vinay/mdeditdiff).
 Releases up to 0.5.3 also remain on this repository's Releases page, so older download links keep working.
