@@ -47,7 +47,10 @@ withhold a summary when simple checks show it straying from the source.
 6. **Top.** Only rows with real signal: two or more outlets, a Techmeme pick, the company's own post, or 400+
    Hacker News points. There is no filler. On a quiet morning Top is short and says so; Latest has everything.
 
-**Research.** arXiv papers have their own tab, newest first, with the abstract when you open one. A paper
+**Research.** arXiv papers have their own tab, newest first. Open one and you get a plain-English explainer in
+four parts: the problem, what the authors did, what they found, and why it matters. It's written on your Mac from
+the abstract plus the paper's introduction and conclusion. Numbers and names in every part, and each sentence of
+the findings, are checked against the paper; "why it matters" is labeled as the model's read. A paper
 joins Top and Latest only when the news picks it up: today, a Hacker News post linking to it with 150 or more
 points. arXiv's titles and abstracts are public domain (CC0), and its terms ask for no more than one request
 every three seconds; Tech60 asks once every six hours.

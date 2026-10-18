@@ -401,7 +401,7 @@ struct LeadStory: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.leading)
                 if case .checked(let text, _) = cluster.summaryStory.summary {
-                    Text(SummaryText.clean(text))
+                    Text(PaperExplainer.parse(text)?.problem ?? SummaryText.clean(text))
                         .font(.system(size: 13.5, design: .serif))
                         .foregroundStyle(Palette.body)
                         .lineSpacing(2)
@@ -591,6 +591,25 @@ struct StoryDetail: View {
 
     @ViewBuilder private var summary: some View {
         switch summarized.summary {
+        case .checked(let text, let evidence) where summarized.isResearch == true && PaperExplainer.parse(text) != nil:
+            let e = PaperExplainer.parse(text)!
+            VStack(alignment: .leading, spacing: 11) {
+                ExplainerPart(label: "The problem", text: e.problem)
+                ExplainerPart(label: "What they did", text: e.approach)
+                ExplainerPart(label: "What they found", text: e.findings)
+                ExplainerPart(label: "Why it matters", note: "Our read, from what the paper says it enables", text: e.impact)
+            }
+            HStack(spacing: 5) {
+                Image(systemName: "checkmark").font(.system(size: 10.5, weight: .heavy))
+                Text("Numbers, names and findings checked against the paper")
+                Button("See how") { showEvidence.toggle() }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Palette.secondary)
+                    .underline()
+                    .popover(isPresented: $showEvidence, arrowEdge: .bottom) { EvidenceView(evidence: evidence) }
+            }
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(Palette.checked)
         case .checked(let text, let evidence):
             Text(SummaryText.clean(text))
                 .font(.system(size: 15, design: .serif))
@@ -622,7 +641,8 @@ struct StoryDetail: View {
             }
             HStack(spacing: 7) {
                 ProgressView().controlSize(.mini)
-                Text(excerpt.isEmpty ? "Writing a checked summary on your Mac" : "From the feed. A checked summary is on its way.")
+                Text(summarized.isResearch == true ? "The abstract. A plain-English explainer is on its way."
+                     : excerpt.isEmpty ? "Writing a checked summary on your Mac" : "From the feed. A checked summary is on its way.")
             }
             .font(.system(size: 11.5))
             .foregroundStyle(Palette.secondary)
@@ -721,6 +741,28 @@ struct SourceBadge: View {
             .frame(width: size, height: size)
             .background(RoundedRectangle(cornerRadius: size * 0.27, style: .continuous).fill(color))
             .accessibilityHidden(true)
+    }
+}
+
+/// One part of a paper explainer: a small label, then the text.
+struct ExplainerPart: View {
+    let label: String
+    var note: String? = nil
+    let text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 6) {
+                Text(label).font(.system(size: 12, weight: .bold)).foregroundStyle(Palette.accent)
+                if let note { Text(note).font(.system(size: 11)).foregroundStyle(Palette.secondary) }
+            }
+            Text(text)
+                .font(.system(size: 15, design: .serif))
+                .lineSpacing(3.5)
+                .foregroundStyle(Palette.ink)
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
+        }
     }
 }
 

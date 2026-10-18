@@ -8,6 +8,8 @@ public protocol Summarizer: Sendable {
     var name: String { get }
     func availability() async -> String?
     func summarize(title: String, text: String) async throws -> String
+    /// Explains a research paper in four labeled parts (see PaperExplainer).
+    func explain(title: String, text: String) async throws -> String
     /// Loads the model ahead of the first summary, so the first one isn't slow.
     func prewarm()
 }
@@ -16,6 +18,8 @@ public extension Summarizer {
     func prewarm() {}
     /// Rates headlines 1-5 (see EditorPrompt). The default rates nothing.
     func rate(headlines: [String]) async throws -> [Int?] { headlines.map { _ in nil } }
+    /// Summarizers without a paper prompt use their summary.
+    func explain(title: String, text: String) async throws -> String { try await summarize(title: title, text: text) }
 }
 
 public enum SummaryPrompt {
@@ -38,6 +42,7 @@ public struct NoSummarizer: Summarizer {
     public var name: String { "None" }
     public func availability() async -> String? { reason }
     public func summarize(title: String, text: String) async throws -> String { throw CancellationError() }
+    public func explain(title: String, text: String) async throws -> String { throw CancellationError() }
 }
 
 #if canImport(FoundationModels)
@@ -68,6 +73,12 @@ public struct AppleSummarizer: Summarizer {
     public func summarize(title: String, text: String) async throws -> String {
         let session = LanguageModelSession(instructions: SummaryPrompt.instructions)
         let response = try await session.respond(to: SummaryPrompt.prompt(title: title, text: text))
+        return response.content.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    public func explain(title: String, text: String) async throws -> String {
+        let session = LanguageModelSession(instructions: PaperExplainer.instructions)
+        let response = try await session.respond(to: PaperExplainer.prompt(title: title, text: text))
         return response.content.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
