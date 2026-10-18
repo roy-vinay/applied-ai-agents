@@ -27,7 +27,8 @@ public actor Engine {
         let enabled = sources.filter { source in
             guard source.isEnabled else { return false }
             guard source.kind == .research, let last = snapshot.status[source.id]?.lastSuccess,
-                  snapshot.stories.contains(where: { $0.sourceID == source.id }) else { return true }
+                  snapshot.stories.contains(where: { $0.sourceID == source.id }),
+                  !snapshot.stories.contains(where: { $0.sourceID == source.id && $0.paperHasCode == nil }) else { return true }
             return now.timeIntervalSince(last) >= Research.refreshInterval
         }
         var incoming: [Story] = []
@@ -150,6 +151,9 @@ public actor Engine {
 
     /// The paper triage pass: groups and rates up to `limit` new papers, 15 per model call. A paper the
     /// model skips keeps its keyword group and is marked rated, so it isn't asked about again.
+    /// Papers still waiting for the triage pass.
+    public var unratedPaperCount: Int { snapshot.stories.filter { $0.isResearch == true && $0.paperRated != true }.count }
+
     public func ratePapers(limit: Int = 150) async -> Snapshot? {
         guard await summarizer.availability() == nil else { return nil }
         let todo = snapshot.stories.filter { $0.isResearch == true && $0.paperRated != true }
@@ -165,8 +169,13 @@ public actor Engine {
                     snapshot.stories[i].paperGroup = r.group.rawValue
                     snapshot.stories[i].paperApplicability = r.applicability
                     snapshot.stories[i].paperGeneralizability = r.generalizability
+                    snapshot.stories[i].paperRated = true
+                } else {
+                    // One more try on a later pass, then give up so it isn't asked about forever.
+                    let tries = (snapshot.stories[i].paperRatingTries ?? 0) + 1
+                    snapshot.stories[i].paperRatingTries = tries
+                    if tries >= 2 { snapshot.stories[i].paperRated = true }
                 }
-                snapshot.stories[i].paperRated = true
             }
         }
         persist()

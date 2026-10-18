@@ -81,6 +81,7 @@ public struct Story: Codable, Hashable, Identifiable, Sendable {
     public var paperGeneralizability: Int?
     /// True once the on-device model has rated the paper (or tried), so it isn't asked again.
     public var paperRated: Bool?
+    public var paperRatingTries: Int?
 
     public init(id: String, sourceID: String, sourceName: String, title: String, url: URL, published: Date?,
                 firstSeen: Date, sourceText: String, isPrimary: Bool, summary: SummaryState = .none) {

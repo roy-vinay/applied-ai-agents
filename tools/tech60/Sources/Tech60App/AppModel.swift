@@ -145,6 +145,10 @@ final class AppModel: ObservableObject {
         let s = snapshot.status[source.id]
         if let error = s?.lastError { return "\(source.name) didn't answer: \(error) Tech60 will try again soon." }
         if s?.lastSuccess == nil { return "Fetching new papers from \(source.name)." }
+        let unrated = snapshot.stories.filter { $0.isResearch == true && $0.paperRated != true }.count
+        if !researchShowAll, unrated > 0, summariesEnabled, summaryProblem == nil {
+            return "Rating \(unrated) new papers on your Mac. Notable ones appear as they're rated; All shows everything now."
+        }
         if !researchShowAll, !researchPapers(notableOnly: false).isEmpty {
             return "No notable papers yet. Choose All to see every new paper."
         }
@@ -396,8 +400,9 @@ final class AppModel: ObservableObject {
         isRefreshing = true
         snapshot = await engine.refresh(sources: sources)
         // The editor pass rates new headlines before the card is ranked and summaries are queued.
+        // Papers are rated 15 at a time, so notable ones show up as each batch finishes.
+        while summariesEnabled, let rated = await engine.ratePapers(limit: 15) { snapshot = rated }
         if summariesEnabled, let rated = await engine.rateHeadlines() { snapshot = rated }
-        if summariesEnabled, let rated = await engine.ratePapers() { snapshot = rated }
         isRefreshing = false
         await prepareTopSummaries()
         loadImages()

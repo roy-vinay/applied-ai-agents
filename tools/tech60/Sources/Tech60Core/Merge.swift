@@ -65,6 +65,12 @@ public enum StoryMerge {
                 }
                 updated.title = story.title
                 updated.published = story.published ?? old.published
+                if story.isResearch == true {
+                    // Papers saved before signals existed pick them up on the next fetch.
+                    updated.paperVenue = story.paperVenue ?? old.paperVenue
+                    updated.paperHasCode = story.paperHasCode ?? old.paperHasCode
+                    if old.paperGroup == nil { updated.paperGroup = story.paperGroup }
+                }
                 if story.isPrimary, story.sourceText != old.sourceText, story.sourceText.count > old.sourceText.count {
                     updated.sourceText = story.sourceText
                     updated.summary = .pending

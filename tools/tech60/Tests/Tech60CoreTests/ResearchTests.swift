@@ -227,6 +227,29 @@ final class PaperSignalsTests: XCTestCase {
         XCTAssertEqual(r[3]?.applicability, 5)
     }
 
+    func testLenientRatingParse() {
+        let r = PaperRatingPrompt.parse("""
+        Paper 1: Multi-agent systems; applicability 4, generalizability 3
+        2) RAG | 5 | 2
+        3: Agent, 3
+        """, count: 3)
+        XCTAssertEqual(r[0], PaperRatingPrompt.Rating(group: .agents, applicability: 4, generalizability: 3))
+        XCTAssertEqual(r[1], PaperRatingPrompt.Rating(group: .retrieval, applicability: 5, generalizability: 2))
+        XCTAssertNil(r[2], "needs both scores")
+    }
+
+    func testPracticalAloneIsNotable() {
+        var s = Story(id: "a", sourceID: "arxiv", sourceName: "arXiv", title: "T", url: URL(string: "https://arxiv.org/abs/1")!,
+                      published: nil, firstSeen: Date(), sourceText: "", isPrimary: false)
+        s.isResearch = true
+        s.paperApplicability = 4; s.paperGeneralizability = 2
+        XCTAssertTrue(PaperSignals.isNotable(s))
+        s.paperApplicability = 3; s.paperGeneralizability = 4
+        XCTAssertTrue(PaperSignals.isNotable(s))
+        s.paperApplicability = 3; s.paperGeneralizability = 3
+        XCTAssertFalse(PaperSignals.isNotable(s))
+    }
+
     func testNotableAndTags() {
         var s = Story(id: "a", sourceID: "arxiv", sourceName: "arXiv", title: "T", url: URL(string: "https://arxiv.org/abs/1")!,
                       published: nil, firstSeen: Date(), sourceText: "", isPrimary: false)
