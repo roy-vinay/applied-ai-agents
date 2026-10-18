@@ -25,7 +25,7 @@ public enum Research {
     /// The abstract alone, without arXiv's "arXiv:2410.01234v1 Announce Type: new Abstract:" prefix.
     public static func abstract(_ text: String) -> String {
         guard let r = text.range(of: #"^\s*arXiv:\S+\s+Announce Type:\s*\S+\s+Abstract:\s*"#, options: .regularExpression) else {
-            return text
+            return text.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         return String(text[r.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
     }

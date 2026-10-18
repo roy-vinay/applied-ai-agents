@@ -73,10 +73,19 @@ final class AppModel: ObservableObject {
         let defaults = UserDefaults.standard
         if let data = defaults.data(forKey: "sources"), var saved = try? JSONDecoder().decode([Source].self, from: data) {
             // Once per default-list version: add new default sources and turn off the noisy ones.
-            if defaults.integer(forKey: "sourcesVersion") < DefaultSources.version {
+            let savedVersion = defaults.integer(forKey: "sourcesVersion")
+            if savedVersion < DefaultSources.version {
                 let have = Set(saved.map(\.id))
                 saved += DefaultSources.all.filter { !have.contains($0.id) }
-                for i in saved.indices where DefaultSources.offByDefault.contains(saved[i].id) { saved[i].isEnabled = false }
+                // Only once, when they first went quiet; a reader who turned them back on keeps them on.
+                if savedVersion < 2 {
+                    for i in saved.indices where DefaultSources.offByDefault.contains(saved[i].id) { saved[i].isEnabled = false }
+                }
+                for i in saved.indices {
+                    if let moved = DefaultSources.movedURLs[saved[i].id], saved[i].url?.absoluteString == moved.old {
+                        saved[i].url = URL(string: moved.new)
+                    }
+                }
                 defaults.set(DefaultSources.version, forKey: "sourcesVersion")
                 if let data = try? JSONEncoder().encode(saved) { defaults.set(data, forKey: "sources") }
             }

@@ -32,6 +32,32 @@ final class ResearchTests: XCTestCase {
         XCTAssertFalse(stories[0].isPrimary, "papers are not summarized in the background")
     }
 
+    func testParsesArxivSearchAPI() throws {
+        let xml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <feed xmlns="http://www.w3.org/2005/Atom"><title>arXiv Query</title>
+        <entry><id>http://arxiv.org/abs/2410.01234v1</id><updated>2026-10-16T17:59:59Z</updated>
+          <published>2026-10-16T17:59:59Z</published><title>Scaling laws for
+            tool-using agents</title>
+          <summary>  We study how agents scale with tools.
+        </summary><author><name>A. Author</name></author>
+          <link href="http://arxiv.org/abs/2410.01234v1" rel="alternate" type="text/html"/>
+          <link title="pdf" href="http://arxiv.org/pdf/2410.01234v1" rel="related" type="application/pdf"/></entry>
+        </feed>
+        """
+        let stories = StoryMerge.stories(from: try FeedParser.parse(Data(xml.utf8), now: now), source: arxiv, now: now)
+        XCTAssertEqual(stories.count, 1)
+        XCTAssertEqual(stories[0].title, "Scaling laws for tool-using agents")
+        XCTAssertEqual(stories[0].url.absoluteString, "https://arxiv.org/abs/2410.01234")
+        XCTAssertEqual(stories[0].sourceText, "We study how agents scale with tools.")
+    }
+
+    func testDefaultArxivAddressIsTheSearchAPI() {
+        let source = DefaultSources.all.first { $0.id == "arxiv" }
+        XCTAssertEqual(source?.url?.host, "export.arxiv.org")
+        XCTAssertEqual(DefaultSources.movedURLs["arxiv"]?.new, source?.url?.absoluteString)
+    }
+
     func testCrossListsAreKept() {
         XCTAssertFalse(Research.isReplacement(item("2410.01234", type: "cross")))
         XCTAssertTrue(Research.isReplacement(item("2410.01234", type: "replace-cross")))
@@ -76,6 +102,7 @@ final class ResearchTests: XCTestCase {
     func testResearchFeedIsFetchedAtMostEverySixHours() async {
         var snapshot = Snapshot()
         snapshot.status["arxiv"] = SourceStatus(lastAttempt: now, lastSuccess: now)
+        snapshot.stories = StoryMerge.stories(from: [item("2410.01234")], source: arxiv, now: now)
         let engine = Engine(file: nil, summarizer: NoSummarizer(reason: "test"), initial: snapshot)
         let source = Source(id: "arxiv", name: "arXiv", kind: .research, url: URL(string: "https://rss.arxiv.org/rss/cs.AI"), isPrimary: false)
         let after = await engine.refresh(sources: [source], now: now.addingTimeInterval(3600))

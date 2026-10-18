@@ -21,8 +21,9 @@ public enum StoryMerge {
             guard let url = item.link else { return nil }
             if source.kind == .research {
                 guard !Research.isReplacement(item) else { return nil }
-                var paper = Story(id: "\(source.id)|\(item.id)", sourceID: source.id, sourceName: source.name, title: item.title,
-                                  url: url, published: item.published, firstSeen: now, sourceText: Research.abstract(item.text),
+                let page = Research.canonicalArxiv(url).flatMap(URL.init(string:)) ?? url
+                var paper = Story(id: "\(source.id)|\(item.id)", sourceID: source.id, sourceName: source.name,
+                                  title: item.title.split(whereSeparator: \.isWhitespace).joined(separator: " "), url: page, published: item.published, firstSeen: now, sourceText: Research.abstract(item.text),
                                   isPrimary: false)
                 paper.isResearch = true
                 return paper
