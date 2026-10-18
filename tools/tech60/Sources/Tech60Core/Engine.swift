@@ -112,7 +112,17 @@ public actor Engine {
         return snapshot
     }
 
+    /// Adds one story to the end of the summary queue, without reordering the ones already waiting.
+    public func enqueue(id: String) async -> Snapshot {
+        guard await summarizer.availability() == nil,
+              let i = snapshot.stories.firstIndex(where: { $0.id == id }), snapshot.stories[i].summary == .none else { return snapshot }
+        snapshot.stories[i].summary = .pending
+        if !priority.contains(id) { priority.append(id) }
+        return snapshot
+    }
+
     public func prewarm() { summarizer.prewarm() }
+    public func prewarmExplainer() { summarizer.prewarmExplainer() }
 
     /// The editor pass: rates up to `limit` unrated recent headlines, 20 per model call.
     /// A headline the model skips gets a neutral 3, so it isn't asked about again.

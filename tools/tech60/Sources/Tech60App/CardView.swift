@@ -132,6 +132,7 @@ struct CardView: View {
                             LeadStory(cluster: cluster, model: model) { show(cluster) }
                         } else {
                             StoryLine(cluster: cluster, model: model, isLast: offset == rows.count - 1) { show(cluster) }
+                                .onAppear { model.queueAhead(cluster) }
                         }
                     }
                     if isTop, !rows.isEmpty {
