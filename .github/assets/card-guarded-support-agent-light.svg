@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="224" viewBox="0 0 480 224" role="img" aria-label="Guarded Support Agent: Authorization in code, retries, budgets, idempotent writes, PII redaction and injection screening, tested in CI. Duplicate payments: 79/100 unguarded, 0/100 guarded.">
+<defs><clipPath id="c-card-guarded-support-agent-light"><rect x="0.5" y="0.5" width="479" height="223" rx="14"/></clipPath></defs>
+<rect x="0.5" y="0.5" width="479" height="223" rx="14" fill="#18202C" stroke="#18202C"/>
+<g clip-path="url(#c-card-guarded-support-agent-light)"><text x="486" y="268" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-size="230" font-weight="700" fill="#222C3B">G</text></g>
+<text x="28" y="56" font-family="Georgia, 'Times New Roman', serif" font-size="29" font-weight="700" fill="#F0F3F6">Guarded Support Agent</text>
+<text x="28" y="100" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">Authorization in code, retries, budgets,</text><text x="28" y="125" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">idempotent writes, PII redaction and</text><text x="28" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">injection screening, tested in CI.</text>
+<text x="28" y="200" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FF8A3D">Duplicate payments: 79/100 unguarded, 0/100 guarded.</text>
+</svg>

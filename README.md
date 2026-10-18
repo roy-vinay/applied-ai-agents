@@ -40,9 +40,9 @@ python -m evals.run_evals    # 12 trajectory evals, the same suite CI runs
 
 The parts that keep an agent safe once real users and real money are involved.
 
-| Project | What it shows | Stack |
-| --- | --- | --- |
-| [Guarded support agent](production-patterns/guarded-support-agent) | Authorization in code, retries with backoff, step and token budgets, idempotent writes, PII redaction, prompt-injection screening, 12 trajectory evals, and a fault-injection benchmark, all in CI. Companion to [Building AI Agents That Survive Production](https://vinaysays.medium.com/building-ai-agents-that-survive-production-5bbb2257ba0a). | Python, no dependencies |
+<a href="production-patterns/guarded-support-agent"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-guarded-support-agent-dark.svg"><img src=".github/assets/card-guarded-support-agent-light.svg" width="49%" alt="Guarded support agent: authorization in code, retries, budgets, idempotent writes, PII redaction and injection screening, tested in CI. Duplicate payments 79/100 unguarded, 0/100 guarded."></picture></a>
+
+Companion to [Building AI Agents That Survive Production](https://vinaysays.medium.com/building-ai-agents-that-survive-production-5bbb2257ba0a).
 
 **What the guards prevent** under fault injection, 100 randomized trials per row, same agent with guards off vs on
 ([method and caveats](production-patterns/guarded-support-agent#what-the-guards-actually-prevent)):
@@ -60,9 +60,7 @@ The parts that keep an agent safe once real users and real money are involved.
 
 ### Agents
 
-| Project | What it does | Stack |
-| --- | --- | --- |
-| [MCP chat](agents/mcp-chat) | Terminal chat app showing the Model Context Protocol end to end: an MCP client and server over stdio, with @document mentions and /commands. | Python, MCP |
+<a href="agents/mcp-chat"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-mcp-chat-dark.svg"><img src=".github/assets/card-mcp-chat-light.svg" width="49%" alt="MCP chat: a terminal chat app showing the Model Context Protocol end to end, client and server over stdio. Python and MCP."></picture></a>
 
 ## Explore failure experiments
 
@@ -70,18 +68,15 @@ The parts that keep an agent safe once real users and real money are involved.
 measure mitigations one at a time. Every file uses the shared terms in [METHODS.md](METHODS.md).
 [All files](failure-files).
 
-**[FF-01: Can you stop a support chatbot from making up policy?](failure-files/ff-01-unsupported-policy-claims)**
-The failure behind the 2024 Air Canada chatbot case, tested in four phases. Rules alone either missed too
-much or blocked too many good answers; a small model built for yes/no decisions caught 80% of real
-failures and wrongly blocked 6%, for about 2 cents across 600 answers.
-
-**[FF-05: What does telling an AI agent the rules actually buy you?](failure-files/ff-05-rules-in-the-prompt)**
-The lesson of the 2025 Replit database deletion, tested on a data bot. Without its rules, the larger model
-handed over customer emails on every try; with them, no model broke one.
+<a href="failure-files/ff-05-rules-in-the-prompt"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-ff-05-dark.svg"><img src=".github/assets/card-ff-05-light.svg" width="49%" alt="FF-05: what does telling an AI agent the rules actually buy you? The Replit database deletion, tested on a data bot."></picture></a>
+<a href="failure-files/ff-01-unsupported-policy-claims"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-ff-01-dark.svg"><img src=".github/assets/card-ff-01-light.svg" width="49%" alt="FF-01: can you stop a support chatbot from making up policy? 80% of failures caught, 6% of good answers wrongly blocked."></picture></a>
 
 ## Try the tools
 
 Two free, open-source Mac apps. Both are early.
+
+<a href="tools/tech60"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-tech60-dark.svg"><img src=".github/assets/card-tech60-light.svg" width="49%" alt="Tech60: a tech news front page for the Mac desktop. Summaries must pass checks against the source."></picture></a>
+<a href="https://github.com/roy-vinay/mdeditdiff"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-mdeditdiff-dark.svg"><img src=".github/assets/card-mdeditdiff-light.svg" width="49%" alt="mdEditDiff: a Markdown editor for people and a change diff for agents. Mac app, CLI, and MCP server."></picture></a>
 
 **[Tech60](tools/tech60)**: a tech news front page for the Mac desktop. It shows only stories with signal
 (several outlets, a Techmeme pick, or the company's own post) and gives each a short summary from Apple's
@@ -98,6 +93,8 @@ Releases up to 0.5.3 also remain on this repository's Releases page, so older do
 
 ## Read the decisions and roadmap
 
+<a href="https://github.com/roy-vinay/ai-decision-log"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-ai-decision-log-dark.svg"><img src=".github/assets/card-ai-decision-log-light.svg" width="49%" alt="AI Decision Log: one-page memos on applied AI product choices."></picture></a>
+
 The reasoning behind the builds lives in **[ai-decision-log](https://github.com/roy-vinay/ai-decision-log)**:
 one-page memos on applied AI product choices, with the numbers, the decision, and what would change it.
 Start with [D-002: How many evals are enough?](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-002-how-many-evals-are-enough.md).
@@ -106,14 +103,14 @@ What's shipped, what's next, and the hypothesis behind each: [ROADMAP.md](ROADMA
 
 ## About
 
-Built by [Vinay Roy](https://github.com/roy-vinay). VP of Product at [Burq.ai](https://burq.ai), leading Product and AI.
+<a href="https://www.linkedin.com/in/royvinay"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/about-dark.svg"><img src=".github/assets/about-light.svg" width="100%" alt="About Vinay Roy: VP of Product at Burq.ai, leading Product and AI. Career from NVIDIA (2008), Qualcomm, Apple (Sidecar), Zeus Living, Vista, and a founding product role at an AI SaaS startup, to Burq.ai. Seven years as Head Instructor for the AI/ML executive program at UC Berkeley Executive Education. 3 US patents, MBA from Berkeley Haas, MS from IIT Roorkee."></picture></a>
+
+VP of Product at [Burq.ai](https://burq.ai), leading Product and AI.
 
 Before Burq, I was the founding product leader at an AI SaaS startup, taking it from zero to product-market fit and building multi-agent systems in production. Before that, I led a global team of about 80 across Product, Data Science and Analytics at Vista, the private aviation group behind VistaJet and XO.<br>
 Earlier: marketplace growth at Zeus Living, macOS and iOS features at Apple (including Sidecar), and engineering teams at Qualcomm and NVIDIA.
 
 For seven years I was Head Instructor for the AI/ML executive program at UC Berkeley Executive Education, teaching more than 10,000 business leaders. 3 US patents, MBA from Berkeley Haas, MS from IIT Roorkee.
-
-San Jose, CA · [LinkedIn](https://www.linkedin.com/in/royvinay)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/roy-vinay/roy-vinay/main/dark_mode.svg">
