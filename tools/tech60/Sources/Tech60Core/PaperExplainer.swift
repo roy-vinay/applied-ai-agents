@@ -1,7 +1,4 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
 
 /// A plain-English explainer for a research paper, in four parts: the problem, what the authors did, what
 /// they found, and why it matters. The first three are checked against the paper. "Why it matters" is the
@@ -103,26 +100,25 @@ extension Research {
         return parts.joined(separator: "\n\n")
     }
 
-    /// The introduction and conclusion of an arXiv HTML paper (LaTeXML sections with numbered headings).
+    /// The introduction and conclusion of an arXiv HTML paper: the text under each matching <h2> heading,
+    /// up to the next one. Read straight from the markup, since HTML cleanup can drop newer tags like <section>.
     public static func introductionAndConclusion(fromHTML data: Data) -> (introduction: String?, conclusion: String?) {
-        #if os(macOS)
-        guard let doc = try? XMLDocument(data: data, options: [.documentTidyHTML]),
-              let sections = try? doc.nodes(forXPath: "//section[contains(@class,'ltx_section')]") else { return (nil, nil) }
+        guard let html = String(data: data, encoding: .utf8) else { return (nil, nil) }
+        let ns = html as NSString
+        guard let regex = try? NSRegularExpression(pattern: "<h2[^>]*>(.*?)</h2>", options: [.caseInsensitive, .dotMatchesLineSeparators])
+        else { return (nil, nil) }
+        let heads = regex.matches(in: html, range: NSRange(location: 0, length: ns.length))
         var intro: String?
         var end: String?
-        for section in sections {
-            let title = ((try? section.nodes(forXPath: "./h2")) ?? []).first?.stringValue?.lowercased() ?? ""
-            let text = ((try? section.nodes(forXPath: ".//p")) ?? [])
-                .compactMap { $0.stringValue?.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression) }
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
-                .joined(separator: "\n")
-            if intro == nil, title.contains("introduction") { intro = text }
-            if title.contains("conclusion") || (end == nil && title.contains("discussion")) { end = text }
+        for (i, m) in heads.enumerated() {
+            let title = HTMLText.plain(ns.substring(with: m.range(at: 1))).lowercased()
+            let start = m.range.location + m.range.length
+            let stop = i + 1 < heads.count ? heads[i + 1].range.location : ns.length
+            let body = HTMLText.plain(ns.substring(with: NSRange(location: start, length: max(0, stop - start))))
+            guard !body.isEmpty else { continue }
+            if intro == nil, title.contains("introduction") { intro = body }
+            if title.contains("conclusion") || (end == nil && title.contains("discussion")) { end = body }
         }
         return (intro, end)
-        #else
-        return (nil, nil)
-        #endif
     }
 }
