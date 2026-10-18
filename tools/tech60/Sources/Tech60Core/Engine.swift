@@ -23,7 +23,12 @@ public actor Engine {
     /// Fetches every enabled source, four at a time. One failing source never blocks the others.
     @discardableResult
     public func refresh(sources: [Source], now: Date = Date()) async -> Snapshot {
-        let enabled = sources.filter(\.isEnabled)
+        // Research feeds update once a day, so they're fetched at most every six hours.
+        let enabled = sources.filter { source in
+            guard source.isEnabled else { return false }
+            guard source.kind == .research, let last = snapshot.status[source.id]?.lastSuccess else { return true }
+            return now.timeIntervalSince(last) >= Research.refreshInterval
+        }
         var incoming: [Story] = []
         for chunk in stride(from: 0, to: enabled.count, by: 4).map({ Array(enabled[$0..<min($0 + 4, enabled.count)]) }) {
             let results = await withTaskGroup(of: (Source, Result<[FeedItem], Error>).self) { group in
@@ -32,7 +37,7 @@ public actor Engine {
                         do {
                             switch source.kind {
                             case .hackerNews: return (source, .success(try await HackerNews.topStories(client: client)))
-                            case .feed:
+                            case .feed, .research:
                                 guard let url = source.url else { return (source, .failure(Tech60Error.notAFeed)) }
                                 return (source, .success(try FeedParser.parse(try await client.get(url), now: now)))
                             }
@@ -52,7 +57,8 @@ public actor Engine {
                 case .success(let items):
                     status.lastSuccess = now
                     status.lastError = nil
-                    incoming += StoryMerge.stories(from: Array(items.prefix(40)), source: source, now: now)
+                    let keep = source.kind == .research ? Research.itemsPerFetch : 40
+                    incoming += StoryMerge.stories(from: Array(items.prefix(keep)), source: source, now: now)
                 case .failure(let error):
                     status.lastError = error.localizedDescription
                 }
@@ -112,7 +118,8 @@ public actor Engine {
     public func rateHeadlines(limit: Int = 60, now: Date = Date()) async -> Snapshot? {
         guard await summarizer.availability() == nil else { return nil }
         let todo = snapshot.stories
-            .filter { $0.editorScore == nil && now.timeIntervalSince($0.displayDate) < 2 * 86_400 && !NoiseFilter.isNoise($0) }
+            .filter { $0.editorScore == nil && !Research.isPaperOnly($0) && now.timeIntervalSince($0.displayDate) < 2 * 86_400
+                && !NoiseFilter.isNoise($0) }
             .sorted { $0.displayDate > $1.displayDate }
             .prefix(limit)
         guard !todo.isEmpty else { return nil }

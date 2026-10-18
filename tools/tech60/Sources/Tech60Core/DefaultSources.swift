@@ -6,7 +6,7 @@ public enum DefaultSources {
     }
 
     /// Bumped when the default list changes, so existing installs pick up new sources once.
-    public static let version = 2
+    public static let version = 3
     /// Sources turned off by default since version 2: frequent, minor updates.
     public static let offByDefault: Set<String> = ["github-changelog", "apple-developer"]
 
@@ -26,5 +26,8 @@ public enum DefaultSources {
         feed("platformer", "Platformer", "https://www.platformer.news/rss/", primary: false),
         feed("verge", "The Verge", "https://www.theverge.com/rss/index.xml", primary: false),
         feed("ars", "Ars Technica", "https://feeds.arstechnica.com/arstechnica/index", primary: false),
+        // New AI and language papers. arXiv's titles and abstracts are public domain (CC0); its terms ask for no
+        // more than one request every three seconds, and Tech60 asks once every six hours.
+        Source(id: "arxiv", name: "arXiv", kind: .research, url: URL(string: "https://rss.arxiv.org/rss/cs.AI+cs.CL"), isPrimary: false),
     ]
 }
