@@ -12,15 +12,8 @@ By [Vinay Roy](https://github.com/roy-vinay). Part of [applied-ai-agents](../REA
 
 ## Latest
 
-**[FF-05: What does telling an AI agent the rules actually buy you?](ff-05-rules-in-the-prompt)** The
-lesson of the 2025 Replit database deletion, tested on a data bot. With the rules in its prompt, neither of
-two open models broke one. Without them, the larger model handed over customer emails on every try, and
-both dumped a 2-million-row table. Neither tried to delete data, with or without the rules.
-
-**[FF-01: Can you stop a support chatbot from making up policy?](ff-01-unsupported-policy-claims)** The
-failure behind the 2024 Air Canada chatbot case, tested in four phases on a fictional airline. Rules alone
-either missed too much or blocked too many good answers. A small model built for yes/no decisions caught
-80% of real failures and wrongly blocked 6% of good answers, for about 2 cents across 600 answers.
+<a href="ff-05-rules-in-the-prompt"><picture><source media="(prefers-color-scheme: dark)" srcset="../.github/assets/card-ff-05-dark.svg"><img src="../.github/assets/card-ff-05-light.svg" width="49%" alt="FF-05: what does telling an AI agent the rules actually buy you?"></picture></a>
+<a href="ff-01-unsupported-policy-claims"><picture><source media="(prefers-color-scheme: dark)" srcset="../.github/assets/card-ff-01-dark.svg"><img src="../.github/assets/card-ff-01-light.svg" width="49%" alt="FF-01: can you stop a support chatbot from making up policy?"></picture></a>
 
 ## The files
 

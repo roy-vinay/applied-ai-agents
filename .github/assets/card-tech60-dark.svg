@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="224" viewBox="0 0 480 224" role="img" aria-label="Tech60: A tech news front page for the Mac desktop: only stories with real signal, each with a short on-device summary. Summaries must pass checks against the source.">
+<defs><clipPath id="c-card-tech60-dark"><rect x="0.5" y="0.5" width="479" height="223" rx="14"/></clipPath></defs>
+<rect x="0.5" y="0.5" width="479" height="223" rx="14" fill="#1C2533" stroke="#30363D"/>
+<g clip-path="url(#c-card-tech60-dark)"><text x="486" y="268" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-size="230" font-weight="700" fill="#2A3446">T</text></g>
+<text x="28" y="56" font-family="Georgia, 'Times New Roman', serif" font-size="29" font-weight="700" fill="#F0F3F6">Tech60</text>
+<text x="28" y="100" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">A tech news front page for the Mac desktop:</text><text x="28" y="125" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">only stories with real signal, each with a</text><text x="28" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">short on-device summary.</text>
+<text x="28" y="200" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FF8A3D">Summaries must pass checks against the source.</text>
+</svg>

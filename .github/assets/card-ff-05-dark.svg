@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="224" viewBox="0 0 480 224" role="img" aria-label="FF-05: Rules in the Prompt: What does telling an agent the rules buy you? The Replit database deletion, tested on a data bot. No rules: the larger model leaked emails.">
+<defs><clipPath id="c-card-ff-05-dark"><rect x="0.5" y="0.5" width="479" height="223" rx="14"/></clipPath></defs>
+<rect x="0.5" y="0.5" width="479" height="223" rx="14" fill="#1C2533" stroke="#30363D"/>
+<g clip-path="url(#c-card-ff-05-dark)"><text x="486" y="268" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-size="230" font-weight="700" fill="#2A3446">F</text></g>
+<text x="28" y="56" font-family="Georgia, 'Times New Roman', serif" font-size="29" font-weight="700" fill="#F0F3F6">FF-05: Rules in the Prompt</text>
+<text x="28" y="100" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">What does telling an agent the rules buy</text><text x="28" y="125" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">you? The Replit database deletion,</text><text x="28" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">tested on a data bot.</text>
+<text x="28" y="200" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FF8A3D">No rules: the larger model leaked emails.</text>
+</svg>
