@@ -77,11 +77,16 @@ struct CardView: View {
 
     var body: some View {
         ZStack {
+            // The list stays in place under an open story, so Back returns to the same spot in it.
+            front
+                .opacity(openCluster == nil ? 1 : 0)
+                .disabled(openCluster != nil)
+                .allowsHitTesting(openCluster == nil)
+                .accessibilityHidden(openCluster != nil)
             if let cluster = openCluster {
                 StoryDetail(cluster: cluster, model: model, backTitle: backTitle) { show(nil) }
+                    .background(Palette.paper)
                     .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
-            } else {
-                front.transition(.opacity)
             }
         }
         .frame(minWidth: 340, minHeight: 360)
