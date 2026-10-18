@@ -178,3 +178,28 @@ final class PaperExplainerTests: XCTestCase {
         XCTAssertEqual(end, "Tools help agents.")
     }
 }
+
+final class ExplainerUpgradeTests: XCTestCase {
+    func testOldPaperSummariesAreClearedButExplainersAndNewsStay() {
+        let now = Date()
+        func story(_ id: String, research: Bool, _ summary: SummaryState) -> Story {
+            var s = Story(id: id, sourceID: research ? "arxiv" : "openai", sourceName: "x", title: id,
+                          url: URL(string: "https://example.com/\(id)")!, published: now, firstSeen: now, sourceText: "",
+                          isPrimary: !research, summary: summary)
+            s.isResearch = research ? true : nil
+            return s
+        }
+        let explainer = PaperExplainer(problem: "P.", approach: "A.", findings: "F.", impact: "W.").stored
+        let snap = Snapshot(stories: [
+            story("old", research: true, .checked(text: "A short 45-word summary.", evidence: [])),
+            story("failed", research: true, .withheld(reason: "x")),
+            story("new", research: true, .checked(text: explainer, evidence: [])),
+            story("news", research: false, .checked(text: "News summary.", evidence: [])),
+        ])
+        let up = PaperExplainer.upgrade(snap).stories
+        XCTAssertEqual(up[0].summary, .none)
+        XCTAssertEqual(up[1].summary, .none)
+        XCTAssertEqual(up[2].summary, .checked(text: explainer, evidence: []))
+        XCTAssertEqual(up[3].summary, .checked(text: "News summary.", evidence: []))
+    }
+}

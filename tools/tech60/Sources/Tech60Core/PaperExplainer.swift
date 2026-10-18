@@ -60,6 +60,20 @@ public struct PaperExplainer: Equatable, Sendable {
         return parts.allSatisfy { !$0.isEmpty } ? out : nil
     }
 
+    /// Papers summarized before explainers existed keep their old short summary or a withheld note.
+    /// Clears those, so each paper gets an explainer the next time it's opened or shown in Research.
+    public static func upgrade(_ snapshot: Snapshot) -> Snapshot {
+        var out = snapshot
+        for i in out.stories.indices where out.stories[i].isResearch == true {
+            switch out.stories[i].summary {
+            case .checked(let text, _) where parse(text) == nil: out.stories[i].summary = .none
+            case .withheld: out.stories[i].summary = .none
+            default: break
+            }
+        }
+        return out
+    }
+
     /// How the explainer is stored in a story's checked summary.
     public var stored: String {
         "Problem: \(problem)\nApproach: \(approach)\nFindings: \(findings)\nWhy it matters: \(impact)"
