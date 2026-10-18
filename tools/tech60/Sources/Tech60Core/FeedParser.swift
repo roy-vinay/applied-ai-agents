@@ -15,9 +15,12 @@ public struct FeedItem: Equatable, Sendable {
     public var comments: Int?
     /// The story's picture, when the feed names one.
     public var image: URL?
+    /// arXiv's author comment and journal reference ("Accepted at NeurIPS 2026", "Code: github.com/...").
+    public var comment: String = ""
 
     public init(id: String, title: String, link: URL?, published: Date?, text: String, points: Int? = nil, comments: Int? = nil,
-                image: URL? = nil) {
+                image: URL? = nil, comment: String = "") {
+        self.comment = comment
         self.image = image
         self.id = id
         self.title = title
@@ -42,7 +45,7 @@ public enum FeedParser {
     }
 
     final class Delegate: NSObject, XMLParserDelegate {
-        struct Partial { var id = "", title = "", link = "", published = "", updated = "", summary = "", content = "", image = "" }
+        struct Partial { var id = "", title = "", link = "", published = "", updated = "", summary = "", content = "", image = "", comment = "" }
         let now: Date
         var items: [FeedItem] = []
         var current: Partial?
@@ -100,6 +103,7 @@ public enum FeedParser {
                 case "updated", "modified": current?.updated = text
                 case "description", "summary": current?.summary = buffer
                 case "content:encoded", "content": current?.content = buffer
+                case "arxiv:comment", "arxiv:journal_ref": current?.comment += (current?.comment.isEmpty == false ? " " : "") + text
                 default: break
                 }
             }
@@ -118,7 +122,8 @@ public enum FeedParser {
             var image = HTMLText.httpsURL(p.image)
             if image == nil { image = HTMLText.firstImage(inHTML: p.content + p.summary) }
             items.append(FeedItem(id: id, title: title, link: link, published: published,
-                                  text: content.count > summary.count ? content : summary, image: image))
+                                  text: content.count > summary.count ? content : summary, image: image,
+                                  comment: HTMLText.plain(p.comment)))
         }
     }
 }

@@ -72,6 +72,15 @@ public struct Story: Codable, Hashable, Identifiable, Sendable {
     public var editorScore: Int?
     /// True for a paper from a research feed. Nil on stories saved before research feeds existed.
     public var isResearch: Bool?
+    /// Paper signals (nil for news): its group, an accepted venue, whether code is linked, and the
+    /// on-device model's 1-5 read of applicability and generalizability.
+    public var paperGroup: String?
+    public var paperVenue: String?
+    public var paperHasCode: Bool?
+    public var paperApplicability: Int?
+    public var paperGeneralizability: Int?
+    /// True once the on-device model has rated the paper (or tried), so it isn't asked again.
+    public var paperRated: Bool?
 
     public init(id: String, sourceID: String, sourceName: String, title: String, url: URL, published: Date?,
                 firstSeen: Date, sourceText: String, isPrimary: Bool, summary: SummaryState = .none) {
