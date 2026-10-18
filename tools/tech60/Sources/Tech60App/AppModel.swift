@@ -139,6 +139,15 @@ final class AppModel: ObservableObject {
     /// True when a research feed is on, so the card shows a Research tab.
     var hasResearch: Bool { sources.contains { $0.kind == .research && $0.isEnabled } }
 
+    /// What the empty Research tab says: still fetching, or why the last fetch failed.
+    var researchStatus: String {
+        guard let source = sources.first(where: { $0.kind == .research && $0.isEnabled }) else { return "Turn on arXiv in Sources." }
+        let s = snapshot.status[source.id]
+        if let error = s?.lastError { return "\(source.name) didn't answer: \(error) Tech60 will try again soon." }
+        if s?.lastSuccess == nil { return "Fetching new papers from \(source.name)." }
+        return "\(source.name) sent no new papers. Tech60 checks again every few hours."
+    }
+
     /// The Research tab: new papers, newest first, one per row.
     var researchClusters: [StoryCluster] {
         let enabled = Set(sources.filter { $0.kind == .research && $0.isEnabled }.map(\.id))
