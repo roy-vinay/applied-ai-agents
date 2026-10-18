@@ -118,3 +118,7 @@ For seven years I was Head Instructor for the AI/ML executive program at UC Berk
 ## License
 
 MIT, unless a project folder says otherwise.
+
+---
+
+*Independent project; not affiliated with or endorsed by my employer. No proprietary code, data, or confidential information.*
