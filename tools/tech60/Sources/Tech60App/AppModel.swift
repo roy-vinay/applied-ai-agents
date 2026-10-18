@@ -23,7 +23,7 @@ final class AppModel: ObservableObject {
     @Published var sortMode: SortMode {
         didSet { UserDefaults.standard.set(sortMode.rawValue, forKey: "sortMode") }
     }
-    enum SortMode: String, CaseIterable { case hot = "Hot", latest = "Latest" }
+    enum SortMode: String, CaseIterable { case hot = "Hot", latest = "Latest", research = "Research" }
 
     /// What "More like this" and "Less like this" taught Tech60.
     @Published var taste: Taste {
@@ -121,9 +121,23 @@ final class AppModel: ObservableObject {
         let enabled = Set(sources.filter(\.isEnabled).map(\.id))
         let recent = snapshot.stories.filter {
             (isDemo || enabled.contains($0.sourceID)) && !hiddenIDs.contains($0.id) && !NoiseFilter.isNoise($0)
+                && !Research.isPaperOnly($0)
         }
         let window = recent.filter { Date().timeIntervalSince($0.displayDate) < 2 * 86_400 }
         return Array((window.isEmpty ? recent : window).prefix(80))
+    }
+
+    /// True when a research feed is on, so the card shows a Research tab.
+    var hasResearch: Bool { sources.contains { $0.kind == .research && $0.isEnabled } }
+
+    /// The Research tab: new papers, newest first, one per row.
+    var researchClusters: [StoryCluster] {
+        let enabled = Set(sources.filter { $0.kind == .research && $0.isEnabled }.map(\.id))
+        return snapshot.stories
+            .filter { $0.isResearch == true && enabled.contains($0.sourceID) && !hiddenIDs.contains($0.id) }
+            .sorted { $0.displayDate > $1.displayDate }
+            .prefix(100)
+            .map { StoryCluster(stories: [$0]) }
     }
 
     private func rebuild() {
@@ -170,6 +184,7 @@ final class AppModel: ObservableObject {
             return clusters.filter { c in c.stories.contains { !Topics.matches($0, in: [topic]).isEmpty } }
                 .sorted { Hotness.score($0, topics: topics, taste: taste) > Hotness.score($1, topics: topics, taste: taste) }
         }
+        if sortMode == .research { return hasResearch ? researchClusters : Hotness.hot(clusters, topics: topics, taste: taste) }
         if sortMode == .hot { return Hotness.hot(clusters, topics: topics, taste: taste) }
         guard !topics.isEmpty else { return clusters }
         let (on, off) = clusters.reduce(into: ([StoryCluster](), [StoryCluster]())) { acc, c in

@@ -3,6 +3,7 @@ import Foundation
 public enum StoryMerge {
     /// Removes fragments and common tracking parameters, so the same article from two feeds matches.
     public static func normalized(_ url: URL) -> String {
+        if let paper = Research.canonicalArxiv(url) { return paper }
         guard var c = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return url.absoluteString }
         c.fragment = nil
         c.scheme = c.scheme?.lowercased()
@@ -18,6 +19,14 @@ public enum StoryMerge {
     public static func stories(from items: [FeedItem], source: Source, now: Date) -> [Story] {
         items.compactMap { item in
             guard let url = item.link else { return nil }
+            if source.kind == .research {
+                guard !Research.isReplacement(item) else { return nil }
+                var paper = Story(id: "\(source.id)|\(item.id)", sourceID: source.id, sourceName: source.name, title: item.title,
+                                  url: url, published: item.published, firstSeen: now, sourceText: Research.abstract(item.text),
+                                  isPrimary: false)
+                paper.isResearch = true
+                return paper
+            }
             var story = Story(id: "\(source.id)|\(item.id)", sourceID: source.id, sourceName: source.name, title: item.title,
                               url: url, published: item.published, firstSeen: now,
                               sourceText: source.isPrimary || source.kind == .hackerNews ? item.text : "", isPrimary: source.isPrimary,
@@ -43,6 +52,8 @@ public enum StoryMerge {
                 if let points = story.points { updated.points = max(points, old.points ?? 0) }
                 if let comments = story.comments { updated.comments = max(comments, old.comments ?? 0) }
                 if updated.imageURL == nil { updated.imageURL = story.imageURL }
+                // A paper arriving after a Hacker News post that links to it: the post gains the abstract.
+                if story.isResearch == true, updated.sourceText.isEmpty { updated.sourceText = story.sourceText }
                 if old.sourceID != story.sourceID {
                     byID[old.id] = updated
                     continue
@@ -61,7 +72,7 @@ public enum StoryMerge {
             }
         }
         return byID.values
-            .filter { now.timeIntervalSince($0.displayDate) < retention }
+            .filter { now.timeIntervalSince($0.displayDate) < ($0.isResearch == true && $0.points == nil ? min(retention, Research.retention) : retention) }
             .sorted { $0.displayDate > $1.displayDate }
             .prefix(limit)
             .map { $0 }

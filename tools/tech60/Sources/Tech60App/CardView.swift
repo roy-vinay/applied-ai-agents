@@ -100,7 +100,11 @@ struct CardView: View {
     private var backTitle: String {
         if model.briefIDs != nil { return "Your brief" }
         if let tab = model.topicTab, let t = model.allTopics.first(where: { $0.id == tab }) { return Topics.shortName(t) }
-        return model.sortMode == .hot ? "Top stories" : "Latest"
+        switch model.sortMode {
+        case .hot: return "Top stories"
+        case .latest: return "Latest"
+        case .research: return "Research"
+        }
     }
 
     private func show(_ cluster: StoryCluster?) {
@@ -190,6 +194,11 @@ struct CardView: View {
                 tab("Latest", selected: model.topicTab == nil && model.sortMode == .latest) {
                     model.topicTab = nil; model.sortMode = .latest; model.closeBrief()
                 }
+                if model.hasResearch {
+                    tab("Research", selected: model.topicTab == nil && model.sortMode == .research) {
+                        model.topicTab = nil; model.sortMode = .research; model.closeBrief()
+                    }
+                }
                 ForEach(model.tabTopics) { topic in
                     tab(Topics.shortName(topic), selected: model.topicTab == topic.id) {
                         model.topicTab = topic.id; model.closeBrief(); model.loadImages()
@@ -240,6 +249,7 @@ struct CardView: View {
                  : isTop ? "Nothing big yet today" : "No stories here yet")
                 .font(.system(size: 17, weight: .semibold, design: .serif))
             Text(model.topicTab != nil ? "Nothing on this topic in the last two days."
+                 : model.sortMode == .research ? "New AI papers from arXiv arrive once a day."
                  : isTop ? "Top only shows stories several outlets are covering. Latest has everything." : "Choose sources with the settings button above.")
                 .font(.system(size: 12.5)).foregroundStyle(Palette.secondary)
         }

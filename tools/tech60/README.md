@@ -33,7 +33,8 @@ withhold a summary when simple checks show it straying from the source.
 1. **Sources.** Feeds that sites publish themselves, plus Hacker News through its official API. Techmeme
    anchors the mix because its editors already pick what matters. Company posts (OpenAI, Google DeepMind,
    Google AI, Hugging Face) are the primary sources; TechCrunch, MIT Technology Review, Platformer, The Verge,
-   and Ars Technica add coverage. Tech60 never scrapes a site without a feed.
+   and Ars Technica add coverage. New AI and language papers come from arXiv, once every six hours. Tech60
+   never scrapes a site without a feed.
 2. **Noise filter.** Drops deals, reviews, buying guides, how-tos, gaming, and reference pages like Wikipedia
    or fan wikis. Hacker News stories need 150 points; Show HN and Ask HN need 400.
 3. **One row per story.** When the company post, The Verge, and Hacker News cover the same launch, they become
@@ -45,6 +46,11 @@ withhold a summary when simple checks show it straying from the source.
    professional need to know this today? Anything rated 2 or lower stays out of Top and the daily brief.
 6. **Top.** Only rows with real signal: two or more outlets, a Techmeme pick, the company's own post, or 400+
    Hacker News points. There is no filler. On a quiet morning Top is short and says so; Latest has everything.
+
+**Research.** arXiv papers have their own tab, newest first, with the abstract when you open one. A paper
+joins Top and Latest only when the news picks it up: today, a Hacker News post linking to it with 150 or more
+points. arXiv's titles and abstracts are public domain (CC0), and its terms ask for no more than one request
+every three seconds; Tech60 asks once every six hours.
 
 You tune it with a right-click: **More like this** or **Less like this** adjusts the weight of that story's
 words and source, and stays on your Mac.

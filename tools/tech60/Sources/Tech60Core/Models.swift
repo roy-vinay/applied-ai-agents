@@ -3,6 +3,8 @@ import Foundation
 public enum SourceKind: String, Codable, Sendable {
     case feed
     case hackerNews
+    /// A research feed (arXiv): papers go to the Research tab, and join the news only when the news covers them.
+    case research
 }
 
 /// A place stories come from. Official (primary) sources are eligible for summaries;
@@ -68,6 +70,8 @@ public struct Story: Codable, Hashable, Identifiable, Sendable {
     public var imageChecked: Bool?
     /// The on-device editor's 1-5 rating of whether a tech professional needs this today. Nil until rated.
     public var editorScore: Int?
+    /// True for a paper from a research feed. Nil on stories saved before research feeds existed.
+    public var isResearch: Bool?
 
     public init(id: String, sourceID: String, sourceName: String, title: String, url: URL, published: Date?,
                 firstSeen: Date, sourceText: String, isPrimary: Bool, summary: SummaryState = .none) {
