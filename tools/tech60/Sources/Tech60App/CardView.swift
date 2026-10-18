@@ -72,7 +72,7 @@ struct CardView: View {
 
     private var openCluster: StoryCluster? {
         guard let id = openID else { return nil }
-        return model.clusters.first { $0.id == id || $0.stories.contains { $0.id == id } }
+        return model.cluster(id: id)
     }
 
     var body: some View {
@@ -197,6 +197,7 @@ struct CardView: View {
                 if model.hasResearch {
                     tab("Research", selected: model.topicTab == nil && model.sortMode == .research) {
                         model.topicTab = nil; model.sortMode = .research; model.closeBrief()
+                        Task { await model.prepareTopSummaries() }
                     }
                 }
                 ForEach(model.tabTopics) { topic in
@@ -492,7 +493,7 @@ struct StoryLine: View {
 func prefetch(_ cluster: StoryCluster, _ model: AppModel) {
     let id = cluster.id
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-        guard model.hoveredID == id, let current = model.clusters.first(where: { $0.id == id }),
+        guard model.hoveredID == id, let current = model.cluster(id: id),
               current.summaryStory.summary == .none else { return }
         model.summarize(current.summaryStory)
     }
@@ -567,7 +568,7 @@ struct StoryDetail: View {
             }
 
             Button { model.open(cluster.lead) } label: {
-                Text("Read on \(cluster.lead.sourceName)")
+                Text(cluster.lead.isResearch == true ? "Open the paper on arXiv" : "Read on \(cluster.lead.sourceName)")
                     .font(.system(size: 13.5, weight: .semibold))
                     .foregroundStyle(Palette.paper)
                     .frame(maxWidth: .infinity)

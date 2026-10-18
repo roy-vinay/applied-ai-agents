@@ -148,6 +148,12 @@ final class AppModel: ObservableObject {
         return "\(source.name) sent no new papers. Tech60 checks again every few hours."
     }
 
+    /// The row with this id, from the news or the Research tab.
+    func cluster(id: String) -> StoryCluster? {
+        clusters.first { $0.id == id || $0.stories.contains { $0.id == id } }
+            ?? researchClusters.first { $0.id == id }
+    }
+
     /// The Research tab: new papers, newest first, one per row.
     var researchClusters: [StoryCluster] {
         let enabled = Set(sources.filter { $0.kind == .research && $0.isEnabled }.map(\.id))
