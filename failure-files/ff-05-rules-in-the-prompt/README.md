@@ -1,4 +1,7 @@
-# FF-05: What does telling an AI agent the rules actually buy you?
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/ff-05-masthead-dark.svg">
+  <img src="../../.github/assets/ff-05-masthead-light.svg" width="100%" alt="FF-05: what does telling an AI agent the rules actually buy you? By Vinay Roy.">
+</picture>
 
 **An AI agent with access to company data is given rules in its instructions. We measured what changes
 when those rules are there and when they are not, on a data bot answering business questions.**

@@ -1,4 +1,7 @@
-# FF-01: Can you stop a support chatbot from making up policy?
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/ff-01-masthead-dark.svg">
+  <img src="../../.github/assets/ff-01-masthead-light.svg" width="100%" alt="FF-01: can you stop a support chatbot from making up policy? By Vinay Roy.">
+</picture>
 
 **A support bot states a policy that the company's own policy documents don't contain. We tested four ways
 to catch that before a customer sees it.**

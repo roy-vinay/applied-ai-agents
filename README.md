@@ -11,12 +11,10 @@ where the evidence does.
 
 ## Mac app downloads
 
-| App | Download | Status |
-| --- | --- | --- |
-| **Tech60** | [Download for Mac](https://github.com/roy-vinay/applied-ai-agents/releases/download/tech60-latest/Tech60-macOS.zip) · [Release notes](https://github.com/roy-vinay/applied-ai-agents/releases/tag/tech60-latest) | Early build, updated from main; macOS 14+, on-device summaries require macOS 26 with Apple Intelligence. |
-| **mdEditDiff** | [Download for Mac](https://github.com/roy-vinay/mdeditdiff/releases/latest/download/mdEditDiff-macOS.zip) · [Release notes](https://github.com/roy-vinay/mdeditdiff/releases/latest) | Early release; macOS 14+. Lives in [its own repository](https://github.com/roy-vinay/mdeditdiff). |
+<a href="https://github.com/roy-vinay/applied-ai-agents/releases/download/tech60-latest/Tech60-macOS.zip"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-download-tech60-dark.svg"><img src=".github/assets/card-download-tech60-light.svg" width="49%" alt="Download Tech60 for Mac: early build for macOS 14 and later."></picture></a>
+<a href="https://github.com/roy-vinay/mdeditdiff/releases/latest/download/mdEditDiff-macOS.zip"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-download-mdeditdiff-dark.svg"><img src=".github/assets/card-download-mdeditdiff-light.svg" width="49%" alt="Download mdEditDiff for Mac: early release for macOS 14 and later."></picture></a>
 
-Both apps are not yet notarized; follow the first-launch instructions in their documentation.
+Release notes: [Tech60](https://github.com/roy-vinay/applied-ai-agents/releases/tag/tech60-latest), [mdEditDiff](https://github.com/roy-vinay/mdeditdiff/releases/latest). Both apps are not yet notarized; follow the first-launch instructions in their documentation.
 
 **Start here**
 
