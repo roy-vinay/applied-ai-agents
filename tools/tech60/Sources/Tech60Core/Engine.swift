@@ -14,7 +14,7 @@ public actor Engine {
         self.file = file
         self.client = client
         self.summarizer = summarizer
-        self.snapshot = initial ?? file?.load() ?? Snapshot()
+        self.snapshot = PaperExplainer.upgrade(initial ?? file?.load() ?? Snapshot())
     }
 
     public var summarizerName: String { summarizer.name }
