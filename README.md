@@ -3,6 +3,8 @@
   <img src=".github/assets/masthead-light.svg" width="100%" alt="Applied AI Agents: applied AI projects, with explicit safeguards, evaluations, and trade-offs. By Vinay Roy.">
 </picture>
 
+<p>&nbsp;</p>
+
 [![evals](https://github.com/roy-vinay/applied-ai-agents/actions/workflows/evals.yml/badge.svg)](https://github.com/roy-vinay/applied-ai-agents/actions/workflows/evals.yml)
 
 Each project starts from a real problem, builds the smallest version that works, tests the behavior that
