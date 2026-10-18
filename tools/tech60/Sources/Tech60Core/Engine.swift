@@ -7,6 +7,9 @@ public actor Engine {
     private let summarizer: Summarizer
     private let file: SnapshotFile?
     private var inFlight: Set<String> = []
+    /// When Tech60 last asked arXiv for a paper's page, and until when it holds off after a 429.
+    private var lastArxivPage = Date.distantPast
+    private var arxivPagesPausedUntil = Date.distantPast
     /// Stories to summarize first: the ones at the top of the card.
     private var priority: [String] = []
 
@@ -26,9 +29,13 @@ public actor Engine {
         // Research feeds update once a day, so they're fetched at most every six hours.
         let enabled = sources.filter { source in
             guard source.isEnabled else { return false }
-            guard source.kind == .research, let last = snapshot.status[source.id]?.lastSuccess,
-                  snapshot.stories.contains(where: { $0.sourceID == source.id }),
-                  !snapshot.stories.contains(where: { $0.sourceID == source.id && $0.paperHasCode == nil }) else { return true }
+            guard source.kind == .research else { return true }
+            let status = snapshot.status[source.id]
+            // After a failure (arXiv answers 429 when asked too often), wait an hour before asking again.
+            if status?.lastError != nil, let tried = status?.lastAttempt, now.timeIntervalSince(tried) < Research.retryAfterError {
+                return false
+            }
+            guard let last = status?.lastSuccess, snapshot.stories.contains(where: { $0.sourceID == source.id }) else { return true }
             return now.timeIntervalSince(last) >= Research.refreshInterval
         }
         var incoming: [Story] = []
@@ -239,8 +246,16 @@ public actor Engine {
     private func explainPaper(_ story: Story) async -> SummaryState {
         var intro: String?
         var end: String?
-        if let page = Research.htmlURL(for: story.url), let data = try? await client.get(page, maxBytes: 10_000_000) {
-            (intro, end) = Research.introductionAndConclusion(fromHTML: data)
+        if let page = Research.htmlURL(for: story.url), Date() >= arxivPagesPausedUntil {
+            // arXiv asks for no more than one request every three seconds.
+            let wait = Research.requestSpacing - Date().timeIntervalSince(lastArxivPage)
+            if wait > 0 { try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000)) }
+            lastArxivPage = Date()
+            do {
+                (intro, end) = Research.introductionAndConclusion(fromHTML: try await client.get(page, maxBytes: 10_000_000))
+            } catch Tech60Error.badStatus(429) {
+                arxivPagesPausedUntil = Date().addingTimeInterval(Research.retryAfterError)
+            } catch {}
         }
         let text = Research.explainerText(abstract: story.sourceText, introduction: intro, conclusion: end)
         guard story.sourceText.count >= 150 else {

@@ -114,6 +114,15 @@ final class ResearchTests: XCTestCase {
         let after = await engine.refresh(sources: [source], now: now.addingTimeInterval(3600))
         XCTAssertEqual(after.status["arxiv"]?.lastAttempt, now, "fetched an hour ago, so not asked again")
     }
+
+    func testAfterA429ArxivIsLeftAloneForAnHour() async {
+        var snapshot = Snapshot()
+        snapshot.status["arxiv"] = SourceStatus(lastAttempt: now, lastSuccess: nil, lastError: "429")
+        let engine = Engine(file: nil, summarizer: NoSummarizer(reason: "test"), initial: snapshot)
+        let source = Source(id: "arxiv", name: "arXiv", kind: .research, url: URL(string: "https://export.arxiv.org/api/query"), isPrimary: false)
+        let after = await engine.refresh(sources: [source], now: now.addingTimeInterval(600))
+        XCTAssertEqual(after.status["arxiv"]?.lastAttempt, now, "ten minutes after a 429: not asked again")
+    }
 }
 
 final class PaperExplainerTests: XCTestCase {

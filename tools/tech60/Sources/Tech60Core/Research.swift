@@ -5,6 +5,9 @@ import Foundation
 public enum Research {
     /// How often a research feed is fetched. arXiv publishes once a day.
     public static let refreshInterval: TimeInterval = 6 * 3600
+    /// How long to wait after arXiv refuses or fails, and the gap between requests for paper pages.
+    public static let retryAfterError: TimeInterval = 3600
+    public static let requestSpacing: TimeInterval = 3.5
     /// Papers kept per fetch, and how long they stay.
     public static let itemsPerFetch = 300
     public static let retention: TimeInterval = 2 * 86_400
