@@ -65,6 +65,14 @@ public struct PaperExplainer: Equatable, Sendable {
     public static func upgrade(_ snapshot: Snapshot) -> Snapshot {
         var out = snapshot
         for i in out.stories.indices where out.stories[i].isResearch == true {
+            // Papers saved before signals existed: group and code from the saved abstract. (The venue comes
+            // from arXiv's comment, which wasn't saved, so those papers simply have none.)
+            if out.stories[i].paperHasCode == nil {
+                out.stories[i].paperHasCode = PaperSignals.hasCode(out.stories[i].sourceText)
+            }
+            if out.stories[i].paperGroup == nil {
+                out.stories[i].paperGroup = PaperSignals.keywordGroup(title: out.stories[i].title, abstract: out.stories[i].sourceText).rawValue
+            }
             switch out.stories[i].summary {
             case .checked(let text, _) where parse(text) == nil: out.stories[i].summary = .none
             case .withheld: out.stories[i].summary = .none
