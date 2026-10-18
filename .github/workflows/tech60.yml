@@ -1,6 +1,9 @@
 name: tech60
+# Pull requests are tested; main only packages and publishes the code its pull request already tested.
+# (Pushing to a branch with an open pull request used to run everything twice.)
 on:
   push:
+    branches: [main]
     paths: ["tools/tech60/**", ".github/workflows/tech60.yml"]
   pull_request:
     paths: ["tools/tech60/**", ".github/workflows/tech60.yml"]
@@ -14,6 +17,15 @@ jobs:
         working-directory: tools/tech60
     steps:
       - uses: actions/checkout@v5
+        with:
+          # On a pull request, the branch itself, so screenshots can be committed back to it.
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+      - name: Reuse compiled files from earlier runs
+        uses: actions/cache@v4
+        with:
+          path: tools/tech60/.build
+          key: tech60-build-${{ runner.os }}-${{ hashFiles('tools/tech60/Package.swift', 'tools/tech60/Sources/**', 'tools/tech60/Tests/**') }}
+          restore-keys: tech60-build-${{ runner.os }}-
       - name: Use the newest Xcode (for Apple's on-device model framework)
         run: |
           XC=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
@@ -21,6 +33,7 @@ jobs:
           xcodebuild -version
           swift --version
       - name: Build and test
+        if: github.event_name == 'pull_request'
         run: |
           set -o pipefail
           report() {
@@ -52,16 +65,17 @@ jobs:
           sleep 8
           if kill -0 $PID 2>/dev/null; then echo "App is running"; kill $PID; else echo "::error title=Launch failed::The app exited within 8 seconds"; exit 1; fi
       - name: Screenshots
+        if: github.event_name == 'pull_request'
         run: ./scripts/screenshots.sh
       - name: Commit screenshots to the branch (not main)
-        if: github.event_name == 'push' && github.ref != 'refs/heads/main'
+        if: github.event_name == 'pull_request'
         run: |
           git config user.name "Vinay Roy"
           git config user.email "roy-vinay@users.noreply.github.com"
           git add docs/img/*.png
           if git diff --cached --quiet; then echo "No screenshot changes"; exit 0; fi
           git commit -m "Tech60 docs: card screenshots"
-          git push origin HEAD:${GITHUB_REF#refs/heads/}
+          git push origin "HEAD:$GITHUB_HEAD_REF"
       - name: Publish the latest build as a release (main only, one zip, no sign-in needed)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:

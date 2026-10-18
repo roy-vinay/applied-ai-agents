@@ -12,10 +12,13 @@ public protocol Summarizer: Sendable {
     func explain(title: String, text: String) async throws -> String
     /// Loads the model ahead of the first summary, so the first one isn't slow.
     func prewarm()
+    /// Loads the model for paper explainers, when the reader opens Research.
+    func prewarmExplainer()
 }
 
 public extension Summarizer {
     func prewarm() {}
+    func prewarmExplainer() {}
     /// Rates headlines 1-5 (see EditorPrompt). The default rates nothing.
     func rate(headlines: [String]) async throws -> [Int?] { headlines.map { _ in nil } }
     /// Summarizers without a paper prompt use their summary.
@@ -61,6 +64,11 @@ public struct AppleSummarizer: Summarizer {
     public func prewarm() {
         guard case .available = SystemLanguageModel.default.availability else { return }
         LanguageModelSession(instructions: SummaryPrompt.instructions).prewarm()
+    }
+
+    public func prewarmExplainer() {
+        guard case .available = SystemLanguageModel.default.availability else { return }
+        LanguageModelSession(instructions: PaperExplainer.instructions).prewarm()
     }
 
     public func availability() async -> String? {

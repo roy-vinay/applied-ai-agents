@@ -363,9 +363,20 @@ final class AppModel: ObservableObject {
     /// Summarizes the top stories in the background, so opening one shows its summary at once.
     func prepareTopSummaries() async {
         guard summariesEnabled, !isDemo else { return }
-        let ids = visibleClusters.prefix(10).map(\.summaryStory.id)
+        // Papers take a few seconds each, so the Research tab writes ahead further than the news tabs.
+        let ids = visibleClusters.prefix(sortMode == .research && topicTab == nil ? 30 : 10).map(\.summaryStory.id)
+        if sortMode == .research { await engine.prewarmExplainer() }
         snapshot = await engine.prioritize(ids: ids)
         startSummaries()
+    }
+
+    /// A row scrolled into view in Research: queue its explainer so it's ready before it's opened.
+    func queueAhead(_ cluster: StoryCluster) {
+        guard summariesEnabled, !isDemo, sortMode == .research, cluster.lead.summary == .none else { return }
+        Task {
+            snapshot = await engine.enqueue(id: cluster.lead.id)
+            startSummaries()
+        }
     }
 
     func markViewed() {
