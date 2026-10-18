@@ -103,7 +103,9 @@ public enum FeedParser {
                 case "updated", "modified": current?.updated = text
                 case "description", "summary": current?.summary = buffer
                 case "content:encoded", "content": current?.content = buffer
-                case "arxiv:comment", "arxiv:journal_ref": current?.comment += (current?.comment.isEmpty == false ? " " : "") + text
+                case "arxiv:comment", "arxiv:journal_ref":
+                    let before = current?.comment ?? ""
+                    current?.comment = before.isEmpty ? text : before + " " + text
                 default: break
                 }
             }
