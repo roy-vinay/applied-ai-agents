@@ -1,5 +1,7 @@
-# Production Agent Patterns
-
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/guarded-agent-masthead-dark.svg">
+  <img src="../../.github/assets/guarded-agent-masthead-light.svg" width="100%" alt="Guarded Support Agent: a support agent built to survive production. By Vinay Roy.">
+</picture>
 
 A small, runnable customer support agent that implements the production patterns from the article
 **Building AI Agents That Survive Production**
