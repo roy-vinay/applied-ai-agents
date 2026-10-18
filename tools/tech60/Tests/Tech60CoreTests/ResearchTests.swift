@@ -115,3 +115,66 @@ final class ResearchTests: XCTestCase {
         XCTAssertEqual(after.status["arxiv"]?.lastAttempt, now, "fetched an hour ago, so not asked again")
     }
 }
+
+final class PaperExplainerTests: XCTestCase {
+    let source = """
+    Scaling laws for tool-using agents
+    Abstract: We study how language model agents improve when given more tools. Across 12 benchmarks, agents with \
+    retrieval tools solved 41% more tasks than agents without them. Introduction: Agents often fail on long tasks.
+    """
+    let raw = """
+    **Problem:** AI agents often fail on long tasks, and it's unclear whether giving them more tools helps.
+    Approach: The authors tested language model agents with and without retrieval tools across 12 benchmarks.
+    Findings: Agents with retrieval tools solved 41% more tasks than agents without them.
+    Why it matters: Teams building agents can expect retrieval tools to help on long, multi-step work.
+    """
+
+    func testParsesFourParts() {
+        let e = PaperExplainer.parse(raw)
+        XCTAssertEqual(e?.problem, "AI agents often fail on long tasks, and it's unclear whether giving them more tools helps.")
+        XCTAssertEqual(e?.impact, "Teams building agents can expect retrieval tools to help on long, multi-step work.")
+        XCTAssertEqual(PaperExplainer.parse(e!.stored), e, "stored form reads back the same")
+    }
+
+    func testMissingPartIsRejected() {
+        XCTAssertNil(PaperExplainer.parse("Problem: x\nApproach: y\nFindings: z"))
+    }
+
+    func testPassesWhenGrounded() {
+        let result = PaperExplainer.check(PaperExplainer.parse(raw)!, source: source)
+        XCTAssertTrue(result.passed, result.reason ?? "")
+        XCTAssertFalse(result.evidence.isEmpty)
+    }
+
+    func testInventedNumberFailsEvenInWhyItMatters() {
+        var e = PaperExplainer.parse(raw)!
+        e.impact = "It could cut support costs by 30%."
+        XCTAssertFalse(PaperExplainer.check(e, source: source).passed)
+    }
+
+    func testUnsupportedFindingFails() {
+        var e = PaperExplainer.parse(raw)!
+        e.findings = "Bigger models were much cheaper to run in production deployments."
+        XCTAssertFalse(PaperExplainer.check(e, source: source).passed)
+    }
+
+    func testHTMLAddressAndExplainerText() {
+        XCTAssertEqual(Research.htmlURL(for: URL(string: "https://arxiv.org/abs/2410.01234v2")!)?.absoluteString,
+                       "https://arxiv.org/html/2410.01234")
+        let text = Research.explainerText(abstract: "A.", introduction: "I.", conclusion: nil)
+        XCTAssertEqual(text, "Abstract: A.\n\nIntroduction: I.")
+    }
+
+    func testFindsIntroductionAndConclusion() {
+        let html = """
+        <html><body><article>
+        <section class="ltx_section" id="S1"><h2 class="ltx_title">1 Introduction</h2><p class="ltx_p">Agents fail on long tasks.</p></section>
+        <section class="ltx_section" id="S2"><h2 class="ltx_title">2 Method</h2><p class="ltx_p">We add tools.</p></section>
+        <section class="ltx_section" id="S5"><h2 class="ltx_title">5 Conclusion</h2><p class="ltx_p">Tools help agents.</p></section>
+        </article></body></html>
+        """
+        let (intro, end) = Research.introductionAndConclusion(fromHTML: Data(html.utf8))
+        XCTAssertEqual(intro, "Agents fail on long tasks.")
+        XCTAssertEqual(end, "Tools help agents.")
+    }
+}

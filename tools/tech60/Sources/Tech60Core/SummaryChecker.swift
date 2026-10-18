@@ -15,7 +15,8 @@ public enum SummaryChecker {
         public var evidence: [SummaryEvidence]
     }
 
-    public static func check(summary raw: String, source: String) -> Result {
+    public static func check(summary raw: String, source: String, maxWords: Int = maxWords,
+                             minimumSupport: Double = minimumSupport) -> Result {
         let summary = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         func fail(_ why: String) -> Result { Result(passed: false, reason: why, evidence: []) }
 

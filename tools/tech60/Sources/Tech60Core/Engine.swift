@@ -190,10 +190,42 @@ public actor Engine {
         return snapshot
     }
 
+    /// A paper's plain-English explainer, from its abstract plus the introduction and conclusion when arXiv
+    /// has a web version. The abstract stays the story's text; the fuller text is only used to write this.
+    private func explainPaper(_ story: Story) async -> SummaryState {
+        var intro: String?
+        var end: String?
+        if let page = Research.htmlURL(for: story.url), let data = try? await client.get(page, maxBytes: 10_000_000) {
+            (intro, end) = Research.introductionAndConclusion(fromHTML: data)
+        }
+        let text = Research.explainerText(abstract: story.sourceText, introduction: intro, conclusion: end)
+        guard story.sourceText.count >= 150 else {
+            return .withheld(reason: "arXiv gave too little text to explain this paper. Open it on arXiv to read it.")
+        }
+        do {
+            let raw = try await summarizer.explain(title: story.title, text: text)
+            guard let explainer = PaperExplainer.parse(raw) else {
+                return .withheld(reason: "The on-device model didn't write all four parts, so nothing is shown.")
+            }
+            let result = PaperExplainer.check(explainer, source: story.title + "\n" + text)
+            return result.passed
+                ? .checked(text: explainer.stored, evidence: result.evidence)
+                : .withheld(reason: "The explainer didn't pass the check against the paper (\(result.reason ?? "unknown")), so it isn't shown.")
+        } catch {
+            return .withheld(reason: "The on-device model couldn't explain it (\(error.localizedDescription)).")
+        }
+    }
+
     private func summarize(_ original: Story) async {
         inFlight.insert(original.id)
         defer { inFlight.remove(original.id) }
         var story = original
+        if story.isResearch == true {
+            story.summary = await explainPaper(story)
+            if let i = snapshot.stories.firstIndex(where: { $0.id == story.id }) { snapshot.stories[i].summary = story.summary }
+            persist()
+            return
+        }
         if story.sourceText.count < 300,
            let data = try? await client.get(story.url, maxBytes: 3_000_000),
            let page = HTMLText.articleText(fromHTML: data, minimum: 1), page.count > story.sourceText.count {
