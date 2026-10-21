@@ -87,7 +87,7 @@ starts its summary, so most open instantly.
 - New since you looked: a dot on new stories and a count in the masthead and menu bar.
 - A daily brief: one notification at the time you choose with the five stories that matter most.
 - Light and dark follow macOS. No account, no tracking, no cloud model.
-- Collapse to a ticker or a dot. The card shrinks into a one-line ticker (⌘⇧T) showing one headline at a time,
+- Collapse to a ticker or a dot. The card shrinks into a one-line ticker (⌘⇧T) whose headlines scroll continuously,
   or into a small dot (⌘⇧.) that glows when new stories arrive. Click either to come back to exactly where the
   card was. The ticker starts at the bottom of the screen and snaps to the top or bottom edge, or floats anywhere
   (hold ⌥ to skip snapping); Tech60 remembers where you left it on each display. Both stay above other windows

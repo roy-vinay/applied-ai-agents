@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+- The ticker scrolls continuously, right to left, and pauses while the pointer is over it. Speed is Slow, Normal, or Fast in the ticker's menu; Reduce Motion shows one headline at a time instead.
+- Fixed spinning-wheel stalls when collapsing, dragging, or hovering the ticker and dot: their headlines are now worked out once when stories change, not on every redraw.
 - Ticker and dot: collapse the card into a one-line ticker (⌘⇧T) or a small dot (⌘⇧.); click to restore the card's previous size, position, and tab. The dot glows when new stories arrive and returns to whatever it came from.
 - The ticker docks to the bottom edge at first, snaps to the top or bottom edge, or floats anywhere (⌥ skips snapping). Its position, and the dot's, are remembered per display and never restored off screen.
 - The ticker and dot stay above other windows, including full-screen apps, and appear on every Space; both are options.
