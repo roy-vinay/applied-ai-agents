@@ -14,6 +14,8 @@ final class CompactSettings: ObservableObject {
     private let save: Bool
     @Published var alwaysOnTop: Bool { didSet { store(alwaysOnTop, "compactAlwaysOnTop") } }
     @Published var allSpaces: Bool { didSet { store(allSpaces, "compactAllSpaces") } }
+    /// "Keep card above other windows": also over full-screen apps and on every Space.
+    @Published var cardPinned: Bool { didSet { store(cardPinned, "cardPinned") } }
     /// Leave every Tech60 window out of screen sharing and recordings (SHARE-01).
     @Published var hideFromSharing: Bool { didSet { store(hideFromSharing, "hideFromSharing") } }
     /// Seconds each headline stays on the ticker when Reduce Motion is on.
@@ -27,6 +29,7 @@ final class CompactSettings: ObservableObject {
         let d = UserDefaults.standard
         alwaysOnTop = save ? (d.object(forKey: "compactAlwaysOnTop") as? Bool ?? true) : true
         allSpaces = save ? (d.object(forKey: "compactAllSpaces") as? Bool ?? true) : true
+        cardPinned = save ? d.bool(forKey: "cardPinned") : false
         // Screenshots in CI need to capture the windows; everywhere else they are hidden from sharing.
         let allowCapture = ProcessInfo.processInfo.arguments.contains("--allow-capture")
         hideFromSharing = allowCapture ? false : (save ? (d.object(forKey: "hideFromSharing") as? Bool ?? true) : true)
@@ -83,7 +86,7 @@ final class CompactController: ObservableObject {
     private var tickerBook: PlacementBook
     private var dotBook: PlacementBook
     private lazy var ticker: CompactPanel = makePanel(size: NSSize(width: 620, height: 36), view: AnyView(TickerView(controller: self)))
-    private lazy var dot: CompactPanel = makePanel(size: NSSize(width: 44, height: 44), view: AnyView(DotView(model: model, controller: self)))
+    private lazy var dot: CompactPanel = makePanel(size: NSSize(width: Self.dotSize, height: Self.dotSize), view: AnyView(DotView(model: model, controller: self)))
     private lazy var hints: [Dock: CompactPanel] = [.top: makeHint(.top), .bottom: makeHint(.bottom)]
     private var observers: [Any] = []
     private var hintsShown: Bool?
@@ -183,7 +186,18 @@ final class CompactController: ObservableObject {
         if w.isVisible { w.orderOut(nil) } else { display(state.current) }
     }
 
+    static let dotSize: CGFloat = 56
+
     private func go(_ next: Presentation) {
+        // The first time on a display, the dot appears at the top-right corner of the window it came from,
+        // so it's obvious where the card went.
+        let from = window(for: state.current)
+        if next == .dot, let screen = from.screen, dotBook.byDisplay[screen.tech60Key] == nil {
+            let s = Self.dotSize
+            let rect = CGRect(x: from.frame.maxX - s, y: from.frame.maxY - s, width: s, height: s)
+            dotBook.remember(Placement.spot(afterDropping: rect, in: screen.visibleFrame, snapping: false), on: screen.tech60Key)
+            saveBooks()
+        }
         // The ticker and dot open on the display the card was on, the first time.
         if let screen = window(for: state.current).screen, next != .card {
             var book = next == .ticker ? tickerBook : dotBook
@@ -371,6 +385,9 @@ final class CompactController: ObservableObject {
             panel.collectionBehavior = behavior
         }
         for hint in hints.values { hint.level = .statusBar; hint.collectionBehavior = behavior }
+        // A pinned card floats over other windows, including full-screen apps, on every Space.
+        card.level = settings.cardPinned ? .floating : .normal
+        card.collectionBehavior = settings.cardPinned ? [.canJoinAllSpaces, .fullScreenAuxiliary] : []
         applySharing()
     }
 
@@ -720,17 +737,19 @@ struct DotView: View {
     var body: some View {
         ZStack {
             if hasNew {
-                Circle().fill(Palette.accent.opacity(0.16)).frame(width: 34, height: 34)
-                Circle().fill(Palette.accent.opacity(0.32)).frame(width: 26, height: 26)
-                    .opacity(reduceMotion ? 1 : (bright ? 1 : 0.45))
+                Circle().fill(Palette.accent.opacity(0.18)).frame(width: 50, height: 50)
+                    .opacity(reduceMotion ? 1 : (bright ? 1 : 0.35))
+                Circle().fill(Palette.accent.opacity(0.35)).frame(width: 38, height: 38)
+                    .opacity(reduceMotion ? 1 : (bright ? 1 : 0.5))
             }
+            // Always the accent color with a white ring and a shadow, so it stands out on any wallpaper.
             Circle()
-                .fill(hasNew ? Palette.accent : Palette.secondary)
-                .frame(width: 16, height: 16)
-                .overlay(Circle().strokeBorder(Palette.paper.opacity(0.7), lineWidth: 1.5))
-                .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
+                .fill(Palette.accent)
+                .frame(width: 24, height: 24)
+                .overlay(Circle().strokeBorder(Color.white, lineWidth: 2.5))
+                .shadow(color: .black.opacity(0.45), radius: 4, y: 1.5)
         }
-        .frame(width: 44, height: 44)
+        .frame(width: CompactController.dotSize, height: CompactController.dotSize)
         .allowsHitTesting(false)
         .background(GrabSurface(
             label: hasNew ? "Tech60, new stories. Click to restore." : "Tech60. Click to restore.",

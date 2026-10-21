@@ -96,7 +96,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
         item("Mark all as seen", #selector(markSeen))
         if model.hasBrief { item("Show today's brief", #selector(showBrief)) }
         menu.addItem(.separator())
-        item("Keep card above other windows", #selector(togglePin), on: panel.level == .floating)
+        item("Keep card above other windows", #selector(togglePin), on: compact.settings.cardPinned)
         item("Short summaries (on-device)", #selector(toggleSummaries), on: model.summariesEnabled)
         item("Sources, topics, and brief…", #selector(showSources), key: ",")
         menu.addItem(.separator())
@@ -110,7 +110,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
     @objc private func togglePause() { model.isPaused.toggle() }
     @objc private func refreshNow() { Task { await model.refresh() } }
     @objc private func markSeen() { model.markViewed() }
-    @objc private func togglePin() { panel.level = panel.level == .floating ? .normal : .floating }
+    @objc private func togglePin() { compact.settings.cardPinned.toggle() }
     @objc private func toggleSummaries() { model.summariesEnabled.toggle() }
     @objc private func quit() { NSApp.terminate(nil) }
     @objc private func showBrief() {
