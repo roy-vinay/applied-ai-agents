@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+- Keep card above other windows now also keeps the card over full-screen apps and on every Space, and is remembered after quitting.
+- The dot is larger and always orange with a white ring, and the first time it appears where the card (or ticker) was.
 - The ticker scrolls continuously, right to left, and pauses while the pointer is over it. Speed is Slow, Normal, or Fast in the ticker's menu; Reduce Motion shows one headline at a time instead.
 - Fixed spinning-wheel stalls when collapsing, dragging, or hovering the ticker and dot: their headlines are now worked out once when stories change, not on every redraw.
 - Ticker and dot: collapse the card into a one-line ticker (⌘⇧T) or a small dot (⌘⇧.); click to restore the card's previous size, position, and tab. The dot glows when new stories arrive and returns to whatever it came from.
