@@ -43,6 +43,9 @@ final class AppModel: ObservableObject {
     @Published var topicTab: String?
     /// Set by the app delegate so the card's settings button can open the settings window.
     var openSettings: () -> Void = {}
+    /// Set by the app delegate: collapse the card to the ticker, or shrink it to the dot.
+    var collapseToTicker: () -> Void = {}
+    var shrinkToDot: () -> Void = {}
     /// The row under the pointer, so a hover-started summary only runs if the pointer stayed.
     var hoveredID: String?
     private var maxScore: Double = 1
