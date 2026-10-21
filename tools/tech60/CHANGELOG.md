@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+- The dot is now a tiny Tech60 app icon, with a round orange badge when new stories arrive.
+- Fixed: clicking the dot didn't restore the card or ticker. The dot now owns its whole click area.
 - Keep card above other windows now also keeps the card over full-screen apps and on every Space, and is remembered after quitting.
 - The dot is larger and always orange with a white ring, and the first time it appears where the card (or ticker) was.
 - The ticker scrolls continuously, right to left, and pauses while the pointer is over it. Speed is Slow, Normal, or Fast in the ticker's menu; Reduce Motion shows one headline at a time instead.

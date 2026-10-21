@@ -86,7 +86,21 @@ final class CompactController: ObservableObject {
     private var tickerBook: PlacementBook
     private var dotBook: PlacementBook
     private lazy var ticker: CompactPanel = makePanel(size: NSSize(width: 620, height: 36), view: AnyView(TickerView(controller: self)))
-    private lazy var dot: CompactPanel = makePanel(size: NSSize(width: Self.dotSize, height: Self.dotSize), view: AnyView(DotView(model: model, controller: self)))
+    private lazy var dotIcon: DotIconView = {
+        let view = DotIconView(frame: NSRect(x: 0, y: 0, width: Self.dotSize, height: Self.dotSize))
+        view.controller = self
+        view.onClick = { [weak self] _, _ in self?.expand() }
+        return view
+    }()
+    private lazy var dot: CompactPanel = {
+        let panel = CompactPanel(size: NSSize(width: Self.dotSize, height: Self.dotSize))
+        // The icon draws its own shadow; a window shadow would outline the whole click area.
+        panel.hasShadow = false
+        panel.contentView = dotIcon
+        panel.level = settings.alwaysOnTop ? .statusBar : .normal
+        panel.sharingType = settings.hideFromSharing ? .none : .readOnly
+        return panel
+    }()
     private lazy var hints: [Dock: CompactPanel] = [.top: makeHint(.top), .bottom: makeHint(.bottom)]
     private var observers: [Any] = []
     private var hintsShown: Bool?
@@ -143,7 +157,7 @@ final class CompactController: ObservableObject {
     func showCurrent() {
         applySettings()
         if state.current != .card { refreshHeadlines() }
-        if state.current == .dot { dotBaseline = Set(model.clusters.map(\.id)) }
+        if state.current == .dot { dotBaseline = Set(model.clusters.map(\.id)); updateDot() }
         display(state.current)
     }
 
@@ -151,6 +165,7 @@ final class CompactController: ObservableObject {
 
     func shrinkToDot() {
         dotBaseline = Set(model.clusters.map(\.id))
+        updateDot()
         go(.dot)
     }
 
@@ -186,7 +201,7 @@ final class CompactController: ObservableObject {
         if w.isVisible { w.orderOut(nil) } else { display(state.current) }
     }
 
-    static let dotSize: CGFloat = 56
+    static let dotSize: CGFloat = 52
 
     private func go(_ next: Presentation) {
         // The first time on a display, the dot appears at the top-right corner of the window it came from,
@@ -217,6 +232,16 @@ final class CompactController: ObservableObject {
         let items = rows.map { TickerItem(id: $0.id, source: $0.lead.sourceName, title: $0.lead.title) }
         leadStories = Dictionary(rows.map { ($0.id, $0.lead) }, uniquingKeysWith: { first, _ in first })
         if items != headlines { headlines = items }
+        if state.current == .dot { updateDot() }
+    }
+
+    /// The dot shows a badge when stories arrived since it was shown.
+    private func updateDot() {
+        let hasNew = model.clusters.contains { !dotBaseline.contains($0.id) }
+        dotIcon.hasNew = hasNew
+        let latest = headlines.first?.title
+        dotIcon.toolTip = latest.map { (hasNew ? "New: " : "") + $0 + "\nClick to restore" } ?? "Click to restore Tech60"
+        dotIcon.setAccessibilityLabel(hasNew ? "Tech60, new stories. Click to restore." : "Tech60. Click to restore.")
     }
 
     func openStory(_ id: String) {
@@ -725,45 +750,6 @@ final class MarqueeView: NSView {
     }
 }
 
-/// The dot: a small circle that glows when stories arrive.
-struct DotView: View {
-    @ObservedObject var model: AppModel
-    @ObservedObject var controller: CompactController
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var bright = false
-
-    private var hasNew: Bool { model.clusters.contains { !controller.dotBaseline.contains($0.id) } }
-
-    var body: some View {
-        ZStack {
-            if hasNew {
-                Circle().fill(Palette.accent.opacity(0.18)).frame(width: 50, height: 50)
-                    .opacity(reduceMotion ? 1 : (bright ? 1 : 0.35))
-                Circle().fill(Palette.accent.opacity(0.35)).frame(width: 38, height: 38)
-                    .opacity(reduceMotion ? 1 : (bright ? 1 : 0.5))
-            }
-            // Always the accent color with a white ring and a shadow, so it stands out on any wallpaper.
-            Circle()
-                .fill(Palette.accent)
-                .frame(width: 24, height: 24)
-                .overlay(Circle().strokeBorder(Color.white, lineWidth: 2.5))
-                .shadow(color: .black.opacity(0.45), radius: 4, y: 1.5)
-        }
-        .frame(width: CompactController.dotSize, height: CompactController.dotSize)
-        .allowsHitTesting(false)
-        .background(GrabSurface(
-            label: hasNew ? "Tech60, new stories. Click to restore." : "Tech60. Click to restore.",
-            tooltip: controller.headlines.first.map { hasNew ? "New: \($0.title)" : $0.title },
-            onClick: { _, _ in controller.expand() },
-            onHover: { _ in },
-            controller: controller))
-        .onAppear {
-            guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) { bright = true }
-        }
-    }
-}
-
 /// The highlighted strip at the top or bottom edge while the ticker is dragged.
 struct SnapHintView: View {
     let edge: Dock
@@ -817,7 +803,7 @@ struct GrabSurface: NSViewRepresentable {
     }
 }
 
-final class GrabView: NSView {
+class GrabView: NSView {
     var onClick: (NSEvent.ModifierFlags, NSPoint) -> Void = { _, _ in }
     var onHover: (Bool) -> Void = { _ in }
     weak var controller: CompactController?
@@ -912,5 +898,86 @@ final class HotKeys {
             DispatchQueue.main.async { HotKeys.actions[id]?() }
             return noErr
         }, 1, &spec, nil, nil)
+    }
+}
+
+/// The dot: a tiny Tech60 app icon (a front page with the ring in its corner) and an orange badge for new
+/// stories. A plain view that owns its whole square, so every click lands on it.
+final class DotIconView: GrabView {
+    var hasNew = false {
+        didSet { if hasNew != oldValue { needsDisplay = true } }
+    }
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        setAccessibilityLabel("Tech60. Click to restore.")
+    }
+    @available(*, unavailable) required init?(coder: NSCoder) { fatalError() }
+
+    override var isFlipped: Bool { true }
+
+    // Clicks anywhere in the square, including the transparent corners, belong to the dot.
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        bounds.contains(convert(point, from: superview)) ? self : nil
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        // Nearly invisible fill so macOS doesn't pass clicks on the clear corners through to the window below.
+        NSColor(white: 0, alpha: 0.012).setFill()
+        bounds.fill()
+
+        let size: CGFloat = 34
+        let icon = NSRect(x: (bounds.width - size) / 2, y: (bounds.height - size) / 2 + 1, width: size, height: size)
+        let k = size / 30
+        let page = NSBezierPath(roundedRect: icon, xRadius: 8 * k, yRadius: 8 * k)
+
+        NSGraphicsContext.saveGraphicsState()
+        let shadow = NSShadow()
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.32)
+        shadow.shadowBlurRadius = 6
+        shadow.shadowOffset = NSSize(width: 0, height: -2)
+        shadow.set()
+        NSColor.white.setFill()
+        page.fill()
+        NSGraphicsContext.restoreGraphicsState()
+        NSColor.black.withAlphaComponent(0.08).setStroke()
+        page.lineWidth = 0.5
+        page.stroke()
+
+        func bar(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat, _ color: NSColor) {
+            color.setFill()
+            let r = NSRect(x: icon.minX + x * k, y: icon.minY + y * k, width: w * k, height: h * k)
+            NSBezierPath(roundedRect: r, xRadius: r.height / 2, yRadius: r.height / 2).fill()
+        }
+        let ink = NSColor(srgbRed: 0.09, green: 0.094, blue: 0.11, alpha: 1)
+        let grey = NSColor(srgbRed: 0.6, green: 0.63, blue: 0.68, alpha: 1)
+        bar(6, 7, 10, 3, ink)
+        bar(6, 13, 18, 2, grey)
+        bar(6, 18, 18, 2, grey)
+        bar(6, 23, 12, 2, grey)
+
+        // The Tech60 ring in the top-right corner, open at 82%, starting at 12 o'clock.
+        let accent = NSColor(srgbRed: 0.976, green: 0.451, blue: 0.086, alpha: 1)
+        let center = NSPoint(x: icon.minX + 22.5 * k, y: icon.minY + 8 * k)
+        let ring = NSBezierPath()
+        for i in 0...40 {
+            let a = -CGFloat.pi / 2 + CGFloat(i) / 40 * 2 * .pi * 0.82
+            let p = NSPoint(x: center.x + 3.4 * k * cos(a), y: center.y + 3.4 * k * sin(a))
+            i == 0 ? ring.move(to: p) : ring.line(to: p)
+        }
+        ring.lineWidth = 1.7 * k
+        ring.lineCapStyle = .round
+        accent.setStroke()
+        ring.stroke()
+
+        // New stories: a round orange badge on the top-right corner, like a Dock badge.
+        if hasNew {
+            let d: CGFloat = 13
+            let badge = NSRect(x: icon.maxX - d * 0.65, y: icon.minY - d * 0.35, width: d, height: d)
+            NSColor.white.setFill()
+            NSBezierPath(ovalIn: badge.insetBy(dx: -1.75, dy: -1.75)).fill()
+            accent.setFill()
+            NSBezierPath(ovalIn: badge).fill()
+        }
     }
 }
