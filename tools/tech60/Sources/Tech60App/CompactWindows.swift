@@ -16,8 +16,11 @@ final class CompactSettings: ObservableObject {
     @Published var allSpaces: Bool { didSet { store(allSpaces, "compactAllSpaces") } }
     /// Leave every Tech60 window out of screen sharing and recordings (SHARE-01).
     @Published var hideFromSharing: Bool { didSet { store(hideFromSharing, "hideFromSharing") } }
-    /// Seconds each headline stays on the ticker.
+    /// Seconds each headline stays on the ticker when Reduce Motion is on.
     let rotateSeconds: Double
+    /// How fast the ticker scrolls, in points per second.
+    @Published var speed: Double { didSet { if save { UserDefaults.standard.set(speed, forKey: "tickerSpeed") } } }
+    static let speeds: [(String, Double)] = [("Slow", 25), ("Normal", 40), ("Fast", 60)]
 
     init(save: Bool) {
         self.save = save
@@ -29,6 +32,8 @@ final class CompactSettings: ObservableObject {
         hideFromSharing = allowCapture ? false : (save ? (d.object(forKey: "hideFromSharing") as? Bool ?? true) : true)
         let seconds = d.double(forKey: "tickerSeconds")
         rotateSeconds = seconds >= 3 ? seconds : 8
+        let saved = save ? d.double(forKey: "tickerSpeed") : 0
+        speed = saved > 0 ? saved : 40
     }
 
     private func store(_ value: Bool, _ key: String) {
@@ -69,13 +74,19 @@ final class CompactController: ObservableObject {
     @Published private(set) var isDragging = false
     /// Story rows the dot already knew about; anything else makes it glow.
     @Published private(set) var dotBaseline: Set<String> = []
+    /// The ticker's headlines, worked out once when stories change rather than on every redraw.
+    @Published private(set) var headlines: [TickerItem] = []
+    private var leadStories: [String: Story] = [:]
+    /// The scrolling text, so a ⌘-click can find the headline under the pointer.
+    weak var marquee: MarqueeView?
 
     private var tickerBook: PlacementBook
     private var dotBook: PlacementBook
-    private lazy var ticker: CompactPanel = makePanel(size: NSSize(width: 620, height: 36), view: AnyView(TickerView(model: model, controller: self)))
+    private lazy var ticker: CompactPanel = makePanel(size: NSSize(width: 620, height: 36), view: AnyView(TickerView(controller: self)))
     private lazy var dot: CompactPanel = makePanel(size: NSSize(width: 44, height: 44), view: AnyView(DotView(model: model, controller: self)))
     private lazy var hints: [Dock: CompactPanel] = [.top: makeHint(.top), .bottom: makeHint(.bottom)]
     private var observers: [Any] = []
+    private var hintsShown: Bool?
     /// Other Tech60 windows (settings) that follow the screen-sharing setting.
     var sharedExtras: [NSWindow] = []
     private var bag: Set<AnyCancellable> = []
@@ -98,6 +109,16 @@ final class CompactController: ObservableObject {
         if args.contains("--dot") { start = PresentationState(current: .dot, previous: .ticker) }
         state = start
 
+        // Recompute the ticker's headlines after the stories settle, and only while the ticker or dot is up.
+        model.objectWillChange
+            .debounce(for: .milliseconds(400), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self, self.state.current != .card else { return }
+                    self.refreshHeadlines()
+                }
+            }
+            .store(in: &bag)
         settings.objectWillChange.sink { [weak self] _ in
             DispatchQueue.main.async { self?.applySettings() }
         }.store(in: &bag)
@@ -118,6 +139,7 @@ final class CompactController: ObservableObject {
     /// Shows whichever presentation was showing last time.
     func showCurrent() {
         applySettings()
+        if state.current != .card { refreshHeadlines() }
         if state.current == .dot { dotBaseline = Set(model.clusters.map(\.id)) }
         display(state.current)
     }
@@ -176,7 +198,19 @@ final class CompactController: ObservableObject {
         display(next)
     }
 
+    func refreshHeadlines() {
+        let rows = Array(model.visibleClusters.prefix(20))
+        let items = rows.map { TickerItem(id: $0.id, source: $0.lead.sourceName, title: $0.lead.title) }
+        leadStories = Dictionary(rows.map { ($0.id, $0.lead) }, uniquingKeysWith: { first, _ in first })
+        if items != headlines { headlines = items }
+    }
+
+    func openStory(_ id: String) {
+        if let story = leadStories[id] { model.open(story) }
+    }
+
     private func display(_ p: Presentation) {
+        if p != .card { refreshHeadlines() }
         for other in [Presentation.card, .ticker, .dot] where other != p {
             window(for: other).orderOut(nil)
         }
@@ -248,13 +282,18 @@ final class CompactController: ObservableObject {
         guard panel === ticker, let screen = panel.screen else { return }
         let target = Placement.snapTarget(for: panel.frame, in: screen.visibleFrame, snapping: !optionHeld)
         if target != snapTarget { snapTarget = target }
-        showHints(on: screen, visible: !optionHeld)
+        // Show or hide the snap highlights only when that changes, not on every mouse movement.
+        if hintsShown != !optionHeld {
+            hintsShown = !optionHeld
+            showHints(on: screen, visible: !optionHeld)
+        }
     }
 
     func dragEnded(_ panel: NSWindow, optionHeld: Bool) {
         isDragging = false
         isInteracting = false
         snapTarget = nil
+        hintsShown = nil
         hints.values.forEach { $0.orderOut(nil) }
         guard let screen = panel.screen ?? NSScreen.main else { return }
         let isTicker = panel === ticker
@@ -300,6 +339,17 @@ final class CompactController: ObservableObject {
         }
         item("Always on top", on: settings.alwaysOnTop) { [weak self] in self?.settings.alwaysOnTop.toggle() }
         item("Show on all Spaces", on: settings.allSpaces) { [weak self] in self?.settings.allSpaces.toggle() }
+        if state.current == .ticker {
+            let speed = NSMenuItem(title: "Scroll speed", action: nil, keyEquivalent: "")
+            let sub = NSMenu()
+            for (name, value) in CompactSettings.speeds {
+                let i = ClosureMenuItem(title: name) { [weak self] in self?.settings.speed = value }
+                i.state = settings.speed == value ? .on : .off
+                sub.addItem(i)
+            }
+            speed.submenu = sub
+            menu.addItem(speed)
+        }
         item("Hide from screen sharing", on: settings.hideFromSharing) { [weak self] in self?.settings.hideFromSharing.toggle() }
         item("Reset position") { [weak self] in self?.resetPosition() }
         menu.addItem(.separator())
@@ -381,19 +431,31 @@ final class ClosureMenuItem: NSMenuItem {
 
 // MARK: - Views
 
-/// The ticker: a pill with one headline at a time.
+struct TickerItem: Identifiable, Equatable {
+    let id: String
+    let source: String
+    let title: String
+}
+
+/// The ticker: a pill whose headlines scroll continuously, right to left.
 struct TickerView: View {
-    @ObservedObject var model: AppModel
     @ObservedObject var controller: CompactController
+    @ObservedObject var settings: CompactSettings
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hovering = false
     @State private var index = 0
     @State private var elapsed = 0.0
     @State private var tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    @State private var hovering = false
 
-    private var rows: [StoryCluster] { Array(model.visibleClusters.prefix(20)) }
-    private var row: StoryCluster? { rows.isEmpty ? nil : rows[index % rows.count] }
-    private var paused: Bool { hovering || controller.isInteracting || model.isPaused }
+    init(controller: CompactController) {
+        _controller = ObservedObject(wrappedValue: controller)
+        _settings = ObservedObject(wrappedValue: controller.settings)
+    }
+
+    private var items: [TickerItem] { controller.headlines }
+    private var paused: Bool { hovering || controller.isInteracting || controller.model.isPaused }
+    /// With Reduce Motion, one headline at a time without movement.
+    private var still: TickerItem? { items.isEmpty ? nil : items[index % items.count] }
 
     var body: some View {
         HStack(spacing: 8) {
@@ -406,43 +468,43 @@ struct TickerView: View {
                     Image(systemName: "pause.fill")
                         .font(.system(size: 8, weight: .bold))
                         .foregroundStyle(Palette.accent)
+                        .frame(width: 7)
                 } else {
                     Circle().fill(Palette.accent).frame(width: 7, height: 7)
                 }
-                if let row {
-                    Text(row.lead.sourceName.uppercased())
-                        .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundStyle(Palette.secondary)
-                        .lineLimit(1)
-                        .fixedSize()
-                    Text(row.lead.title)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Palette.ink)
-                        .underline(hovering)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .id(row.id)
-                        .transition(reduceMotion ? .identity : .opacity)
-                    Spacer(minLength: 4)
-                    Text("\(index % rows.count + 1) / \(rows.count)")
-                        .font(.system(size: 10.5).monospacedDigit())
-                        .foregroundStyle(Palette.secondary)
-                        .fixedSize()
-                } else {
-                    Text(model.isRefreshing ? "Checking sources" : "No stories yet")
+                if items.isEmpty {
+                    Text(controller.model.isRefreshing ? "Checking sources" : "No stories yet")
                         .font(.system(size: 13))
                         .foregroundStyle(Palette.secondary)
                     Spacer()
+                } else if reduceMotion, let still {
+                    Text(still.source.uppercased())
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .foregroundStyle(Palette.secondary)
+                        .fixedSize()
+                    Text(still.title)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Palette.ink)
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                } else {
+                    MarqueeText(items: items, paused: paused, speed: CGFloat(settings.speed), controller: controller)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .allowsHitTesting(false)
             .padding(.leading, 10)
             .frame(maxHeight: .infinity)
             .background(GrabSurface(
-                label: row.map { "Tech60 ticker: \($0.lead.title). Click to expand, Command-click to open the story." } ?? "Tech60 ticker. Click to expand.",
-                tooltip: row?.lead.title,
-                onClick: { flags in
-                    if flags.contains(.command), let row { model.open(row.lead) } else { controller.expand() }
+                label: "Tech60 ticker. Click to expand, Command-click a headline to open it.",
+                tooltip: hovering ? "Click to expand · ⌘-click a headline to open it" : nil,
+                onClick: { flags, point in
+                    if flags.contains(.command) {
+                        if reduceMotion, let still { controller.openStory(still.id) }
+                        else if let id = controller.marquee?.itemID(atWindowPoint: point) { controller.openStory(id) }
+                    } else {
+                        controller.expand()
+                    }
                 },
                 onHover: { hovering = $0 },
                 controller: controller))
@@ -456,12 +518,193 @@ struct TickerView: View {
         .overlay(Capsule().strokeBorder(Palette.rule, lineWidth: 1))
         .clipShape(Capsule())
         .onReceive(tick) { _ in
-            guard !paused, rows.count > 1 else { return }
+            // Only Reduce Motion rotates; the scroll itself is a Core Animation loop and needs no ticks.
+            guard reduceMotion, !paused, items.count > 1 else { return }
             elapsed += 1
-            guard elapsed >= controller.settings.rotateSeconds else { return }
+            guard elapsed >= settings.rotateSeconds else { return }
             elapsed = 0
-            if reduceMotion { index += 1 } else { withAnimation(.easeInOut(duration: 0.35)) { index += 1 } }
+            index += 1
         }
+    }
+}
+
+/// Continuous right-to-left scrolling text, run by Core Animation so it costs almost nothing per frame.
+struct MarqueeText: NSViewRepresentable {
+    let items: [TickerItem]
+    let paused: Bool
+    let speed: CGFloat
+    let controller: CompactController
+
+    func makeNSView(context: Context) -> MarqueeView {
+        let view = MarqueeView()
+        controller.marquee = view
+        return view
+    }
+
+    func updateNSView(_ view: MarqueeView, context: Context) {
+        view.update(items: items, speed: speed)
+        view.setPaused(paused)
+    }
+}
+
+final class MarqueeView: NSView {
+    private let strip = CALayer()
+    private let fade = CAGradientLayer()
+    private var items: [TickerItem] = []
+    private var speed: CGFloat = 40
+    /// Width of one full pass of the headlines.
+    private var cycle: CGFloat = 0
+    /// Where each headline sits within one pass.
+    private struct Span { let start: CGFloat; let end: CGFloat; let id: String }
+    private var spans: [Span] = []
+    private var paused = false
+    private var builtSize: CGSize = .zero
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        wantsLayer = true
+        layer?.masksToBounds = true
+        layer?.addSublayer(strip)
+        // Soft edges so headlines slide in and out instead of being cut.
+        fade.colors = [NSColor.clear.cgColor, NSColor.black.cgColor, NSColor.black.cgColor, NSColor.clear.cgColor]
+        fade.startPoint = CGPoint(x: 0, y: 0.5)
+        fade.endPoint = CGPoint(x: 1, y: 0.5)
+        layer?.mask = fade
+    }
+    @available(*, unavailable) required init?(coder: NSCoder) { fatalError() }
+
+    // Clicks go to the surface underneath.
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    func update(items: [TickerItem], speed: CGFloat) {
+        guard items != self.items || speed != self.speed else { return }
+        self.items = items
+        self.speed = speed
+        rebuild()
+    }
+
+    override func layout() {
+        super.layout()
+        if bounds.size != builtSize { rebuild() }
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        rebuild()
+    }
+
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        rebuild()
+    }
+
+    private func text() -> NSAttributedString {
+        let out = NSMutableAttributedString()
+        var found: [Span] = []
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            let sourceStyle: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 10.5, weight: .semibold),
+                .foregroundColor: NSColor.secondaryLabelColor.usingColorSpace(.sRGB) ?? .gray, .kern: 0.4,
+            ]
+            let titleStyle: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 13, weight: .medium),
+                .foregroundColor: NSColor.labelColor.usingColorSpace(.sRGB) ?? .black,
+            ]
+            let gapStyle: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 13),
+                .foregroundColor: NSColor.tertiaryLabelColor.usingColorSpace(.sRGB) ?? .gray,
+            ]
+            for item in items {
+                let start = out.size().width
+                out.append(NSAttributedString(string: item.source.uppercased() + "  ", attributes: sourceStyle))
+                out.append(NSAttributedString(string: item.title, attributes: titleStyle))
+                found.append(Span(start: start, end: out.size().width, id: item.id))
+                out.append(NSAttributedString(string: "      •      ", attributes: gapStyle))
+            }
+        }
+        spans = found
+        return out
+    }
+
+    private func rebuild() {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        defer { CATransaction.commit() }
+        builtSize = bounds.size
+        strip.removeAllAnimations()
+        strip.sublayers?.forEach { $0.removeFromSuperlayer() }
+        strip.speed = 1
+        strip.timeOffset = 0
+        strip.beginTime = 0
+        fade.frame = bounds
+        let edge = bounds.width > 0 ? min(0.06, 18 / bounds.width) : 0
+        fade.locations = [0, NSNumber(value: Double(edge)), NSNumber(value: Double(1 - edge)), 1]
+        guard !items.isEmpty, bounds.width > 0 else { return }
+
+        let pass = text()
+        let height = ceil(pass.size().height)
+        // Repeat a short list until one pass is wider than the ticker, so there's never a gap.
+        let line = NSMutableAttributedString(attributedString: pass)
+        let one = pass.size().width
+        var copies = 1
+        while line.size().width < bounds.width, copies < 20 {
+            line.append(pass)
+            copies += 1
+        }
+        let base = spans
+        spans = (0..<copies).flatMap { k in
+            base.map { Span(start: $0.start + CGFloat(k) * one, end: $0.end + CGFloat(k) * one, id: $0.id) }
+        }
+        cycle = one * CGFloat(copies)
+
+        let scale = window?.backingScaleFactor ?? 2
+        for k in 0..<2 {
+            let t = CATextLayer()
+            t.string = line
+            t.contentsScale = scale
+            t.isWrapped = false
+            t.frame = CGRect(x: CGFloat(k) * cycle, y: (bounds.height - height) / 2, width: cycle + 1, height: height)
+            strip.addSublayer(t)
+        }
+        strip.frame = CGRect(x: 0, y: 0, width: cycle * 2, height: bounds.height)
+
+        let scroll = CABasicAnimation(keyPath: "transform.translation.x")
+        scroll.fromValue = 0
+        scroll.toValue = -cycle
+        scroll.duration = CFTimeInterval(cycle / max(speed, 5))
+        scroll.repeatCount = .infinity
+        scroll.isRemovedOnCompletion = false
+        strip.add(scroll, forKey: "scroll")
+        if paused {
+            paused = false
+            setPaused(true)
+        }
+    }
+
+    func setPaused(_ pause: Bool) {
+        guard pause != paused else { return }
+        paused = pause
+        if pause {
+            let now = strip.convertTime(CACurrentMediaTime(), from: nil)
+            strip.speed = 0
+            strip.timeOffset = now
+        } else {
+            let pausedAt = strip.timeOffset
+            strip.speed = 1
+            strip.timeOffset = 0
+            strip.beginTime = 0
+            strip.beginTime = strip.convertTime(CACurrentMediaTime(), from: nil) - pausedAt
+        }
+    }
+
+    /// The headline under a point in window coordinates, for ⌘-click.
+    func itemID(atWindowPoint point: NSPoint) -> String? {
+        guard cycle > 0 else { return nil }
+        let x = convert(point, from: nil).x
+        let shift = (strip.presentation()?.value(forKeyPath: "transform.translation.x") as? NSNumber)?.doubleValue ?? 0
+        var at = (x - CGFloat(shift)).truncatingRemainder(dividingBy: cycle)
+        if at < 0 { at += cycle }
+        return spans.first { at >= $0.start - 12 && at <= $0.end + 12 }?.id
     }
 }
 
@@ -491,8 +734,8 @@ struct DotView: View {
         .allowsHitTesting(false)
         .background(GrabSurface(
             label: hasNew ? "Tech60, new stories. Click to restore." : "Tech60. Click to restore.",
-            tooltip: model.visibleClusters.first.map { hasNew ? "New: \($0.lead.title)" : $0.lead.title },
-            onClick: { _ in controller.expand() },
+            tooltip: controller.headlines.first.map { hasNew ? "New: \($0.title)" : $0.title },
+            onClick: { _, _ in controller.expand() },
             onHover: { _ in },
             controller: controller))
         .onAppear {
@@ -540,7 +783,7 @@ struct PillButton: View {
 struct GrabSurface: NSViewRepresentable {
     let label: String
     let tooltip: String?
-    let onClick: (NSEvent.ModifierFlags) -> Void
+    let onClick: (NSEvent.ModifierFlags, NSPoint) -> Void
     let onHover: (Bool) -> Void
     let controller: CompactController
 
@@ -556,7 +799,7 @@ struct GrabSurface: NSViewRepresentable {
 }
 
 final class GrabView: NSView {
-    var onClick: (NSEvent.ModifierFlags) -> Void = { _ in }
+    var onClick: (NSEvent.ModifierFlags, NSPoint) -> Void = { _, _ in }
     var onHover: (Bool) -> Void = { _ in }
     weak var controller: CompactController?
     private var start: NSPoint?
@@ -607,12 +850,12 @@ final class GrabView: NSView {
             let option = event.modifierFlags.contains(.option)
             controller?.dragEnded(window, optionHeld: option)
         } else {
-            onClick(event.modifierFlags)
+            onClick(event.modifierFlags, event.locationInWindow)
         }
     }
 
     override func accessibilityPerformPress() -> Bool {
-        onClick([])
+        onClick([], .zero)
         return true
     }
 }
