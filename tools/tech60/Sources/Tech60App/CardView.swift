@@ -174,6 +174,8 @@ struct CardView: View {
                 RoundButton(symbol: "arrow.clockwise", label: "Refresh", spinning: model.isRefreshing) { model.refreshNow() }
                     .keyboardShortcut("r", modifiers: .command)
                 RoundButton(symbol: "slider.horizontal.3", label: "Sources, topics, and brief") { model.openSettings() }
+                RoundButton(symbol: "rectangle.compress.vertical", label: "Collapse to ticker (⌘⇧T)") { model.collapseToTicker() }
+                    .contextMenu { Button("Shrink to dot (⌘⇧.)") { model.shrinkToDot() } }
             }
             HStack {
                 Text(Date().formatted(.dateTime.weekday(.wide).month(.wide).day()))

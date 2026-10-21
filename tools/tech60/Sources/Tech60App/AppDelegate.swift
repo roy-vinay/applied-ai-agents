@@ -44,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
     private var statusItem: NSStatusItem!
     private var sourcesWindow: NSWindow?
     private var countWatcher: Any?
+    private var compact: CompactController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let args = ProcessInfo.processInfo.arguments
@@ -54,7 +55,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
         if !model.isDemo { UNUserNotificationCenter.current().delegate = self }
         model.openSettings = { [weak self] in self?.showSources() }
         panel = makeCardPanel(model: model)
-        panel.orderFrontRegardless()
+        compact = CompactController(model: model, card: panel)
+        model.collapseToTicker = { [weak self] in self?.compact.collapseToTicker() }
+        model.shrinkToDot = { [weak self] in self?.compact.shrinkToDot() }
+        compact.showCurrent()
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.button?.image = MenuBarIcon.make()
@@ -81,7 +85,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
             if let on { i.state = on ? .on : .off }
             menu.addItem(i)
         }
-        item(panel.isVisible ? "Hide card" : "Show card", #selector(toggleCard))
+        item(compact.isVisible ? "Hide Tech60" : "Show Tech60", #selector(toggleCard))
+        if compact.current == .card {
+            item("Collapse to ticker", #selector(collapseToTicker), key: "")
+        } else {
+            item("Expand to card", #selector(expandCard), key: "")
+        }
+        if compact.current != .dot { item("Shrink to dot", #selector(shrinkToDot)) }
         item(model.isRefreshing ? "Refreshing…" : "Refresh now", #selector(refreshNow), key: "r")
         item("Mark all as seen", #selector(markSeen))
         if model.hasBrief { item("Show today's brief", #selector(showBrief)) }
@@ -93,7 +103,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
         item("Quit Tech60", #selector(quit), key: "q")
     }
 
-    @objc private func toggleCard() { panel.isVisible ? panel.orderOut(nil) : panel.orderFrontRegardless() }
+    @objc private func toggleCard() { compact.toggleVisible() }
+    @objc private func collapseToTicker() { compact.collapseToTicker() }
+    @objc private func shrinkToDot() { compact.shrinkToDot() }
+    @objc private func expandCard() { compact.showCard() }
     @objc private func togglePause() { model.isPaused.toggle() }
     @objc private func refreshNow() { Task { await model.refresh() } }
     @objc private func markSeen() { model.markViewed() }
@@ -102,7 +115,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
     @objc private func quit() { NSApp.terminate(nil) }
     @objc private func showBrief() {
         model.showBrief()
-        panel.orderFrontRegardless()
+        compact.showCard()
     }
 
     // Clicking the brief notification opens the brief on the card.
@@ -126,6 +139,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
             w.contentView = NSHostingView(rootView: SourcesView(model: model))
             w.center()
             sourcesWindow = w
+            compact.sharedExtras = [w]
+            compact.applySharing()
         }
         NSApp.activate(ignoringOtherApps: true)
         sourcesWindow?.makeKeyAndOrderFront(nil)

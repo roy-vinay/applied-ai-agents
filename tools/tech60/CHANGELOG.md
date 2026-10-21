@@ -3,6 +3,11 @@
 
 ## Unreleased
 
+- Ticker and dot: collapse the card into a one-line ticker (⌘⇧T) or a small dot (⌘⇧.); click to restore the card's previous size, position, and tab. The dot glows when new stories arrive and returns to whatever it came from.
+- The ticker docks to the bottom edge at first, snaps to the top or bottom edge, or floats anywhere (⌥ skips snapping). Its position, and the dot's, are remembered per display and never restored off screen.
+- The ticker and dot stay above other windows, including full-screen apps, and appear on every Space; both are options.
+- Tech60 windows are excluded from screen sharing and recordings by default (Hide from screen sharing).
+
 - Top has no filler: only stories with real signal (two or more outlets, a Techmeme pick, an official post, or 400+ Hacker News points). On quiet days it's shorter and says so.
 - Encyclopedia, fan wiki, and similar reference pages are never treated as news.
 - The on-device editor's prompt now defines news as recent and rates reference pages, history, fiction, and evergreen essays as not news.
