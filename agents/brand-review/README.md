@@ -15,7 +15,7 @@ objections are fixed before anyone looks.
 <a href="https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/btn-brand-review-memo-dark.svg"><img src="../../.github/assets/btn-brand-review-memo-light.svg" width="49%" alt="Decision memo D-004: why fix the review, not the draft, with a model you can change and rerun."></picture></a>
 </p>
 
-No login, works best on a laptop. Jump to: [the code](#the-code) · [how it works](#how-it-works) · [decisions](#decisions-and-trade-offs)
+No login, works best on a laptop. Jump to: [the code](#the-code) · [three theses](#three-theses) · [how it works](#how-it-works) · [decisions](#decisions-and-trade-offs)
 
 ![The core loop in 36 seconds: one brief, agents build and self-check, Legal reviews one decision, and her correction is reused on the next campaign](docs/demo.gif)
 
@@ -31,14 +31,24 @@ No login, works best on a laptop. Jump to: [the code](#the-code) · [how it work
 | **Measured in replay** | 29% fewer review rounds and repeat corrections from 104 to 3 a quarter, with zero out-of-scope edits ([benchmark](#the-code), simulated reviewers). The [D-004](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md) model predicted about 30%. |
 | **Status** | Working Python core (drafting, rendering, rules, lessons, retrieval, pre-review, workflow) with 25 must-pass evals and a replay benchmark in CI, plus a clickable web demo. Fictional brand. |
 
-## Three bets
+## Three theses
 
-1. **One agent owns each campaign.** It works in bursts, waits days on people when it has to, and only brings
-   the marketer decisions.
-2. **Reviewers teach their own agents.** A correction with a reason becomes a scoped, owned lesson that later
-   drafts apply before the reviewer sees them.
-3. **Review is the product.** Each reviewer gets a no-login link with one decision, their past rulings, and a
-   suggested fix. The agent nudges on the due date, never before a date the reviewer committed to.
+The product rests on three claims. Each one is tested here, with the evidence and a way to see it.
+
+| Thesis | The claim | Evidence in this repo | See it in the [live demo](https://brand-review-demo.vercel.app/live/) |
+| --- | --- | --- | --- |
+| **1. Long-horizon agent** | One agent carries a campaign from brief to approval. It works in bursts, waits days on people when it has to, and only brings the marketer decisions. | The campaign state machine: one holder at a time, illegal moves raise ([`workflow.py`](agent/workflow.py), eval E13). The drafter asks instead of guessing a missing fact (E17). | Start **Auto loan refinance** and follow it through Needs you, Waiting on others and Campaign status. |
+| **2. Coach the agents** | Reviewers teach their own agents. A correction with a reason becomes an owned, scoped lesson that later drafts apply before the reviewer sees them. | [`review.py`](agent/review.py), [`lessons.py`](agent/lessons.py), [`retrieval.py`](agent/retrieval.py); evals E06 to E11, E24, E25. Replay: repeat corrections 104 → 3 a quarter, zero out-of-scope edits. [Deep dive below.](#teach-the-agent-not-the-ad) | Open **Dana's review link**, teach her Legal agent, then start the **Personal loan promo**. |
+| **3. Review is the product** | Known issues are fixed before anyone looks, each reviewer gets one decision, and nothing ships with a failing check. | Pre-review and checks on what was drawn (E01 to E05, E18 to E23). Replay: review rounds 1.84 → 1.31, issues escaping review 17.7% → 8.7%. | Dana's **no-login link**; in a campaign, hide the disclaimer to see **Blocks sending**. |
+
+**What would prove each one wrong**
+
+- **Thesis 1:** campaigns still stall at handoffs, or the agent asks so often that its questions become noise.
+  This is the least tested here: the code has the state machine, not days of real waiting.
+- **Thesis 2:** most review comments turn out to be one-off judgment calls, or lessons find the right correction
+  less than half the time after a month of use ([D-004](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md)).
+- **Thesis 3:** review rounds fall but missed issues rise, which means reviewers are skimming; or reviewers keep
+  working from email instead of the link.
 
 | The reviewer's view | Every change explained |
 | --- | --- |
