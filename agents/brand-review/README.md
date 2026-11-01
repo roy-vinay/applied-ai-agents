@@ -8,12 +8,14 @@ them approved.** Generating the assets is table stakes; in a bank or an insurer,
 stall for a week. So reviewers teach their own pre-review agents through their corrections, and known
 objections are fixed before anyone looks.
 
-**[▶ Open the demo](https://brand-review-demo.vercel.app)** (no login, laptop, 10 minutes) ·
-**[The same demo, running the real code](https://brand-review-demo.vercel.app/live/)** ·
-**[Code playground](https://brand-review-demo.vercel.app/web/)** ·
-**[Read the decision memo](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md)** ·
-**[Run the code](#the-code)** ·
-**[See how it's built](#how-it-works)**
+<p>
+<a href="https://brand-review-demo.vercel.app/live/"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/btn-brand-review-live-dark.svg"><img src="../../.github/assets/btn-brand-review-live-light.svg" width="49%" alt="Start here. Live demo: the clickable product, running the real agent code in your browser. No login."></picture></a>
+<a href="https://brand-review-demo.vercel.app"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/btn-brand-review-walkthrough-dark.svg"><img src="../../.github/assets/btn-brand-review-walkthrough-light.svg" width="49%" alt="Guided walkthrough: the original clickable prototype, scripted, with a step-by-step demo guide."></picture></a>
+<a href="https://brand-review-demo.vercel.app/web/"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/btn-brand-review-playground-dark.svg"><img src="../../.github/assets/btn-brand-review-playground-light.svg" width="49%" alt="Code playground: change a brief, a rate or the copy, and watch the agent draft, render and check."></picture></a>
+<a href="https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/btn-brand-review-memo-dark.svg"><img src="../../.github/assets/btn-brand-review-memo-light.svg" width="49%" alt="Decision memo D-004: why fix the review, not the draft, with a model you can change and rerun."></picture></a>
+</p>
+
+No login, works best on a laptop. Jump to: [the code](#the-code) · [how it works](#how-it-works) · [decisions](#decisions-and-trade-offs)
 
 ![The core loop in 36 seconds: one brief, agents build and self-check, Legal reviews one decision, and her correction is reused on the next campaign](docs/demo.gif)
 
