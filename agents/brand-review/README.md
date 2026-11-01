@@ -9,6 +9,7 @@ stall for a week. So reviewers teach their own pre-review agents through their c
 objections are fixed before anyone looks.
 
 **[▶ Open the live demo](https://brand-review-demo.vercel.app)** (no login, laptop, 10 minutes) ·
+**[Run the real code in your browser](https://brand-review-demo.vercel.app/web/)** ·
 **[Read the decision memo](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md)** ·
 **[Run the code](#the-code)** ·
 **[See how it's built](#how-it-works)**
@@ -53,7 +54,12 @@ briefs and an offer sheet, through the full pipeline (draft, pre-review, render,
 | --- | --- |
 | ![Generated 300x250 display ad](docs/formats/auto-refi-display-300x250.svg) | ![Generated 728x90 leaderboard](docs/formats/auto-refi-leaderboard-728x90.svg) |
 
-Run it yourself:
+**[Run it in your browser](https://brand-review-demo.vercel.app/web/):** this page loads the files from `agent/`
+and runs them with Pyodide (Python compiled to WebAssembly). Change the brief, the offer sheet or the copy,
+and the real drafter, pre-review, renderer and checks run on your machine. It can run the 23 evals too. The
+clickable product demo above is separate and scripted; this one is the code.
+
+Or run it locally:
 
 ```bash
 git clone https://github.com/roy-vinay/applied-ai-agents
@@ -307,5 +313,6 @@ count says how big a cut to promise.
 - `benchmark/`: the seeded world and the replay; `results.json` is written on every run
 - `demo.py`: the terminal walkthrough
 - `render_examples.py`: generates `docs/formats/` from briefs
-- `index.html`: the clickable web demo, one self-contained file
+- `index.html`: the clickable web demo, one self-contained file (scripted)
+- `web/`: the in-browser runner for the real code; `web/build.py` inlines `agent/` and `evals/` into `web/index.html`
 - `docs/`: screenshots and the demo GIF
