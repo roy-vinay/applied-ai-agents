@@ -70,7 +70,7 @@ def svg(theme: str) -> str:
     # Agent core lane
     o.append(f'<rect x="290" y="76" width="610" height="420" rx="16" fill="{c["core"]}"/>')
     text(312, 104, "Agent core", 20, c["core_ink"], 700, SERIF)
-    text(430, 104, "standard-library Python, 23 must-pass evals in CI", 12.5, c["core_muted"])
+    text(430, 104, "standard-library Python, 25 must-pass evals in CI", 12.5, c["core_muted"])
     box(312, 124, 130, 112, "Drafter", ["3 directions;", "asks if a fact", "is missing"], "drafter.py", dark=True)
     box(458, 124, 130, 112, "Pre-review", ["applies lessons,", "safe rule fixes,", "re-checks"], "prereview.py", dark=True)
     box(604, 124, 130, 112, "Renderer", ["one spec, six", "formats, each", "its own layout"], "render.py", dark=True)

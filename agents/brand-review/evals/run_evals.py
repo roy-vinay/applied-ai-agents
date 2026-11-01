@@ -267,8 +267,34 @@ def e23():
     assert any(not f.ok and f.rule.endswith(":image") for f in check_rendered(spec, outs, FACTS))
 
 
+def e24():
+    """Fixing this campaign only corrects the draft and teaches nothing: the next lending draft repeats the mistake."""
+    from agent import apply_correction
+    s = LessonStore()
+    c = Correction("Dana Ruiz", "legal", "sub", r"and lower your monthly payment",
+                   "and you could lower your monthly payment", "claim")
+    out = apply_correction(refi(), c, teach=False, store=s)
+    assert "you could lower" in out.spec.sub and out.lesson is None and len(s) == 0
+    nxt = refi(campaign="Personal loan", product="personal_loan", figures=(),
+               sub="Consolidate at 9.9% APR and lower your monthly payment.")
+    assert "you could lower" not in prereview(nxt, R, s, TODAY, SRC).spec.sub
+
+
+def e25():
+    """Teaching the agent creates an owned, scoped lesson: later lending drafts arrive fixed, other products don't change."""
+    from agent import apply_correction
+    s = LessonStore()
+    c = Correction("Dana Ruiz", "legal", "sub", r"guaranteed ", "", "claim", note="No 'guaranteed' in lending claims")
+    out = apply_correction(refi(), c, teach=True, store=s, scope={"product_line": "lending"}, today=D)
+    assert out.lesson and out.lesson.owner == "legal" and out.lesson.status == "context" and "taught" in out.change.source
+    loan = refi(campaign="Personal loan", product="personal_loan", figures=(),
+                sub="Consolidate at a guaranteed 9.9% APR.")
+    assert "guaranteed" not in prereview(loan, R, s, TODAY, SRC).spec.sub.lower()
+    assert "Guaranteed" in prereview(cert(), R, s, TODAY, SRC).spec.sub
+
+
 CASES = [e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15,
-         e16, e17, e18, e19, e20, e21, e22, e23]
+         e16, e17, e18, e19, e20, e21, e22, e23, e24, e25]
 
 
 def main() -> int:

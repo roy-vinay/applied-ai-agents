@@ -10,12 +10,13 @@ from .pipeline import Production, produce
 from .render import FORMATS, check_rendered, render_all
 from .prereview import PreReviewResult, prereview
 from .retrieval import in_scope, retrieve
+from .review import Corrected, apply_correction
 from .routing import route
 from .rules import BrandRules, check, contrast_ratio
 from .spec import Change, ContentSpec, Correction, Figure, Finding
 from .workflow import Campaign, IllegalMove
 
-__all__ = ["FORMATS", "Brief", "MissingFact", "Production", "TemplateDrafter", "check_rendered",
+__all__ = ["Corrected", "apply_correction", "FORMATS", "Brief", "MissingFact", "Production", "TemplateDrafter", "check_rendered",
            "produce", "render_all", "BrandRules", "Campaign", "Change", "ContentSpec", "Correction", "Figure", "Finding",
            "IllegalMove", "Lesson", "LessonStore", "PreReviewResult", "check", "contrast_ratio",
            "in_scope", "prereview", "retrieve", "route"]

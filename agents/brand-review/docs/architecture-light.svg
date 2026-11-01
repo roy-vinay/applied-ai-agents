@@ -19,7 +19,7 @@
 <text x="54" y="385" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#59636E" text-anchor="start">(contrast, disclaimers, fit)</text>
 <rect x="290" y="76" width="610" height="420" rx="16" fill="#18202C"/>
 <text x="312" y="104" font-family="Georgia, 'Times New Roman', serif" font-size="20" font-weight="700" fill="#F0F3F6" text-anchor="start">Agent core</text>
-<text x="430" y="104" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9AA6B5" text-anchor="start">standard-library Python, 23 must-pass evals in CI</text>
+<text x="430" y="104" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9AA6B5" text-anchor="start">standard-library Python, 25 must-pass evals in CI</text>
 <rect x="312" y="124" width="130" height="112" rx="10" fill="#222C3B" stroke="#3A4658" stroke-width="1"/>
 <text x="326" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#F0F3F6" text-anchor="start">Drafter</text>
 <text x="326" y="171" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">3 directions;</text>

@@ -85,7 +85,7 @@ pre{background:var(--soft);border:1px solid var(--line);border-radius:8px;paddin
     <button data-try="missing">A product with no offer</button>
     <button data-try="reset">Reset</button>
   </div></div>
-  <button class="primary" id="evals">Run the 23 must-pass evals here</button>
+  <button class="primary" id="evals">Run the 25 must-pass evals here</button>
 </div></aside>
 <section class="stack" id="out"><div class="card muted">Waiting for Python to load…</div></section>
 </main>
@@ -161,7 +161,7 @@ $("evals").onclick = () => {
   setTimeout(() => {
     const out = py.globals.get("run_evals")();
     $("out").insertAdjacentHTML("afterbegin", `<div class="card"><h2>Must-pass evals, run in your browser just now</h2><pre>${esc(out)}</pre></div>`);
-    $("evals").textContent = "Run the 23 must-pass evals here";
+    $("evals").textContent = "Run the 25 must-pass evals here";
     window.scrollTo({top: 0, behavior: "smooth"});
   }, 30);
 };
