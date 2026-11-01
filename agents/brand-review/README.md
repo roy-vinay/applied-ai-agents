@@ -9,6 +9,7 @@ pre-review agents through their corrections, so known objections are fixed befor
 
 **[▶ Open the live demo](https://brand-review-demo.vercel.app)** (no login, laptop, 10 minutes) ·
 **[Read the decision memo](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md)** ·
+**[Run the code](#the-code)** ·
 **[See how it's built](#how-it-works)**
 
 ![The core loop in 36 seconds: one brief, agents build and self-check, Legal reviews one decision, and her correction is reused on the next campaign](docs/demo.gif)
@@ -21,8 +22,8 @@ pre-review agents through their corrections, so known objections are fixed befor
 | **The bet** | Most review rounds come from rules reviewers never wrote down. Capture those, and rounds fall. |
 | **What's new** | Each reviewer owns a pre-review agent that learns from their corrections. No model is retrained. |
 | **What it won't let through** | A rate with no disclaimer, text below contrast minimums, a chart figure that doesn't match its source |
-| **Modeled impact** | About 30% fewer review rounds; issues missed by review fall from 19% to 4% ([D-004](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md), stated assumptions) |
-| **Status** | Clickable prototype. Scripted agent behavior, real checks and layouts, fictional brand. |
+| **Measured in replay** | 29% fewer review rounds and repeat corrections from 104 to 3 a quarter, with zero out-of-scope edits ([benchmark](#the-code), simulated reviewers). The [D-004](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md) model predicted about 30%. |
+| **Status** | Working Python core (rules, lessons, retrieval, pre-review, workflow) with 15 must-pass evals and a replay benchmark in CI, plus a clickable web demo. Fictional brand. |
 
 ## Three bets
 
@@ -36,6 +37,52 @@ pre-review agents through their corrections, so known objections are fixed befor
 | The reviewer's view | Every change explained |
 | --- | --- |
 | ![No-login review link with one decision, past rulings, and a suggested fix](docs/review-link.jpg) | ![Campaign view: each change on the asset tagged by its reason and source](docs/campaign-view.jpg) |
+
+## The code
+
+The mechanism the demo shows is implemented in Python, standard library only, no API key:
+
+```bash
+git clone https://github.com/roy-vinay/applied-ai-agents
+cd applied-ai-agents/agents/brand-review
+python demo.py                      # the core loop in the terminal, with a full trace
+python -m evals.run_evals           # 15 must-pass evals, the same suite CI runs
+python -m benchmark.replay --check  # replay a quarter of campaigns, with and without lessons
+```
+
+| Module | What it does |
+| --- | --- |
+| [`agent/rules.py`](agent/rules.py) | Written brand rules: WCAG contrast, disclaimer when a rate is stated, banner length, approved images, every printed figure checked against the offer sheet. Safe fixes are automatic; figures never are. |
+| [`agent/lessons.py`](agent/lessons.py) | A reviewer's correction becomes a lesson with an owner, reason, scope and status. Only the owning function can promote or retire it; unused lessons go stale. |
+| [`agent/retrieval.py`](agent/retrieval.py) | Picks lessons by reviewing function, product line, product and region. Conflicting lessons are never applied. |
+| [`agent/prereview.py`](agent/prereview.py) | Routes the draft, applies lessons, applies safe rule fixes, re-checks, and returns every change with its source. |
+| [`agent/workflow.py`](agent/workflow.py) | The campaign state machine. Skipping review, sending a blocked draft, or publishing without a person raises. |
+
+### What the replay measures
+
+A seeded quarter of 120 campaigns across loans, mortgages, certificates, cards and branches, averaged over
+20 seeds. Simulated reviewers enforce six unwritten rules, each with a true scope, and skim: they spot 75% of
+what's wrong per round. Lessons learn the exact words a reviewer struck, so a paraphrase can slip past them.
+
+| | No lessons | Unscoped lessons | Scoped lessons |
+| --- | ---: | ---: | ---: |
+| Review rounds per campaign | 1.84 | 1.31 | **1.31** |
+| First-pass approval | 31% | 70% | **70%** |
+| Repeat corrections per quarter | 104 | 3 | **3** |
+| Edits outside the reviewer's intended scope | 0 | **18** | **0** |
+| Campaigns with an issue that escaped review | 17.7% | 8.7% | **8.7%** |
+| Wrong figures blocked before review | 6 of 6 | 6 of 6 | 6 of 6 |
+
+- **Scope is what makes lessons safe.** Unscoped lessons cut rounds just as much, but strip "guaranteed" from
+  fixed-rate certificates, where it's accurate. That's 18 wrong edits a quarter a reviewer would have to catch.
+- **It learns fast.** With scoped lessons, rounds go from 1.42 in month one to 1.26 by month three; without
+  them, 1.90 to 1.77.
+- **Fewer escapes, not more.** Fewer issues reach the reviewer, so fewer slip past a skimming one.
+
+**Caveats.** The reviewers and campaigns are simulated, and the copy reuses a small set of phrasings, so
+lesson recall here (97%) is higher than real copy would allow. The value is in the comparisons and the
+properties CI enforces, not the absolute numbers. The next step is replaying a real team's past review
+comments.
 
 ## Why this, why now
 
@@ -107,11 +154,11 @@ The Demo guide in the left rail walks through this.
 
 | Part | In this prototype |
 | --- | --- |
-| Agent reasoning and generation | **Simulated.** Scripted steps; no model calls. |
-| Workflow, states, handoffs, timers | Real logic, running in your browser |
-| Brand checks (contrast, disclaimer, banner length, sourced numbers) | Real checks on the content; edit a headline and they re-run |
+| Drafting copy | **Not modeled.** The demo is scripted; the Python core takes any draft as input, so an LLM can plug in without changing the checks or lessons. |
+| Rules, lessons, scoped retrieval, pre-review, workflow | **Real**, in the Python core ([`agent/`](agent)), tested in CI |
+| Brand checks in the web demo | Real checks on the content; edit a headline and they re-run |
 | Per-format layouts | Real templates rendering one content spec five ways |
-| Lessons and their reuse | Scripted for the demo scenarios |
+| Lessons in the web demo | Scripted for the demo scenarios; the real logic is in the Python core |
 | Insights page metrics | **Seeded, illustrative.** How a pilot would be measured, not results |
 | Brand, people, offers | Fictional |
 
@@ -236,5 +283,9 @@ count says how big a cut to promise.
 
 ## Files
 
-- `index.html`: the whole prototype, one self-contained file. Open it in any modern browser.
-- `docs/`: screenshots and the demo GIF.
+- `agent/`: the core, standard library only
+- `evals/`: 15 must-pass evals
+- `benchmark/`: the seeded world and the replay; `results.json` is written on every run
+- `demo.py`: the terminal walkthrough
+- `index.html`: the clickable web demo, one self-contained file
+- `docs/`: screenshots and the demo GIF

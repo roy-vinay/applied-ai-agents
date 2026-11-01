@@ -1,0 +1,47 @@
+{
+  "off": {
+    "mean_rounds": 1.84,
+    "first_pass": 0.312,
+    "repeat_corrections_per_quarter": 104.0,
+    "lesson_recall": 0.0,
+    "wrong_scope_edits_per_quarter": 0.0,
+    "escaped": 0.177,
+    "blocked_before_review_per_quarter": 6.0,
+    "planted_wrong_figures_per_quarter": 6.0,
+    "rounds_by_month": [
+      1.9,
+      1.84,
+      1.77
+    ]
+  },
+  "unscoped": {
+    "mean_rounds": 1.31,
+    "first_pass": 0.705,
+    "repeat_corrections_per_quarter": 2.9,
+    "lesson_recall": 0.971,
+    "wrong_scope_edits_per_quarter": 18.0,
+    "escaped": 0.087,
+    "blocked_before_review_per_quarter": 6.0,
+    "planted_wrong_figures_per_quarter": 6.0,
+    "rounds_by_month": [
+      1.42,
+      1.24,
+      1.26
+    ]
+  },
+  "scoped": {
+    "mean_rounds": 1.31,
+    "first_pass": 0.705,
+    "repeat_corrections_per_quarter": 2.9,
+    "lesson_recall": 0.971,
+    "wrong_scope_edits_per_quarter": 0.0,
+    "escaped": 0.087,
+    "blocked_before_review_per_quarter": 6.0,
+    "planted_wrong_figures_per_quarter": 6.0,
+    "rounds_by_month": [
+      1.42,
+      1.24,
+      1.26
+    ]
+  }
+}

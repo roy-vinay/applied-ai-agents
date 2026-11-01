@@ -65,7 +65,8 @@ Companion to [Building AI Agents That Survive Production](https://vinaysays.medi
 
 **[Brand Review](agents/brand-review)**: a clickable prototype of a campaign agent for regulated marketing teams.
 Reviewers teach their own pre-review agents through their corrections, so known objections are fixed before
-anyone looks. [Try the live demo](https://brand-review-demo.vercel.app) (no login), or read the reasoning in
+anyone looks. A standard-library Python core with 15 must-pass evals and a replay benchmark runs in CI: scoped
+lessons cut review rounds 29% with zero out-of-scope edits. [Try the live demo](https://brand-review-demo.vercel.app) (no login), or read the reasoning in
 [D-004](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md).
 
 ## Explore failure experiments

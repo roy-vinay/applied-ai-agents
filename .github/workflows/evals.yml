@@ -13,6 +13,19 @@ jobs:
           python-version: "3.12"
       - run: python -m evals.run_evals
       - run: python -m benchmark.failure_matrix --check
+  brand-review:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agents/brand-review
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m evals.run_evals
+      - run: python -m benchmark.replay --check
+      - run: python demo.py
   ff-01:
     runs-on: ubuntu-latest
     defaults:
