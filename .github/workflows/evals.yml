@@ -28,6 +28,7 @@ jobs:
       - run: python demo.py
       - run: python render_examples.py --check && git diff --exit-code docs/formats
       - run: python web/build.py --check
+      - run: python live/build.py --check
   ff-01:
     runs-on: ubuntu-latest
     defaults:
