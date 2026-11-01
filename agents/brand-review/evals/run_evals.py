@@ -7,6 +7,9 @@ from __future__ import annotations
 import sys
 from datetime import date
 
+from agent.drafter import DIRECTIONS, PRODUCTS, Brief, MissingFact, TemplateDrafter
+from agent.pipeline import produce
+from agent.render import FORMATS, render_all, check_rendered
 from agent import (BrandRules, Campaign, ContentSpec, Correction, Figure, IllegalMove, LessonStore,
                    check, contrast_ratio, prereview)
 
@@ -183,7 +186,89 @@ def e15():
     assert not s.stale(TODAY) and len(s.stale(date(2027, 6, 1))) == 2
 
 
-CASES = [e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15]
+OFFER = {"_name": "Q4 offer sheet, Oct 28", "auto_refi_apr": 4.2, "personal_loan_apr": 9.9,
+         "certificate_6m_apy": 3.6, "certificate_12m_apy": 4.0, "certificate_24m_apy": 3.8,
+         "balance_transfer_intro_apr": 0.0}
+FACTS = {k: v for k, v in OFFER.items() if not k.startswith("_")}
+CHART = Brief("Rates", "certificate", compare=("certificate_6m_apy", "certificate_12m_apy", "certificate_24m_apy"))
+
+
+def all_briefs():
+    return [Brief(f"{p} {d}", p, direction=d) for p in PRODUCTS for d in DIRECTIONS] + [CHART]
+
+
+def e16():
+    """The drafter never writes a number that isn't in the offer sheet."""
+    import re
+    for b in all_briefs():
+        spec = TemplateDrafter().draft(b, FACTS)
+        for num in re.findall(r"(\d+(?:\.\d+)?)%", spec.text()):
+            assert float(num) in FACTS.values(), f"{b.campaign}: {num}% invented"
+
+
+def e17():
+    """When the offer sheet lacks a fact, the drafter asks instead of guessing."""
+    for b, facts in ((Brief("x", "auto_refi"), {}), (Brief("x", "mortgage"), FACTS),
+                     (Brief("x", "certificate", compare=("certificate_60m_apy",)), FACTS)):
+        try:
+            TemplateDrafter().draft(b, facts)
+            raise AssertionError(f"{b.product}: drafted without the fact")
+        except MissingFact:
+            pass
+
+
+def e18():
+    """Every brief renders in every format, fits every text box, and is ready to send."""
+    for b in all_briefs():
+        p = produce(b, OFFER, R, None, TODAY)
+        assert p.can_send, f"{b.campaign}: {[f.evidence for f in p.blocked]}"
+        assert len(p.outputs) == (1 if b.compare else len(FORMATS))
+
+
+def e19():
+    """When a rate is stated, every rendered format carries the full disclaimer."""
+    p = produce(Brief("Refi", "auto_refi", direction="rate"), OFFER, R, None, TODAY)
+    for fmt, r in p.outputs.items():
+        assert " ".join(r.lines["disclaimer"]) == p.review.spec.disclaimer, fmt
+        assert all(line in r.svg for line in r.lines["disclaimer"]), fmt   # drawn, not just planned
+
+
+def e20():
+    """The banner is re-laid out with the short headline, not shrunk from the post."""
+    p = produce(Brief("Refi", "auto_refi"), OFFER, R, None, TODAY)
+    lb, post = p.outputs["leaderboard_728x90"], p.outputs["post_1x1"]
+    assert " ".join(lb.lines["headline"]) == p.review.spec.short_headline != p.review.spec.headline
+    assert "sub" not in lb.lines and "sub" in post.lines
+
+
+def e21():
+    """Infographic bars match the offer sheet and print their source; a tampered bar is blocked."""
+    p = produce(CHART, OFFER, R, None, TODAY)
+    assert p.can_send and "Q4 offer sheet" in p.outputs["infographic"].lines["source"][0]
+    spec = p.review.spec
+    bad = spec.with_(figures=(spec.figures[0].__class__("6-month", 3.9, "certificate_6m_apy"),) + spec.figures[1:])
+    found = check_rendered(bad, render_all(bad, R, OFFER["_name"]), FACTS, OFFER["_name"])
+    assert any(not f.ok and "6-month" in f.rule for f in found)
+
+
+def e22():
+    """A number that isn't in the offer sheet can't sneak into rendered copy."""
+    spec = TemplateDrafter().draft(Brief("Refi", "auto_refi"), FACTS).with_(sub="Rates as low as 3.9% APR.",
+                                                                              disclaimer="APR = Annual Percentage Rate.")
+    found = check_rendered(spec, render_all(spec, R), FACTS)
+    assert any(not f.ok and "3.9%" in f.rule for f in found)
+
+
+def e23():
+    """An image outside the approved library renders as a visible placeholder and blocks sending."""
+    spec = TemplateDrafter().draft(Brief("Refi", "auto_refi"), FACTS).with_(image="stock-smiling-couple")
+    outs = render_all(spec, R)
+    assert "Image needed" in outs["post_1x1"].svg
+    assert any(not f.ok and f.rule.endswith(":image") for f in check_rendered(spec, outs, FACTS))
+
+
+CASES = [e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15,
+         e16, e17, e18, e19, e20, e21, e22, e23]
 
 
 def main() -> int:
