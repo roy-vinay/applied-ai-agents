@@ -19,6 +19,12 @@ Statuses: **Shipped** · **Building** · **Next** · **Exploring**. Only a few i
 | P-05 | Model routing | A router can predict when the larger model is needed, keeping most of its quality at a fraction of its cost | Quality, failure rate, cost, latency for small-only, large-only, and routed | Exploring |
 | P-06 | Escalation under uncertainty in customer support | Explicit cost assumptions make the trade-off between missed and unnecessary escalations tunable | Missed escalations, unnecessary escalations, cost per conversation | Exploring |
 
+## Agents
+
+| ID | Experiment | Hypothesis | Measures | Status |
+| --- | --- | --- | --- | --- |
+| A-01 | [Reviewer-taught pre-review](agents/brand-review) | Storing each reviewer's corrections as scoped, owned lessons and applying them before review cuts review rounds without raising missed issues ([D-004](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md)) | Rounds per approved campaign, first-pass approval, issues missed by review, lesson recall | Building (clickable prototype shipped; runnable eval next) |
+
 ## Failure Files
 
 Each reproduces the **failure mode** behind a public incident in a fictional system, then tests mitigations.
