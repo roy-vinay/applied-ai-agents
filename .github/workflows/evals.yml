@@ -27,6 +27,7 @@ jobs:
       - run: python -m benchmark.replay --check
       - run: python demo.py
       - run: python render_examples.py --check && git diff --exit-code docs/formats
+      - run: python web/build.py --check
   ff-01:
     runs-on: ubuntu-latest
     defaults:
