@@ -3,77 +3,127 @@
   <img src="../../.github/assets/brand-review-masthead-light.svg" width="100%" alt="Brand Review: a campaign agent for regulated marketing teams, with pre-reviewers taught by each reviewer's corrections. By Vinay Roy.">
 </picture>
 
-Brand Review is a clickable prototype of an agent that takes a marketing brief to approved, on-brand assets
-for a regulated brand. It plans the campaign, builds every format, checks it against brand rules, fixes known
-reviewer objections before anyone looks, routes it to Legal, Brand and Compliance with deadlines, and follows
-up until it's approved.
+AI can draft a campaign in minutes. In a bank or an insurer, getting it approved still takes a week of review
+rounds. **Brand Review is an agent that attacks the review, not the draft:** reviewers teach their own
+pre-review agents through their corrections, so known objections are fixed before anyone looks.
 
-**[Open the live demo →](https://brand-review-demo.vercel.app)** No login. Best on a laptop. About 10 minutes.
+**[▶ Open the live demo](https://brand-review-demo.vercel.app)** (no login, laptop, 10 minutes) ·
+**[Read the decision memo](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md)** ·
+**[See how it's built](#how-it-works)**
 
-![Home: decisions waiting on the marketer, campaigns waiting on reviewers, and a demo guide](docs/home.jpg)
+![The core loop in 36 seconds: one brief, agents build and self-check, Legal reviews one decision, and her correction is reused on the next campaign](docs/demo.gif)
 
-## The problem
+## At a glance
 
-Drafting a campaign with AI now takes minutes. Getting it approved in a bank, credit union or insurer still
-takes rounds of Legal, Brand and Compliance review, and each round is a queue. Three things cause most of
-those rounds:
-
-1. **Nobody owns the next step.** Work sits between handoffs.
-2. **Reviewers enforce rules nobody wrote down.** Legal strikes "guaranteed" from every loan ad, and the same
-   fix gets made on every campaign.
-3. **Reviewers get whole files with no context.** One miss restarts the loop.
-
-Better generation doesn't touch any of these. So this prototype bets on the review loop instead.
-The reasoning, with a model you can rerun, is in
-[D-004: what should a content agent fix first?](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md)
+| | |
+| --- | --- |
+| **For** | Marketing teams at banks, credit unions and insurers, where every claim passes Legal, Brand and Compliance |
+| **The bet** | Most review rounds come from rules reviewers never wrote down. Capture those, and rounds fall. |
+| **What's new** | Each reviewer owns a pre-review agent that learns from their corrections. No model is retrained. |
+| **What it won't let through** | A rate with no disclaimer, text below contrast minimums, a chart figure that doesn't match its source |
+| **Modeled impact** | About 30% fewer review rounds; issues missed by review fall from 19% to 4% ([D-004](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md), stated assumptions) |
+| **Status** | Clickable prototype. Scripted agent behavior, real checks and layouts, fictional brand. |
 
 ## Three bets
 
-**1. One agent owns each campaign.** It works in short bursts, waits days on people when it has to, and only
-brings the marketer decisions: approve a plan, pick between options, send for review. Everything else it does
-and logs.
+1. **One agent owns each campaign.** It works in bursts, waits days on people when it has to, and only brings
+   the marketer decisions.
+2. **Reviewers teach their own agents.** A correction with a reason becomes a scoped, owned lesson that later
+   drafts apply before the reviewer sees them.
+3. **Review is the product.** Each reviewer gets a no-login link with one decision, their past rulings, and a
+   suggested fix. The agent nudges on the due date, never before a date the reviewer committed to.
 
-**2. Reviewers teach their own agents.** Legal, Brand and Compliance each own a pre-reviewer. A correction
-with a reason becomes a scoped lesson ("could lower, not lower, in lending payment claims") that later drafts
-apply before the reviewer sees them. Only a rule's owner can promote a lesson to policy. No model is retrained.
+| The reviewer's view | Every change explained |
+| --- | --- |
+| ![No-login review link with one decision, past rulings, and a suggested fix](docs/review-link.jpg) | ![Campaign view: each change on the asset tagged by its reason and source](docs/campaign-view.jpg) |
 
-![Agent team: each specialist has an owner, a job description, and the lessons it learned from people](docs/agent-team.jpg)
+<details>
+<summary><h2>Why this, why now</h2></summary>
 
-**3. Review is the product.** Known objections are fixed before review. Each reviewer opens a no-login link
-and gets one decision, with the reasoning, their own past rulings on similar claims, and a suggested fix.
-The agent nudges on the due date, never before a date the reviewer committed to.
+### The problem
 
-![The reviewer's no-login link: one decision, past rulings, and every change explained](docs/review-link.jpg)
+Three things cause most review rounds in regulated marketing:
 
-Every change the agent makes is explained on the asset, with its source: a brand rule, a reviewer's
-correction, an assumption, or a fallback.
+1. **Nobody owns the next step.** Work sits between handoffs, waiting on whoever remembers it.
+2. **Reviewers enforce rules nobody wrote down.** Legal strikes "guaranteed" from every loan ad, and the same
+   fix gets made on every campaign.
+3. **Reviewers get whole files with no context.** They skim, one miss surfaces late, and the loop restarts.
 
-![Campaign view: one content spec laid out per format, with each change tagged by its reason](docs/campaign-view.jpg)
+Better generation fixes none of these.
 
-## A 10-minute tour
+### Who it's for
 
-The Demo guide in the left rail walks through this. The short version:
+| Role | What they need | What they get |
+| --- | --- | --- |
+| **Marketer** (daily user) | Ship on time without chasing people | Only decisions reach them; the agent chases |
+| **Legal, Brand, Compliance** (must adopt, never asked to) | Fewer, better review requests | One decision per link, no login, and an agent that stops repeating old mistakes |
+| **Marketing ops lead** (buyer) | Predictable launch dates, no compliance incidents | Time to approval, rounds, and missed issues, per team |
+
+The reviewers are the adoption risk. They don't choose the tool, so the review link has to be easier than
+email, or it fails.
+
+### Why now
+
+- **Agents can now run for days.** Durable workflows keep state and timers alive while people are away.
+- **Agents can act where reviewers already work.** Email, Slack and workflow tools, not a new login.
+- **Generation within hard constraints is reliable enough** when text is templated and image models fill only
+  image slots.
+
+### Where existing tools stop
+
+| Category | What it does well | Where it stops | What I'd take |
+| --- | --- | --- | --- |
+| Design tools with locked templates | AI can't move locked elements; low-risk templates skip approval | Reviewer decisions are logged, not fed into the next draft | Locked elements and risk-based routing |
+| Content suites with brand scoring | Per-attribute brand score, approvals through a workflow system | Checks follow documented guidelines, not each reviewer's past calls | The per-attribute score, and keeping the workflow system as record |
+| Data-to-chart tools | Spreadsheet to branded chart in seconds | Nothing ties a printed number back to its source | The import flow |
+| Ad resizing tools | One design adapted across sizes | Resizing, not compliance | Per-size layout rules |
+| General chat assistants | The bar for briefs and image quality | Text drawn into an image can't be edited or checked | Conversational briefs, image models for images only |
+
+**The gap:** these tools help make or grade the asset. None I've found uses a reviewer's past decisions to
+shape the next draft. That is the part only a customer's own reviewers can teach, which makes it hard to copy.
+
+### What I'd build first, and what I wouldn't
+
+| Build first | Later | Not in V1 |
+| --- | --- | --- |
+| Social posts, banners, single-page infographics from sourced tables | Flyers (print), more pre-reviewers, promoting lessons to rules | An image model of our own |
+| Planner, Copywriter, Designer, Brand checker, Legal pre-reviewer | Calendar, localization | A pro design tool or co-editing |
+| Checks and score, Home, the review link with routing and nudges | Brochures, motion, auto-approval of low-risk work | Publishing ads, or customer-built agents |
+
+Ranked by fewer review rounds first, then defensibility, then what one team can ship in a quarter.
+
+</details>
+
+<details>
+<summary><h2>Try it: a 10-minute tour</h2></summary>
+
+The Demo guide in the left rail walks through this.
 
 1. Start **Auto loan refinance**, pick a launch date, approve the plan.
 2. Watch the specialists build, self-check and fix before review.
-3. Send it to Legal, then open **Dana's review link** and correct the payment claim with a reason.
+3. Send it to Legal, then open **Dana's review link** and take the suggested fix.
 4. Start **Personal loan promo**. The agent applies Dana's lesson before she sees it.
-5. In **Agent team**, retire that lesson and run it again: Dana has to repeat herself.
+5. In **Agent team**, retire that lesson and run the promo again: Dana has to repeat herself.
 6. Try **Rates infographic**: a chart figure that doesn't match its source blocks sending.
 
-## What's real and what's simulated
+### What's real and what's simulated
 
 | Part | In this prototype |
 | --- | --- |
 | Agent reasoning and generation | **Simulated.** Scripted steps; no model calls. |
-| Workflow, states, handoffs, timers | Real logic in the page, running in your browser |
-| Brand checks (contrast, disclaimer, banner length, sourced numbers) | Real checks on the rendered content; edit a headline and they re-run |
+| Workflow, states, handoffs, timers | Real logic, running in your browser |
+| Brand checks (contrast, disclaimer, banner length, sourced numbers) | Real checks on the content; edit a headline and they re-run |
 | Per-format layouts | Real templates rendering one content spec five ways |
 | Lessons and their reuse | Scripted for the demo scenarios |
-| Insights page metrics | **Seeded, illustrative.** A worked example of how a pilot would be measured, not results |
+| Insights page metrics | **Seeded, illustrative.** How a pilot would be measured, not results |
 | Brand, people, offers | Fictional |
 
-## How it would be built
+</details>
+
+<details>
+<summary><h2>How it works</h2></summary>
+
+### Architecture
 
 ```mermaid
 flowchart TB
@@ -94,14 +144,71 @@ flowchart TB
     Workflow -.- Review
 ```
 
-- **Brand rules compile into template constraints.** Agents fill templates; they don't draw text.
-- **Image models fill image slots only.** Text drawn into an image can't be edited or checked.
-- **A durable workflow engine** keeps campaign state and timers alive across days of waiting on people.
-- **Each agent is a versioned job description** with its own memory and an eval set every edit must pass.
-- **Lessons are retrieved, not trained.** Each has an owner, a scope, a reason and a usage count, so it can be
-  audited, promoted or retired.
+- **Agents fill templates; they don't draw text.** Brand rules compile into template constraints, and a renderer
+  draws every format from one content spec. Text stays editable and checkable.
+- **A durable workflow engine** keeps each campaign's state and timers alive across days of waiting.
+- **Each agent is a versioned job description** with its own memory and an eval set every edit must pass, so a
+  bad edit can be rolled back.
 
-## Decisions and trade-offs
+### Campaign lifecycle
+
+Every campaign moves through six stages. At any moment exactly one party holds it: the marketer, a reviewer,
+an agent, or the clock.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Brief
+    Brief --> Plan: agent drafts plan
+    Plan --> Create: marketer approves
+    Plan --> Plan: agent asks before guessing a regulated term
+    Create --> Create: self-check fails, agent fixes
+    Create --> Review: hard rules pass, marketer sends
+    Review --> Create: reviewer requests a change
+    Review --> Review: reviewers conflict, marketer decides
+    Review --> Approved: all reviewers approve
+    Approved --> Live: a person hands off to the scheduler
+    Live --> [*]
+```
+
+### A lesson
+
+A reviewer's correction becomes a record like this. Every field is something a person can audit.
+
+```json
+{
+  "id": "lsn_0142",
+  "text": "Write 'could lower', not 'lower', in payment claims",
+  "reason": "claim",
+  "owner": "Legal",
+  "taught_by": { "reviewer": "Dana Ruiz", "campaign": "Auto loan refinance", "asset_version": "v3" },
+  "scope": { "product_line": "lending", "region": "all", "claim_type": "payment" },
+  "status": "context",
+  "uses": 1,
+  "repeats_avoided": 1,
+  "last_used": "2026-10-31"
+}
+```
+
+- **Status** moves from `context` (guides the agent) to `proposed` to `rule` (enforced). Only the owning
+  function can promote or retire a lesson.
+- **Retrieval** filters by the reviewer function a draft is routed to, then by product line, region and claim
+  type, and ranks by recency and past use. A lesson that doesn't match the scope is never applied.
+- **Conflicts** between lessons, or between reviewers, go to the marketer. The agent never picks a side.
+- **Staleness:** a lesson unused for six months is flagged to its owner.
+
+### How I'd test it
+
+| Layer | Test | Pass bar |
+| --- | --- | --- |
+| Hard rules | Must-pass cases in CI: rate without disclaimer, low contrast, mismatched figure | Every case blocks sending |
+| Lessons offline | Replay a quarter of past corrections: would the right lesson have fired on the next draft? | Recall above 50%, wrong-scope applications near zero |
+| Agent edits | Each job-description change re-runs its eval set | No regression on must-pass cases |
+| Pilot | Same teams, last 90 days as baseline, matched group where possible | See below |
+
+</details>
+
+<details>
+<summary><h2>Decisions and trade-offs</h2></summary>
 
 | Decision | Why | Given up |
 | --- | --- | --- |
@@ -110,17 +217,34 @@ flowchart TB
 | Agent asks before guessing on regulated terms | A wrong rate or fee is the worst failure in this domain | Some speed: the marketer gets an extra question |
 | Conflicting feedback goes to the marketer | Choosing between Legal and Brand is a human call | Full autonomy on conflicts |
 | Publishing always waits for a person | Approval and publishing are different decisions | A fully hands-off pipeline |
+| Reviewers tag a reason with each correction | The reason decides what the agent learns and where it applies | A few seconds per comment |
 
-## How I'd measure it
+</details>
 
-Primary: **review rounds per approved campaign set**, paired with **issues missed by review**, because
-optimizing rounds alone rewards reviewers for skimming. Secondary: p90 time to approval, first-pass approval,
-and repeat corrections per reviewer. Guardrail: zero post-publish compliance violations.
+<details>
+<summary><h2>Measurement and risks</h2></summary>
 
-The model in D-004 suggests planning for about **30% fewer rounds**, with 50% as a stretch that needs strong
-lesson recall and few novel objections.
+**Primary:** review rounds per approved campaign set, **paired with** issues missed by review. Optimizing rounds
+alone rewards reviewers for skimming. **Secondary:** p90 time to approval, first-pass approval, repeat
+corrections per reviewer. **Guardrail:** zero post-publish compliance violations.
+
+The model in [D-004](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md)
+suggests planning for about **30% fewer rounds**, with 50% as a stretch that needs strong lesson recall and few
+novel objections. Before building, I'd tag a month of real review comments as written, repeat or novel: that
+count says how big a cut to promise.
+
+| Risk | Mitigation |
+| --- | --- |
+| A wrong number ships | A figure that doesn't match its source blocks sending |
+| A bad agent edit | Versioned job descriptions, eval-gated, one-click rollback |
+| The score breeds false confidence | Hard rules block on their own, whatever the score |
+| Lessons go stale or conflict | Owners, scopes, six-month staleness flags, conflicts to the marketer |
+| Reviewers don't adopt | No login, one decision per link, and their own agent visibly learning from them |
+| Customer data leaks across accounts | Lessons and content isolated per customer, never used to train shared models |
+
+</details>
 
 ## Files
 
 - `index.html`: the whole prototype, one self-contained file. Open it in any modern browser.
-- `docs/`: screenshots.
+- `docs/`: screenshots and the demo GIF.
