@@ -61,6 +61,12 @@ Companion to [Building AI Agents That Survive Production](https://vinaysays.medi
 ### Agents
 
 <a href="agents/mcp-chat"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-mcp-chat-dark.svg"><img src=".github/assets/card-mcp-chat-light.svg" width="49%" alt="MCP chat: a terminal chat app showing the Model Context Protocol end to end, client and server over stdio. Python and MCP."></picture></a>
+<a href="agents/brand-review"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-brand-review-dark.svg"><img src=".github/assets/card-brand-review-light.svg" width="49%" alt="Brand Review: a campaign agent that takes a marketing brief to approved, on-brand assets, with pre-reviewers taught by each reviewer's corrections. Clickable prototype, no login."></picture></a>
+
+**[Brand Review](agents/brand-review)**: a clickable prototype of a campaign agent for regulated marketing teams.
+Reviewers teach their own pre-review agents through their corrections, so known objections are fixed before
+anyone looks. [Try the live demo](https://brand-review-demo.vercel.app) (no login), or read the reasoning in
+[D-004](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md).
 
 ## Explore failure experiments
 
