@@ -8,8 +8,9 @@ them approved.** Generating the assets is table stakes; in a bank or an insurer,
 stall for a week. So reviewers teach their own pre-review agents through their corrections, and known
 objections are fixed before anyone looks.
 
-**[▶ Open the live demo](https://brand-review-demo.vercel.app)** (no login, laptop, 10 minutes) ·
-**[Run the real code in your browser](https://brand-review-demo.vercel.app/web/)** ·
+**[▶ Open the demo](https://brand-review-demo.vercel.app)** (no login, laptop, 10 minutes) ·
+**[The same demo, running the real code](https://brand-review-demo.vercel.app/live/)** ·
+**[Code playground](https://brand-review-demo.vercel.app/web/)** ·
 **[Read the decision memo](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md)** ·
 **[Run the code](#the-code)** ·
 **[See how it's built](#how-it-works)**
@@ -58,6 +59,13 @@ briefs and an offer sheet, through the full pipeline (draft, pre-review, render,
 and runs them with Pyodide (Python compiled to WebAssembly). Change the brief, the offer sheet or the copy,
 and the real drafter, pre-review, renderer and checks run on your machine. It can run the 23 evals too. The
 clickable product demo above is separate and scripted; this one is the code.
+
+**[The same demo, running the real code](https://brand-review-demo.vercel.app/live/):** a copy of the clickable demo,
+built by `live/build.py` from the original without changing it. In the copy, every ad is drawn by
+`agent/render.py`, the brand checks and "blocks sending" come from `agent/rules.py` and the render checks,
+the refinance directions come from `agent/drafter.py`, and Dana's lesson is learned, applied to the personal
+loan, and retired by `agent/lessons.py`. Nudges, deadlines, insights numbers and agent run timings stay
+scripted, and the page says so. CI fails if the copy can't be rebuilt from the original.
 
 Or run it locally:
 
@@ -314,5 +322,6 @@ count says how big a cut to promise.
 - `demo.py`: the terminal walkthrough
 - `render_examples.py`: generates `docs/formats/` from briefs
 - `index.html`: the clickable web demo, one self-contained file (scripted)
+- `live/`: the demo copy wired to the real code; `live/build.py` patches a copy of `index.html` and inlines `agent/`
 - `web/`: the in-browser runner for the real code; `web/build.py` inlines `agent/` and `evals/` into `web/index.html`
 - `docs/`: screenshots and the demo GIF
