@@ -202,24 +202,10 @@ The Demo guide in the left rail walks through this.
 
 ### Architecture
 
-```mermaid
-flowchart TB
-    Brief["Brief and launch date"] --> Planner
-    Planner -->|"plan approved by marketer"| Specialists["Copywriter and Designer"]
-    Rules[("Versioned brand rules")] -->|"compile into"| Templates["Template constraints"]
-    Templates --> Specialists
-    Specialists -->|"content spec"| Renderer["Renderer: one spec, every format"]
-    ImageModel["Image model"] -.->|"fills image slots only"| Renderer
-    Renderer --> Checker["Brand checker: hard rules block"]
-    Checker --> PreReview["Pre-reviewers: Legal, Brand, Compliance"]
-    Lessons[("Scoped lessons, owned per reviewer")] --> PreReview
-    PreReview -->|"fixes known objections"| Specialists
-    PreReview --> Review["No-login review link: one decision"]
-    Review -->|"correction with a reason"| Lessons
-    Review -->|"approved"| Handoff["Approved package to the system of record"]
-    Workflow{{"Durable workflow engine: state and timers across days"}} -.- Planner
-    Workflow -.- Review
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.svg">
+  <img src="docs/architecture-light.svg" width="100%" alt="Architecture. A brief, the offer sheet and versioned brand rules feed the agent core: the drafter writes copy, pre-review applies reviewers' lessons and safe rule fixes, the renderer draws every format, and render checks verify what was drawn. The marketer sends; reviewers decide on a no-login link; each correction with a reason becomes a scoped lesson; approved packages go to the system of record.">
+</picture>
 
 - **Agents fill templates; they don't draw text.** Brand rules compile into template constraints, and a renderer
   draws every format from one content spec. Text stays editable and checkable.

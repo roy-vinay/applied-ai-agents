@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" role="img" aria-label="Brand Review architecture. A brief, the offer sheet and versioned brand rules feed the agent core: the drafter writes copy, pre-review applies reviewers' lessons and safe rule fixes, the renderer draws every format, and render checks verify what was drawn. The marketer sends; reviewers decide on a no-login link; each correction becomes a scoped lesson; approved packages go to the system of record. A campaign workflow tracks every stage.">
+<defs><marker id="a-dark" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9198A1"/></marker><marker id="o-dark" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#FF8A3D"/></marker></defs>
+<rect width="1200" height="640" fill="#0D1117"/>
+<text x="40" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#9198A1" text-anchor="start">INPUTS</text>
+<text x="300" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#9198A1" text-anchor="start">AGENT CORE</text>
+<text x="940" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#9198A1" text-anchor="start">PEOPLE AND SYSTEMS</text>
+<line x1="40" y1="58" x2="1160" y2="58" stroke="#30363D"/>
+<rect x="40" y="92" width="210" height="78" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1"/>
+<text x="54" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#E6EDF3" text-anchor="start">Brief</text>
+<text x="54" y="139" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">What, who, where it runs,</text>
+<text x="54" y="157" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">and the launch date</text>
+<rect x="40" y="206" width="210" height="78" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1"/>
+<text x="54" y="232" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#E6EDF3" text-anchor="start">Offer sheet</text>
+<text x="54" y="253" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">The only source of every</text>
+<text x="54" y="271" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">number an ad may print</text>
+<rect x="40" y="320" width="210" height="78" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1"/>
+<text x="54" y="346" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#E6EDF3" text-anchor="start">Brand rules</text>
+<text x="54" y="367" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">Versioned; owned by Brand</text>
+<text x="54" y="385" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">(contrast, disclaimers, fit)</text>
+<rect x="290" y="76" width="610" height="420" rx="16" fill="#1C2533"/>
+<text x="312" y="104" font-family="Georgia, 'Times New Roman', serif" font-size="20" font-weight="700" fill="#F0F3F6" text-anchor="start">Agent core</text>
+<text x="430" y="104" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9AA6B5" text-anchor="start">standard-library Python, 23 must-pass evals in CI</text>
+<rect x="312" y="124" width="130" height="112" rx="10" fill="#2A3446" stroke="#3D4A5E" stroke-width="1"/>
+<text x="326" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#F0F3F6" text-anchor="start">Drafter</text>
+<text x="326" y="171" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">3 directions;</text>
+<text x="326" y="189" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">asks if a fact</text>
+<text x="326" y="207" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">is missing</text>
+<text x="326" y="224" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11.5" font-weight="600" fill="#FF8A3D" text-anchor="start">drafter.py</text>
+<rect x="458" y="124" width="130" height="112" rx="10" fill="#2A3446" stroke="#3D4A5E" stroke-width="1"/>
+<text x="472" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#F0F3F6" text-anchor="start">Pre-review</text>
+<text x="472" y="171" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">applies lessons,</text>
+<text x="472" y="189" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">safe rule fixes,</text>
+<text x="472" y="207" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">re-checks</text>
+<text x="472" y="224" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11.5" font-weight="600" fill="#FF8A3D" text-anchor="start">prereview.py</text>
+<rect x="604" y="124" width="130" height="112" rx="10" fill="#2A3446" stroke="#3D4A5E" stroke-width="1"/>
+<text x="618" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#F0F3F6" text-anchor="start">Renderer</text>
+<text x="618" y="171" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">one spec, six</text>
+<text x="618" y="189" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">formats, each</text>
+<text x="618" y="207" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">its own layout</text>
+<text x="618" y="224" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11.5" font-weight="600" fill="#FF8A3D" text-anchor="start">render.py</text>
+<rect x="750" y="124" width="130" height="112" rx="10" fill="#2A3446" stroke="#3D4A5E" stroke-width="1"/>
+<text x="764" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#F0F3F6" text-anchor="start">Render checks</text>
+<text x="764" y="171" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">what was drawn:</text>
+<text x="764" y="189" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">numbers vs offer</text>
+<text x="764" y="207" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">sheet, disclaimer</text>
+<text x="764" y="224" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11.5" font-weight="600" fill="#FF8A3D" text-anchor="start">render.py</text>
+<rect x="312" y="300" width="130" height="112" rx="10" fill="#2A3446" stroke="#3D4A5E" stroke-width="1"/>
+<text x="326" y="326" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#F0F3F6" text-anchor="start">Rules</text>
+<text x="326" y="347" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">WCAG contrast,</text>
+<text x="326" y="365" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">disclaimers,</text>
+<text x="326" y="383" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">approved images</text>
+<text x="326" y="400" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11.5" font-weight="600" fill="#FF8A3D" text-anchor="start">rules.py</text>
+<rect x="458" y="300" width="130" height="112" rx="10" fill="#2A3446" stroke="#FF8A3D" stroke-width="2"/>
+<text x="472" y="326" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#F0F3F6" text-anchor="start">Lessons</text>
+<text x="472" y="347" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">owned, scoped;</text>
+<text x="472" y="365" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">only in-scope</text>
+<text x="472" y="383" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">ones apply</text>
+<text x="472" y="400" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11.5" font-weight="600" fill="#FF8A3D" text-anchor="start">lessons.py</text>
+<rect x="604" y="300" width="130" height="112" rx="10" fill="#2A3446" stroke="#3D4A5E" stroke-width="1"/>
+<text x="618" y="326" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#F0F3F6" text-anchor="start">Routing</text>
+<text x="618" y="347" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">picks reviewers</text>
+<text x="618" y="365" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">and whose</text>
+<text x="618" y="383" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9AA6B5" text-anchor="start">lessons apply</text>
+<text x="618" y="400" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11.5" font-weight="600" fill="#FF8A3D" text-anchor="start">routing.py</text>
+<polyline points="442,180 456,180" fill="none" stroke="#9198A1" stroke-width="1.6" marker-end="url(#a-dark)"/>
+<polyline points="588,180 602,180" fill="none" stroke="#9198A1" stroke-width="1.6" marker-end="url(#a-dark)"/>
+<polyline points="734,180 748,180" fill="none" stroke="#9198A1" stroke-width="1.6" marker-end="url(#a-dark)"/>
+<polyline points="545,300 545,238" fill="none" stroke="#9198A1" stroke-width="1.6" marker-end="url(#a-dark)"/>
+<polyline points="377,300 377,270 495,270 495,238" fill="none" stroke="#9198A1" stroke-width="1.6" marker-end="url(#a-dark)"/>
+<polyline points="420,300 420,258 815,258 815,238" fill="none" stroke="#9198A1" stroke-width="1.6" marker-end="url(#a-dark)"/>
+<polyline points="604,356 590,356" fill="none" stroke="#9198A1" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#a-dark)"/>
+<text x="566" y="442" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9AA6B5" text-anchor="start">Every change carries its source.</text>
+<text x="566" y="460" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9AA6B5" text-anchor="start">A failing required check blocks sending.</text>
+<text x="566" y="478" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9AA6B5" text-anchor="start">Conflicting lessons: a person decides.</text>
+<polyline points="250,131 310,131" fill="none" stroke="#9198A1" stroke-width="1.6" marker-end="url(#a-dark)"/>
+<polyline points="250,245 280,245 280,160 310,160" fill="none" stroke="#9198A1" stroke-width="1.6" marker-end="url(#a-dark)"/>
+<polyline points="250,359 310,359" fill="none" stroke="#9198A1" stroke-width="1.6" marker-end="url(#a-dark)"/>
+<rect x="930" y="76" width="230" height="420" rx="16" fill="#221A12" stroke="#30363D"/>
+<rect x="948" y="96" width="194" height="92" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1"/>
+<text x="962" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#E6EDF3" text-anchor="start">Marketer</text>
+<text x="962" y="143" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">approves the plan; sends</text>
+<text x="962" y="161" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">once every check passes</text>
+<rect x="948" y="226" width="194" height="110" rx="10" fill="#161B22" stroke="#FF8A3D" stroke-width="2"/>
+<text x="962" y="252" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#E6EDF3" text-anchor="start">Reviewer link</text>
+<text x="962" y="273" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">no login; one decision,</text>
+<text x="962" y="291" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">past rulings, a fix;</text>
+<text x="962" y="309" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">Legal · Brand · Compliance</text>
+<rect x="948" y="384" width="194" height="92" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1"/>
+<text x="962" y="410" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#E6EDF3" text-anchor="start">System of record</text>
+<text x="962" y="431" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">approved package;</text>
+<text x="962" y="449" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9198A1" text-anchor="start">publishing waits for a person</text>
+<polyline points="880,180 946,142" fill="none" stroke="#9198A1" stroke-width="1.6" marker-end="url(#a-dark)"/>
+<polyline points="1045,188 1045,224" fill="none" stroke="#9198A1" stroke-width="1.6" marker-end="url(#a-dark)"/>
+<text x="1053" y="212" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#9198A1" text-anchor="start">sends</text>
+<polyline points="1045,336 1045,382" fill="none" stroke="#9198A1" stroke-width="1.6" marker-end="url(#a-dark)"/>
+<text x="1053" y="366" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#9198A1" text-anchor="start">approved</text>
+<polyline points="948,300 915,300 915,536 523,536 523,414" fill="none" stroke="#FF8A3D" stroke-width="2.2" marker-end="url(#o-dark)"/>
+<text x="560" y="528" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#FF8A3D" text-anchor="start">a correction with a reason becomes a scoped lesson</text>
+<rect x="40" y="568" width="1120" height="48" rx="12" fill="#11161D" stroke="#30363D"/>
+<text x="60" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#E6EDF3" text-anchor="start">Campaign workflow</text>
+<text x="230" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#E6EDF3" text-anchor="start">Brief</text>
+<text x="287.0" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="400" fill="#9198A1" text-anchor="start">→</text>
+<text x="313.0" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#E6EDF3" text-anchor="start">Plan</text>
+<text x="361.4" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="400" fill="#9198A1" text-anchor="start">→</text>
+<text x="387.4" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#E6EDF3" text-anchor="start">Create</text>
+<text x="453.0" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="400" fill="#9198A1" text-anchor="start">→</text>
+<text x="479.0" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#E6EDF3" text-anchor="start">Review</text>
+<text x="544.6" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="400" fill="#9198A1" text-anchor="start">→</text>
+<text x="570.6" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#E6EDF3" text-anchor="start">Approved</text>
+<text x="653.4" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="400" fill="#9198A1" text-anchor="start">→</text>
+<text x="679.4" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#E6EDF3" text-anchor="start">Live</text>
+<text x="1140" y="597" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198A1" text-anchor="end">one holder at a time · illegal moves raise · workflow.py</text>
+</svg>
