@@ -29,7 +29,7 @@ No login, works best on a laptop. Jump to: [the code](#the-code) · [how it work
 | **What it makes** | Social posts (1:1, 4:5, 9:16), display banners (300x250, 728x90) and sourced rate infographics, each with its own layout. Flyers and brochures are next. |
 | **What it won't let through** | A rate with no disclaimer, text below contrast minimums, a chart figure that doesn't match its source |
 | **Measured in replay** | 29% fewer review rounds and repeat corrections from 104 to 3 a quarter, with zero out-of-scope edits ([benchmark](#the-code), simulated reviewers). The [D-004](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md) model predicted about 30%. |
-| **Status** | Working Python core (drafting, rendering, rules, lessons, retrieval, pre-review, workflow) with 23 must-pass evals and a replay benchmark in CI, plus a clickable web demo. Fictional brand. |
+| **Status** | Working Python core (drafting, rendering, rules, lessons, retrieval, pre-review, workflow) with 25 must-pass evals and a replay benchmark in CI, plus a clickable web demo. Fictional brand. |
 
 ## Three bets
 
@@ -43,6 +43,36 @@ No login, works best on a laptop. Jump to: [the code](#the-code) · [how it work
 | The reviewer's view | Every change explained |
 | --- | --- |
 | ![No-login review link with one decision, past rulings, and a suggested fix](docs/review-link.jpg) | ![Campaign view: each change on the asset tagged by its reason and source](docs/campaign-view.jpg) |
+
+## Teach the agent, not the ad
+
+Most AI content tools treat a reviewer's correction as a fix to one asset. Here it can be a lesson for the agent.
+When Dana in Legal corrects a claim on the review link, she chooses: **fix this campaign only**, or **teach her
+Legal agent**, inside a scope she picks (say, all lending, every region). Teach it once, and every later draft in
+that scope arrives already fixed, citing her lesson as the reason. Outside that scope, nothing changes.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/teaching-dark.svg">
+  <img src="docs/teaching-light.svg" width="100%" alt="Fix the ad versus teach the agent. Fixing only the ad: the same payment-claim correction on the auto loan, the personal loan and the mortgage, 104 repeat corrections a quarter. Teaching the Legal agent: the personal loan arrives already fixed and the certificate is left alone as out of scope; 3 repeat corrections a quarter and zero out-of-scope edits.">
+</picture>
+
+**What teaching means here**
+
+- **Each reviewing function owns its agent.** Legal's lessons only run on drafts routed to Legal; Brand's on drafts
+  routed to Brand. Only the owner (or an admin) can change them.
+- **A lesson is data, not a retrained model.** It records who taught it, the reason, the exact edit, the scope,
+  and how often it has been used, so anyone can audit it.
+- **Teaching never changes policy on its own.** A lesson starts as context. Only its owner can promote it to a
+  brand rule, or retire it. Lessons unused for six months are flagged.
+- **Scope is what makes it safe.** Without scope, the same lessons cut review rounds just as much, but make 18
+  wrong edits a quarter, like stripping "guaranteed" from fixed-rate certificates where it's accurate.
+- **Conflicts go to a person.** If two lessons would edit the same words differently, neither is applied.
+
+**In the code:** the choice is [`agent/review.py`](agent/review.py) (`apply_correction(teach=True/False)`); lessons
+and ownership are [`agent/lessons.py`](agent/lessons.py); scoping and conflicts are
+[`agent/retrieval.py`](agent/retrieval.py). Evals E06 to E11, E14, E15, E24 and E25 pin down each property.
+**To see it:** in the [live demo](https://brand-review-demo.vercel.app/live/), open Dana's review link, choose
+"Teach your Legal agent," then start the personal loan promo. Retire the lesson in Agent team and run it again.
 
 ## The code
 
@@ -59,7 +89,7 @@ briefs and an offer sheet, through the full pipeline (draft, pre-review, render,
 
 **[Run it in your browser](https://brand-review-demo.vercel.app/web/):** this page loads the files from `agent/`
 and runs them with Pyodide (Python compiled to WebAssembly). Change the brief, the offer sheet or the copy,
-and the real drafter, pre-review, renderer and checks run on your machine. It can run the 23 evals too. The
+and the real drafter, pre-review, renderer and checks run on your machine. It can run the 25 evals too. The
 clickable product demo above is separate and scripted; this one is the code.
 
 **[The same demo, running the real code](https://brand-review-demo.vercel.app/live/):** a copy of the clickable demo,
@@ -76,7 +106,7 @@ git clone https://github.com/roy-vinay/applied-ai-agents
 cd applied-ai-agents/agents/brand-review
 python demo.py                      # brief to formats to review to lessons, with a full trace
 python render_examples.py           # regenerate the graphics above into docs/formats/
-python -m evals.run_evals           # 23 must-pass evals, the same suite CI runs
+python -m evals.run_evals           # 25 must-pass evals, the same suite CI runs
 python -m benchmark.replay --check  # replay a quarter of campaigns, with and without lessons
 ```
 
@@ -295,7 +325,7 @@ count says how big a cut to promise.
 ## Files
 
 - `agent/`: the core, standard library only
-- `evals/`: 23 must-pass evals
+- `evals/`: 25 must-pass evals
 - `benchmark/`: the seeded world and the replay; `results.json` is written on every run
 - `demo.py`: the terminal walkthrough
 - `render_examples.py`: generates `docs/formats/` from briefs

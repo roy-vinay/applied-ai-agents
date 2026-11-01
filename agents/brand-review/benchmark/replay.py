@@ -3,10 +3,10 @@
     python -m benchmark.replay            # print the table
     python -m benchmark.replay --check    # also assert the claims the README makes (used in CI)
 
-Modes
-  off       written-rule checks only; reviewers repeat their unwritten rules every time
-  unscoped  reviewers' corrections become lessons, applied everywhere they match
-  scoped    the same lessons, applied only inside the scope the reviewer chose
+Modes: what reviewers do with each correction
+  off       fix each campaign only: the agent learns nothing, reviewers repeat themselves
+  unscoped  teach the agent, but lessons apply everywhere they match
+  scoped    teach the agent, and lessons apply only inside the scope the reviewer chose
 
 Per campaign: pre-review runs, required-rule failures are fixed by the marketer before review
 (they never reach a reviewer), then reviewers review in rounds. A reviewer spots each remaining
@@ -21,7 +21,7 @@ import re
 import sys
 from pathlib import Path
 
-from agent import BrandRules, Correction, LessonStore, prereview
+from agent import BrandRules, Correction, LessonStore, apply_correction, prereview
 from agent.lessons import apply_edit
 from agent.retrieval import in_scope
 from benchmark.scenarios import HABITS, SOURCE, make_quarter
@@ -29,6 +29,7 @@ from benchmark.scenarios import HABITS, SOURCE, make_quarter
 SPOT = 0.75
 SEEDS = range(1, 21)
 MODES = ("off", "unscoped", "scoped")
+LABEL = {"off": "fix each campaign", "unscoped": "teach, unscoped", "scoped": "teach, scoped"}
 HERE = Path(__file__).parent
 
 
@@ -94,8 +95,8 @@ def run(mode: str, seed: int, quarter) -> dict:
                     m["repeat_corrections"] += 1
                 if hid:
                     seen.add(hid)
-                if store is not None:
-                    store.learn(c, scope, day)
+                if store is not None:   # the reviewer chose "teach my agent", in the scope they meant
+                    apply_correction(draft, c, teach=True, store=store, scope=scope, today=day)
         m["campaigns"] += 1
         m["rounds"] += rounds
         mo = min(2, i * 3 // len(quarter))
@@ -138,12 +139,12 @@ def main() -> int:
             ("repeat_corrections_per_quarter", "Repeat fixes", "{:.1f}"), ("lesson_recall", "Recall", "{:.0%}"),
             ("wrong_scope_edits_per_quarter", "Wrong-scope", "{:.1f}"), ("escaped", "Escaped", "{:.1%}"),
             ("blocked_before_review_per_quarter", "Blocked pre-review", "{:.1f}")]
-    print(f"{'Mode':10}" + "".join(f"{h:>19}" for _, h, _ in cols))
+    print(f"{'Reviewers':18}" + "".join(f"{h:>19}" for _, h, _ in cols))
     for mode, r in res.items():
-        print(f"{mode:10}" + "".join(f"{f.format(r[k]):>19}" for k, _, f in cols))
+        print(f"{LABEL[mode]:18}" + "".join(f"{f.format(r[k]):>19}" for k, _, f in cols))
     print("\nLearning curve, mean rounds by month:")
     for mode, r in res.items():
-        print(f"  {mode:10}" + "  ".join(f"month {i + 1}: {v:.2f}" for i, v in enumerate(r["rounds_by_month"])))
+        print(f"  {LABEL[mode]:18}" + "  ".join(f"month {i + 1}: {v:.2f}" for i, v in enumerate(r["rounds_by_month"])))
     (HERE / "results.json").write_text(json.dumps(res, indent=2) + "\n")
 
     if "--check" in sys.argv:

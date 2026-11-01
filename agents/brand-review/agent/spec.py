@@ -46,7 +46,7 @@ class Change:
     field: str
     before: str
     after: str
-    kind: str     # rule | lesson | fallback
+    kind: str     # rule | lesson | correction | fallback
     source: str   # e.g. "Brand rule: disclaimer required when a rate is stated"
 
 
