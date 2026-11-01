@@ -23,7 +23,7 @@ Statuses: **Shipped** · **Building** · **Next** · **Exploring**. Only a few i
 
 | ID | Experiment | Hypothesis | Measures | Status |
 | --- | --- | --- | --- | --- |
-| A-01 | [Reviewer-taught pre-review](agents/brand-review) | Storing each reviewer's corrections as scoped, owned lessons and applying them before review cuts review rounds without raising missed issues ([D-004](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md)) | Rounds per approved campaign, first-pass approval, issues missed by review, lesson recall | Building (clickable prototype shipped; runnable eval next) |
+| A-01 | [Reviewer-taught pre-review](agents/brand-review) | Storing each reviewer's corrections as scoped, owned lessons and applying them before review cuts review rounds without raising missed issues ([D-004](https://github.com/roy-vinay/ai-decision-log/blob/main/decisions/D-004-what-should-a-content-agent-fix-first.md)) | Rounds per approved campaign, first-pass approval, issues missed by review, lesson recall | Shipped (Python core, 15 evals, replay benchmark in CI; next: replay a real team's review comments) |
 
 ## Failure Files
 
