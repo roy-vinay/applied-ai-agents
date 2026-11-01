@@ -218,20 +218,10 @@ The Demo guide in the left rail walks through this.
 Every campaign moves through six stages. At any moment exactly one party holds it: the marketer, a reviewer,
 an agent, or the clock.
 
-```mermaid
-stateDiagram-v2
-    [*] --> Brief
-    Brief --> Plan: agent drafts plan
-    Plan --> Create: marketer approves
-    Plan --> Plan: agent asks before guessing a regulated term
-    Create --> Create: self-check fails, agent fixes
-    Create --> Review: hard rules pass, marketer sends
-    Review --> Create: reviewer requests a change
-    Review --> Review: reviewers conflict, marketer decides
-    Review --> Approved: all reviewers approve
-    Approved --> Live: a person hands off to the scheduler
-    Live --> [*]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/lifecycle-dark.svg">
+  <img src="docs/lifecycle-light.svg" width="100%" alt="Campaign lifecycle: Brief (agent) to Plan (marketer) to Create (agent) to Review (reviewer) to Approved (marketer) to Live. Only the marketer can send for review, and only when every required check passes. A change request sends it back to Create and adds a round. Conflicting lessons go to a person. Only a person moves Approved to Live; the agent never publishes. Illegal moves raise an error, tested by eval E13.">
+</picture>
 
 ### A lesson
 
