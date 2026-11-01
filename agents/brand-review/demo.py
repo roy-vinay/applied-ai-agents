@@ -2,6 +2,7 @@
 
     python demo.py
 
+0. A brief becomes three drafts and five rendered formats, numbers taken only from the offer sheet.
 1. An auto-loan draft goes through pre-review: rule fixes, routing, a blocked figure.
 2. Legal (Dana) corrects two payment claims on the review link. Each becomes a scoped lesson.
 3. A personal-loan draft arrives. Dana's lessons are applied before she sees it.
@@ -12,7 +13,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from agent import BrandRules, Campaign, ContentSpec, Correction, Figure, LessonStore, prereview
+from agent import (BrandRules, Brief, Campaign, ContentSpec, Correction, Figure, LessonStore, MissingFact,
+                   TemplateDrafter, prereview, produce)
 
 OFFER_SHEET = {"auto_refi_apr": 4.2, "personal_loan_apr": 9.9, "certificate_apy": 4.1}
 RULES = BrandRules()
@@ -38,6 +40,18 @@ def show(title: str, spec: ContentSpec, today: date) -> None:
 
 
 def main() -> None:
+    print(f"{B}0. Brief: 'Auto loan refinance for Pacific NW members.' The agent drafts three directions{X}")
+    brief = Brief("Auto loan refinance", "auto_refi")
+    for spec in TemplateDrafter().directions(brief, OFFER_SHEET):
+        print(f"  {D}draft:{X} {spec.headline} | {spec.sub}")
+    p = produce(brief, {"_name": "Q4 offer sheet, Oct 28", **OFFER_SHEET}, RULES, None, date(2026, 10, 20))
+    for fmt, r in p.outputs.items():
+        print(f"  {G}rendered{X} {r.layout.name:20} {D}{r.layout.w}x{r.layout.h}, headline: {' / '.join(r.lines['headline'])}{X}")
+    try:
+        TemplateDrafter().draft(Brief("Jumbo mortgage", "mortgage"), OFFER_SHEET)
+    except MissingFact as e:
+        print(f"  {Y}asks instead of guessing:{X} {e}")
+
     c = Campaign("Auto loan refinance")
     c.move("plan", "agent", "drafted plan and 3 directions")
     c.move("create", "marketer", "Brielle approved the benefit-led direction")
