@@ -37,8 +37,7 @@ pre-review agents through their corrections, so known objections are fixed befor
 | --- | --- |
 | ![No-login review link with one decision, past rulings, and a suggested fix](docs/review-link.jpg) | ![Campaign view: each change on the asset tagged by its reason and source](docs/campaign-view.jpg) |
 
-<details>
-<summary><h2>Why this, why now</h2></summary>
+## Why this, why now
 
 ### The problem
 
@@ -92,10 +91,8 @@ shape the next draft. That is the part only a customer's own reviewers can teach
 
 Ranked by fewer review rounds first, then defensibility, then what one team can ship in a quarter.
 
-</details>
 
-<details>
-<summary><h2>Try it: a 10-minute tour</h2></summary>
+## Try it: a 10-minute tour
 
 The Demo guide in the left rail walks through this.
 
@@ -118,10 +115,8 @@ The Demo guide in the left rail walks through this.
 | Insights page metrics | **Seeded, illustrative.** How a pilot would be measured, not results |
 | Brand, people, offers | Fictional |
 
-</details>
 
-<details>
-<summary><h2>How it works</h2></summary>
+## How it works
 
 ### Architecture
 
@@ -205,10 +200,8 @@ A reviewer's correction becomes a record like this. Every field is something a p
 | Agent edits | Each job-description change re-runs its eval set | No regression on must-pass cases |
 | Pilot | Same teams, last 90 days as baseline, matched group where possible | See below |
 
-</details>
 
-<details>
-<summary><h2>Decisions and trade-offs</h2></summary>
+## Decisions and trade-offs
 
 | Decision | Why | Given up |
 | --- | --- | --- |
@@ -219,10 +212,8 @@ A reviewer's correction becomes a record like this. Every field is something a p
 | Publishing always waits for a person | Approval and publishing are different decisions | A fully hands-off pipeline |
 | Reviewers tag a reason with each correction | The reason decides what the agent learns and where it applies | A few seconds per comment |
 
-</details>
 
-<details>
-<summary><h2>Measurement and risks</h2></summary>
+## Measurement and risks
 
 **Primary:** review rounds per approved campaign set, **paired with** issues missed by review. Optimizing rounds
 alone rewards reviewers for skimming. **Secondary:** p90 time to approval, first-pass approval, repeat
@@ -242,7 +233,6 @@ count says how big a cut to promise.
 | Reviewers don't adopt | No login, one decision per link, and their own agent visibly learning from them |
 | Customer data leaks across accounts | Lessons and content isolated per customer, never used to train shared models |
 
-</details>
 
 ## Files
 
