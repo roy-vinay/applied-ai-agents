@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="210" viewBox="0 0 480 210" role="img" aria-label="Code playground: Change a brief, a rate or the copy, and watch the agent draft, render and check. Open the playground">
+<defs><clipPath id="c-btn-brand-review-playground-dark"><rect x="1.5" y="1.5" width="477" height="207" rx="14"/></clipPath></defs>
+<rect x="1.5" y="1.5" width="477" height="207" rx="14" fill="#1C2533" stroke="#30363D" stroke-width="1"/>
+<g clip-path="url(#c-btn-brand-review-playground-dark)"><text x="486" y="262" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-size="220" font-weight="700" fill="#2A3446">P</text></g>
+<text x="28" y="52" font-family="Georgia, 'Times New Roman', serif" font-size="29" font-weight="700" fill="#F0F3F6">Code playground</text>
+<text x="28" y="92" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">Change a brief, a rate or the copy, and</text>
+<text x="28" y="117" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">watch the agent draft, render and check.</text>
+<text x="28" y="186" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FF8A3D">Open the playground  →</text>
+</svg>
