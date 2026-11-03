@@ -821,7 +821,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
 
     private func finishInstruction(_ instruction: String, _ phrases: [String], _ style: EmphasisStyle) {
         guard !phrases.isEmpty else {
-            emphasisPanel.setStatus("Nothing matched. Try naming what to look for, like \u{201C}the engine names\u{201D}.")
+            emphasisPanel.setStatus("Nothing matched. Try naming what to look for, like \u{201C}the tool names\u{201D}.")
             return
         }
         setRules(rules + [EmphasisRule(label: instruction, phrases: phrases, style: style)])

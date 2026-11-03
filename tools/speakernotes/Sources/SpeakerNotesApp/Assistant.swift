@@ -3,7 +3,7 @@ import Foundation
 import FoundationModels
 #endif
 
-/// Finds the phrases an instruction refers to ("the names of the engines"), using Apple's on-device
+/// Finds the phrases an instruction refers to ("the parts of an agent"), using Apple's on-device
 /// language model (macOS 26 with Apple Intelligence). The notes never leave the Mac.
 enum Assistant {
     /// Nil when the model is ready; otherwise a short reason it can't be used.

@@ -78,7 +78,7 @@ enum EmphasisStyle: String, Codable, CaseIterable {
     }
 }
 
-/// A set of phrases shown with one emphasis style, for example "engine names" → highlighted.
+/// A set of phrases shown with one emphasis style, for example "the parts of an agent" → highlighted.
 struct EmphasisRule: Codable, Equatable, Identifiable {
     var id = UUID()
     var label: String
