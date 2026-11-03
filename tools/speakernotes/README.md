@@ -1,13 +1,13 @@
 <picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-masthead-dark.svg"><img src="../../.github/assets/speakernotes-masthead-light.svg" width="100%" alt="SpeakerNotes: speaker notes that float over your slides and stay out of your screen share. By Vinay Roy."></picture>
 
-<p align="center"><b>Speaker notes that float over your slides on Zoom and Google Meet, follow along slide by slide,<br>and stay out of your screen share.</b></p>
+<p align="center"><b>Speaker notes that float over your slides on Zoom and Google Meet.<br>They stay hidden even when you share your entire screen, and they move when your slides move.</b></p>
 
 <p>
 <a href="https://github.com/roy-vinay/applied-ai-agents/releases/download/speakernotes-latest/SpeakerNotes-macOS.zip"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/btn-speakernotes-download-dark.svg"><img src="../../.github/assets/btn-speakernotes-download-light.svg" width="49%" alt="Download for Mac: free for macOS 13 and later. Get SpeakerNotes-macOS.zip"></picture></a>
 <a href="#install"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/btn-speakernotes-install-dark.svg"><img src="../../.github/assets/btn-speakernotes-install-light.svg" width="49%" alt="One-line install: paste one command, run it again to update"></picture></a>
 </p>
 
-<img src="../../.github/assets/speakernotes-hero.svg" width="100%" alt="What you see: your notes over your slides. What your audience sees: just your slides.">
+<img src="../../.github/assets/speakernotes-demo.gif" width="100%" alt="Animated demo. Left, what you see: you press Next, and the slide and your notes advance together. Right, what your audience sees while you share your entire screen: the same slides, with the notes window hidden.">
 
 <p align="center"><a href="#share">How it hides</a> · <a href="#slides">Slides</a> · <a href="#follow">Following</a> · <a href="#read">Reading</a> · <a href="#demo">Demo-safe</a> · <a href="#decisions">Decisions</a> · <a href="#shortcuts">Shortcuts</a> · <a href="#install">Install</a></p>
 
@@ -35,7 +35,8 @@ on top of everything, with the notes for the slide you're on, that macOS leaves 
 <picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-share-flow-dark.svg"><img src="../../.github/assets/speakernotes-share-flow-light.svg" width="100%" alt="Your screen shows slides with the notes on top. macOS screen capture leaves the notes window out. Zoom, Meet and recordings get your slides without the notes."></picture>
 
 macOS lets an app mark a window as private to screen capture, and SpeakerNotes does that for its notes window.
-CI checks it on every change by capturing the screen with hiding on and off (that's the picture at the top).
+That holds when you share your **entire screen or desktop**, not just a window, and in recordings. CI checks it on
+every change by capturing the full screen with hiding on and off; the demo at the top is made from those captures.
 
 > [!TIP]
 > Test once on the Mac you present from: share your **entire screen** in a call with just yourself, and record it.
@@ -62,7 +63,7 @@ Perceive, plan, act, reflect. ==Pause here.==
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-follow-flow-dark.svg"><img src="../../.github/assets/speakernotes-follow-flow-light.svg" width="100%" alt="Keynote and PowerPoint: SpeakerNotes asks which slide is up. Google Slides, Canva and PDFs: it reads the slide's title and finds the notes heading with that title. Two-way: move the notes and your slides move too."></picture>
 
-Turn on **Follow My Slides** (the ⟳ button, or <kbd>⌃⌥F</kbd>):
+**Move your slides, and the notes move with you.** Turn on **Follow My Slides** (the ⟳ button, or <kbd>⌃⌥F</kbd>):
 
 - **Exact where it can be.** Keynote and PowerPoint report the slide that's up, even full screen. Numbered headings
   (`## 7. Pricing`) are matched by number.
