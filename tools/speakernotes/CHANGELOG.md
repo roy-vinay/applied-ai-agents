@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0
+
+- **Moving the notes moves your slides too.** While following is on (Follow My Slides or Move with My Slide Keys), the ⌃⌥ arrow hotkeys, the arrow keys in the notes, the ‹ › buttons and the slide list also move your presentation. Keynote and PowerPoint go to the exact slide; other apps (Google Slides in a browser, a PDF viewer) get → or ← once per slide. Turn it off with **Slides > Moving the Notes Moves My Slides**. Sending keys to another app needs Accessibility permission.
+- **Much faster following of other apps.** SpeakerNotes looks four times a second, skips reading when nothing changed, reads big text quickly first and carefully only when needed, and moves at once on a near-exact title. A slide change now shows in the notes in well under a second instead of several seconds. Keynote and PowerPoint are checked four times a second too.
+
 ## 0.3.1
 
 - **Following other apps is much stricter.** It now reads only the slide's title, not every word on screen, and moves only when nearly all of a notes title's words are in it. One shared word is never enough, and jumping more than three slides needs a near-exact title. Text recognition's one-letter misreads are tolerated.

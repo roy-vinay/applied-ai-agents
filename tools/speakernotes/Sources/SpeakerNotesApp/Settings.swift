@@ -40,6 +40,11 @@ enum Settings {
         get { bool("followSlides", false) }
         set { defaults.set(newValue, forKey: "followSlides") }
     }
+    /// When the notes move (your hotkeys, buttons or arrow keys in the notes), move the slides too.
+    static var moveSlidesToo: Bool {
+        get { bool("moveSlidesToo", true) }
+        set { defaults.set(newValue, forKey: "moveSlidesToo") }
+    }
     static var showMenuBarIcon: Bool {
         get { bool("showMenuBarIcon", true) }
         set { defaults.set(newValue, forKey: "showMenuBarIcon") }

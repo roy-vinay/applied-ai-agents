@@ -82,11 +82,14 @@ hotkeys.
 - **Keynote and PowerPoint: exact.** SpeakerNotes asks the app which slide is showing, twice a second, even
   while it plays full screen. When your notes number their slides (`## 7. Pricing`), those numbers win, so a
   slide without notes doesn't throw the rest off.
-- **Google Slides, Canva, PDFs, anything else: it reads the slide.** About once a second it takes a quiet look at
-  the slides window, reads the title with Apple's on-device text recognition, and finds the notes slide with that
-  title. Only the title counts, not other words on screen. It moves only when nearly all of a notes title is on
+- **Google Slides, Canva, PDFs, anything else: it reads the slide.** It takes a quiet look at
+  the slides window four times a second (reading only when something changed), reads the title with Apple's on-device
+  text recognition, and finds the notes slide with that title. Only the title counts, not other words on screen. It moves only when nearly all of a notes title is on
   screen, and two readings in a row agree; a jump of more than three slides needs a near-exact title. If a title doesn't match word for
   word, Apple's on-device model can match it by meaning (macOS 26 with Apple Intelligence).
+- **Two-way.** While following is on, moving the notes moves your slides too: the ⌃⌥ arrow hotkeys, the arrow keys
+  in the notes, the buttons and the slide list. Keynote and PowerPoint go to the exact slide; other apps get → or ←.
+  So one key, from anywhere, moves both.
 - **You stay in charge.** Move by hand and following pauses for a few seconds so it doesn't snap you back. Call
   apps like Zoom are ignored, so clicking into one doesn't confuse it.
 
@@ -141,7 +144,7 @@ your slides, and **Click-through** (<kbd>⌃⌥T</kbd>) lets clicks pass through
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-status-dark.svg"><img src="../../.github/assets/speakernotes-status-light.svg" width="100%" alt="Status: 12 parser tests on every change; Apple silicon and Intel builds that open on macOS 13; launch, linking and capture hiding checked in CI; instructions not tested in CI."></picture>
 
-Early, version 0.3. CI runs on macOS 26 for every change, including a test that reads a sample slide off an
+Early, version 0.4. CI runs on macOS 26 for every change, including a test that reads a sample slide off an
 image and matches it to the right notes. Following Keynote and PowerPoint isn't tested in CI, because neither
 app is on the build machines. Instructions aren't tested there, because the build
 machines can't run Apple Intelligence.
