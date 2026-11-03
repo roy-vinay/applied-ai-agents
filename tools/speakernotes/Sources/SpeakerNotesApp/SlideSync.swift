@@ -36,7 +36,7 @@ final class SlideSync {
     private var lastAppSlide: (SlideApp, Int)?
     private var pending: (index: Int, count: Int)?
     private var lastScreenTitle: String?
-    private var askedModel: Set<String> = []
+    private var modelAnswers: [String: Int?] = [:]
     private var warnedAutomation: Set<SlideApp> = []
     private var warnedScreen = false
     /// After you move the notes yourself, sync waits a moment before taking over again.
@@ -140,7 +140,7 @@ final class SlideSync {
                   let text = try? ScreenText.read(image) else { return }
             let match = SlideMatcher.match(screenTitle: text.title, screenLines: text.lines, slides: slides, near: near)
             await MainActor.run { self?.source = .screen(name) }
-            if let match, SlideMatcher.isConfident(match) {
+            if let match, SlideMatcher.isConfident(match, from: near) {
                 await MainActor.run { self?.propose(match.index) }
             } else if let title = text.title, let index = await self?.askModel(title, slides) {
                 await MainActor.run { self?.propose(index) }
@@ -149,16 +149,21 @@ final class SlideSync {
     }
 
     /// When the screen title doesn't match well, ask the on-device model which notes heading it means.
-    /// Asked once per title, so it costs nothing while a slide stays up.
+    /// Each title is asked once and the answer remembered, so it costs nothing while a slide stays up.
     private func askModel(_ title: String, _ slides: [Slide]) async -> Int? {
+        guard Assistant.isAvailable, SlideMatcher.keyWords(title).count >= 2 else { return nil }
         let key = title.lowercased()
-        let alreadyAsked = await MainActor.run { () -> Bool in
-            let seen = askedModel.contains(key)
-            askedModel.insert(key)
-            return seen
-        }
-        guard !alreadyAsked, Assistant.isAvailable else { return nil }
-        return await Assistant.matchSlide(title, among: slides.map { $0.title })
+        if let cached = await MainActor.run(body: { modelAnswers[key] }) { return cached }
+        let answer = await Assistant.matchSlide(title, among: slides.map { $0.title })
+        await MainActor.run { modelAnswers[key] = .some(answer) }
+        return answer
+    }
+
+    /// Forget remembered answers, for example when different notes are opened.
+    func reset() {
+        modelAnswers = [:]
+        pending = nil
+        lastAppSlide = nil
     }
 
     /// Moves only when two readings in a row agree, so a passing animation or a half-drawn slide can't jump the notes.

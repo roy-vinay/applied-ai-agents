@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1
+
+- **Following other apps is much stricter.** It now reads only the slide's title, not every word on screen, and moves only when nearly all of a notes title's words are in it. One shared word is never enough, and jumping more than three slides needs a near-exact title. Text recognition's one-letter misreads are tolerated.
+- **Move with My Slide Keys explains itself.** When Accessibility permission is missing, the menu says so and SpeakerNotes opens the right Settings page. It starts working as soon as permission is given, without reopening.
+- **Updates reset stale permissions.** The installer clears Accessibility, Screen Recording and Automation for SpeakerNotes when it updates, because macOS quietly stops honoring permissions given to an earlier unsigned build. macOS asks again the first time each is needed.
+
 ## 0.3.0
 
 - **Follow My Slides** (the ⟳ button or **⌃⌥F**): the notes move with your presentation on their own.

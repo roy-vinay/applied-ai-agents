@@ -84,7 +84,8 @@ hotkeys.
   slide without notes doesn't throw the rest off.
 - **Google Slides, Canva, PDFs, anything else: it reads the slide.** About once a second it takes a quiet look at
   the slides window, reads the title with Apple's on-device text recognition, and finds the notes slide with that
-  title. It moves only when the match is clear and two readings in a row agree. If a title doesn't match word for
+  title. Only the title counts, not other words on screen. It moves only when nearly all of a notes title is on
+  screen, and two readings in a row agree; a jump of more than three slides needs a near-exact title. If a title doesn't match word for
   word, Apple's on-device model can match it by meaning (macOS 26 with Apple Intelligence).
 - **You stay in charge.** Move by hand and following pauses for a few seconds so it doesn't snap you back. Call
   apps like Zoom are ignored, so clicking into one doesn't confuse it.
@@ -92,6 +93,9 @@ hotkeys.
 **Import the deck's own notes.** Open your deck in Keynote or PowerPoint and choose **File > Import Notes from
 Keynote or PowerPoint** (or the link on the welcome screen). SpeakerNotes writes one numbered heading per slide with
 its presenter notes, opens the file, and starts following. For Google Slides, download the deck as PowerPoint first.
+
+**Move with My Slide Keys** is the simpler option: when you press → or ← in your slides app, the notes move one
+slide too. It needs Accessibility permission.
 
 macOS asks once for each permission it uses: **Automation** to ask Keynote or PowerPoint for the slide number,
 and **Screen Recording** to read other apps. Nothing leaves your Mac. CI checks the reading path on every change
@@ -158,7 +162,7 @@ To build it yourself:
 
 ```bash
 cd tools/speakernotes
-swift test                        # 21 tests
+swift test                        # 24 tests
 ./scripts/build-app.sh            # build/SpeakerNotes.app, icon included
 open build/SpeakerNotes.app
 ```
