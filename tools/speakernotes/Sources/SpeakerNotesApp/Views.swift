@@ -186,7 +186,7 @@ final class Toast: NSView {
     required init?(coder: NSCoder) { fatalError("not used") }
 
     /// Shows a message. A persistent one stays until `dismiss()`.
-    func show(_ text: String, persistent: Bool = false) {
+    func show(_ text: String, persistent: Bool = false, duration: TimeInterval = 1.6) {
         label.stringValue = text
         isPersistent = persistent
         hideWork?.cancel()
@@ -194,7 +194,7 @@ final class Toast: NSView {
         guard !persistent else { return }
         let work = DispatchWorkItem { [weak self] in self?.fadeOut() }
         hideWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: work)
     }
 
     func dismiss() {
@@ -212,6 +212,7 @@ final class EmptyStateView: NSView {
     var onOpen: (() -> Void)?
     var onWrite: (() -> Void)?
     var onOpenRecent: ((URL) -> Void)?
+    var onImport: (() -> Void)?
 
     private let recentStack = NSStackView()
     private var recents: [URL] = []
@@ -246,18 +247,24 @@ final class EmptyStateView: NSView {
         write.controlSize = .large
         let buttons = NSStackView(views: [open, write])
         buttons.spacing = 10
+        let importButton = NSButton(title: "", target: self, action: #selector(importTapped))
+        importButton.isBordered = false
+        importButton.attributedTitle = NSAttributedString(string: "Or import the notes from Keynote or PowerPoint", attributes: [
+            .foregroundColor: Theme.accent, .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+        ])
 
         recentStack.orientation = .vertical
         recentStack.alignment = .centerX
         recentStack.spacing = 2
 
-        let stack = NSStackView(views: [icon, title, subtitle, buttons, recentStack])
+        let stack = NSStackView(views: [icon, title, subtitle, buttons, importButton, recentStack])
         stack.orientation = .vertical
         stack.alignment = .centerX
         stack.spacing = 10
         stack.setCustomSpacing(14, after: icon)
         stack.setCustomSpacing(18, after: subtitle)
-        stack.setCustomSpacing(22, after: buttons)
+        stack.setCustomSpacing(8, after: buttons)
+        stack.setCustomSpacing(20, after: importButton)
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
         NSLayoutConstraint.activate([
@@ -294,6 +301,7 @@ final class EmptyStateView: NSView {
 
     @objc private func openTapped() { onOpen?() }
     @objc private func writeTapped() { onWrite?() }
+    @objc private func importTapped() { onImport?() }
     @objc private func recentTapped(_ sender: NSButton) {
         guard recents.indices.contains(sender.tag) else { return }
         onOpenRecent?(recents[sender.tag])

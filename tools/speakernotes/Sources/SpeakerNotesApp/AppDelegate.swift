@@ -78,6 +78,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         hotKeys.register(kVK_ANSI_T) { [weak self] in self?.notes.toggleClickThrough() }
         hotKeys.register(kVK_ANSI_N) { [weak self] in self?.notes.toggleVisible() }
         hotKeys.register(kVK_ANSI_E) { [weak self] in self?.notes.toggleEditing() }
+        hotKeys.register(kVK_ANSI_F) { [weak self] in self?.notes.toggleFollowSlides() }
     }
 
     // MARK: - Following your slide keys
@@ -174,8 +175,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         add(menu, "Open Notes…", #selector(NotesController.openDocument), key: "o", mods: [.command], target: notes)
         menu.addItem(recentMenuItem())
         add(menu, "Write Notes Here", #selector(NotesController.writeNotes), target: notes)
+        add(menu, "Import Notes from Keynote or PowerPoint…", #selector(NotesController.importFromDeck), target: notes)
         add(menu, "Close File", #selector(NotesController.closeFile), target: notes).identifier = .init("closeFile")
         menu.addItem(.separator())
+        add(menu, "Follow My Slides", #selector(NotesController.toggleFollowSlides), key: "f", target: notes)
+            .identifier = .init("followSlides")
         add(menu, "Text Size and Typeface…", #selector(NotesController.showTextSettings(_:)), target: notes)
         add(menu, "Emphasize…", #selector(NotesController.showEmphasis(_:)), target: notes)
         menu.addItem(.separator())
@@ -213,6 +217,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         add(file, "Open Notes…", #selector(NotesController.openDocument), key: "o", mods: [.command], target: notes)
         file.addItem(recentMenuItem())
         add(file, "Write Notes Here", #selector(NotesController.writeNotes), key: "n", mods: [.command], target: notes)
+        add(file, "Import Notes from Keynote or PowerPoint…", #selector(NotesController.importFromDeck), key: "i", mods: [.command, .shift], target: notes)
         file.addItem(.separator())
         add(file, "Save", #selector(NotesController.save), key: "s", mods: [.command], target: notes)
         add(file, "Close File", #selector(NotesController.closeFile), target: notes).identifier = .init("closeFile")
@@ -249,6 +254,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         add(slides, "Next Slide", #selector(NotesController.nextSlide), key: arrow(NSRightArrowFunctionKey), target: notes)
         add(slides, "Previous Slide", #selector(NotesController.previousSlide), key: arrow(NSLeftArrowFunctionKey), target: notes)
         add(slides, "First Slide", #selector(NotesController.firstSlide), target: notes)
+        slides.addItem(.separator())
+        add(slides, "Follow My Slides", #selector(NotesController.toggleFollowSlides), key: "f", target: notes)
+            .identifier = .init("followSlides")
         add(slides, "Move with My Slide Keys", #selector(toggleFollowSlideKeys), target: self).identifier = .init("follow")
         slides.addItem(.separator())
         add(slides, "Start Auto-Scroll", #selector(NotesController.toggleScrolling), key: " ", target: notes)
@@ -304,6 +312,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 item.isEnabled = notes.fileURL != nil
                 item.title = notes.fileURL.map { "Close \($0.lastPathComponent)" } ?? "Close File"
             case "follow": item.state = Settings.followSlideKeys ? .on : .off
+            case "followSlides": item.state = notes.sync.isOn ? .on : .off
             case "clickThrough": item.state = notes.clickThrough ? .on : .off
             case "share": item.state = Settings.hiddenFromShare ? .on : .off
             case "login": item.state = opensAtLogin ? .on : .off

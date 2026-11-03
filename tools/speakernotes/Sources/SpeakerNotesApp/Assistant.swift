@@ -40,6 +40,16 @@ enum Assistant {
         #endif
         return []
     }
+
+    /// Which of the notes' slide titles a slide title read off the screen means, or nil if none.
+    static func matchSlide(_ screenTitle: String, among titles: [String]) async -> Int? {
+        #if canImport(FoundationModels)
+        if #available(macOS 26.0, *), isAvailable {
+            return await SlideTitleMatcher().run(screenTitle, titles)
+        }
+        #endif
+        return nil
+    }
 }
 
 #if canImport(FoundationModels)
@@ -48,6 +58,29 @@ enum Assistant {
 struct PhraseMatches {
     @Guide(description: "Exact phrases copied from the passage, with the same spelling and capitalization, that the instruction asks for. Keep each one short: a name or a few words, not a whole sentence unless the instruction asks for sentences.")
     var phrases: [String]
+}
+
+@available(macOS 26.0, *)
+@Generable
+struct SlideChoice {
+    @Guide(description: "The number of the heading that is the same slide as the title on screen, or 0 if none of them is.")
+    var number: Int
+}
+
+@available(macOS 26.0, *)
+struct SlideTitleMatcher {
+    func run(_ screenTitle: String, _ titles: [String]) async -> Int? {
+        guard !titles.isEmpty else { return nil }
+        let list = titles.prefix(120).enumerated().map { "\($0 + 1). \($1)" }.joined(separator: "\n")
+        let session = LanguageModelSession(instructions: """
+            A presenter's notes have one heading per slide. Given the title read off the slide on screen \
+            (it may have small reading errors), pick the heading for the same slide. Answer 0 if none fits.
+            """)
+        let prompt = "Title on screen: \(screenTitle)\n\nHeadings:\n\(list)"
+        guard let reply = try? await session.respond(to: prompt, generating: SlideChoice.self) else { return nil }
+        let n = reply.content.number
+        return (1...titles.count).contains(n) ? n - 1 : nil
+    }
 }
 
 @available(macOS 26.0, *)

@@ -58,6 +58,11 @@ jobs:
           PID=$!
           sleep 8
           if kill -0 $PID 2>/dev/null; then echo "App is running"; kill $PID; else echo "::error title=Launch failed::The app exited within 8 seconds"; exit 1; fi
+      - name: Slide following reads the right slide off the screen (on-device text recognition)
+        run: |
+          set -o pipefail
+          ./build/SpeakerNotes.app/Contents/MacOS/SpeakerNotes --match-image examples/sample-slide.png examples/sample-talk.md | tee match.log
+          grep -q 'matched slide 2 ' match.log || { echo "::error title=Slide matching::expected the sample slide to match notes slide 2"; exit 1; }
       - name: Installer script syntax
         run: bash -n install.sh
       - name: Screenshots, and a check that the window stays out of a full-screen capture

@@ -14,7 +14,7 @@ screen share.** You see them; your audience sees your slides.
   <img src="docs/img/app-text-settings.png" width="32%" alt="Text settings: size, typeface and line spacing">
 </p>
 
-Jump to: [how it hides](#share) · [slides](#slides) · [reading](#read) · [demo-safe](#demo) · [decisions](#decisions) · [shortcuts](#shortcuts) · [install](#install)
+Jump to: [how it hides](#share) · [slides](#slides) · [following](#follow) · [reading](#read) · [demo-safe](#demo) · [decisions](#decisions) · [shortcuts](#shortcuts) · [install](#install)
 
 <a name="problem"></a>
 <picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-problem-dark.svg"><img src="../../.github/assets/speakernotes-sec-problem-light.svg" width="100%" alt="The problem: your notes, or your audience's view"></picture>
@@ -31,7 +31,7 @@ you're on, and asks macOS to leave it out of every screen capture.
 
 <p>
 <a href="#share"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-private-dark.svg"><img src="../../.github/assets/speakernotes-glance-private-light.svg" width="49%" alt="Private: asks macOS to leave the notes out of every screen capture. Checked in CI on every change."></picture></a>
-<a href="#slides"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-slides-dark.svg"><img src="../../.github/assets/speakernotes-glance-slides-light.svg" width="49%" alt="One slide at a time: Markdown notes with --- between slides, moved from any app."></picture></a>
+<a href="#follow"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-slides-dark.svg"><img src="../../.github/assets/speakernotes-glance-slides-light.svg" width="49%" alt="Follows your slides: exactly with Keynote and PowerPoint, and by reading the slide title elsewhere."></picture></a>
 <a href="#read"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-readable-dark.svg"><img src="../../.github/assets/speakernotes-glance-readable-light.svg" width="49%" alt="Easy to read: size, typeface and spacing, plus emphasis by hand or on-device AI."></picture></a>
 <a href="#demo"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-demo-dark.svg"><img src="../../.github/assets/speakernotes-glance-demo-light.svg" width="49%" alt="Demo-safe: Dock icon, Open at Login, reopens on the same slide, never steals focus."></picture></a>
 </p>
@@ -69,9 +69,33 @@ a slide, so a Word or PDF script converts easily.
 Perceive, plan, act, reflect. ==Pause here.==
 ```
 
-<kbd>⌃⌥→</kbd> and <kbd>⌃⌥←</kbd> move between slides from any app. Turn on **Move with My Slide Keys** and your
-usual arrow keys move the notes too. Click the slide counter to jump to any slide by title, press
+<kbd>⌃⌥→</kbd> and <kbd>⌃⌥←</kbd> move between slides from any app, or let the notes [follow your slides](#follow)
+on their own. Click the slide counter to jump to any slide by title, press
 <kbd>⌃⌥Space</kbd> for a teleprompter scroll, and <kbd>⌘E</kbd> to edit in place.
+
+<a name="follow"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-follow-dark.svg"><img src="../../.github/assets/speakernotes-sec-follow-light.svg" width="100%" alt="Follows your slides"></picture>
+
+Turn on **Follow My Slides** (the ⟳ button, or <kbd>⌃⌥F</kbd>) and the notes keep up with you. No clicking, no
+hotkeys.
+
+- **Keynote and PowerPoint: exact.** SpeakerNotes asks the app which slide is showing, twice a second, even
+  while it plays full screen. When your notes number their slides (`## 7. Pricing`), those numbers win, so a
+  slide without notes doesn't throw the rest off.
+- **Google Slides, Canva, PDFs, anything else: it reads the slide.** About once a second it takes a quiet look at
+  the slides window, reads the title with Apple's on-device text recognition, and finds the notes slide with that
+  title. It moves only when the match is clear and two readings in a row agree. If a title doesn't match word for
+  word, Apple's on-device model can match it by meaning (macOS 26 with Apple Intelligence).
+- **You stay in charge.** Move by hand and following pauses for a few seconds so it doesn't snap you back. Call
+  apps like Zoom are ignored, so clicking into one doesn't confuse it.
+
+**Import the deck's own notes.** Open your deck in Keynote or PowerPoint and choose **File > Import Notes from
+Keynote or PowerPoint** (or the link on the welcome screen). SpeakerNotes writes one numbered heading per slide with
+its presenter notes, opens the file, and starts following. For Google Slides, download the deck as PowerPoint first.
+
+macOS asks once for each permission it uses: **Automation** to ask Keynote or PowerPoint for the slide number,
+and **Screen Recording** to read other apps. Nothing leaves your Mac. CI checks the reading path on every change
+by running text recognition on a sample slide and confirming it lands on the right notes.
 
 <a name="read"></a>
 <picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-read-dark.svg"><img src="../../.github/assets/speakernotes-sec-read-light.svg" width="100%" alt="Make it easy to read"></picture>
@@ -113,7 +137,9 @@ your slides, and **Click-through** (<kbd>⌃⌥T</kbd>) lets clicks pass through
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-status-dark.svg"><img src="../../.github/assets/speakernotes-status-light.svg" width="100%" alt="Status: 12 parser tests on every change; Apple silicon and Intel builds that open on macOS 13; launch, linking and capture hiding checked in CI; instructions not tested in CI."></picture>
 
-Early, version 0.2. CI runs on macOS 26 for every change. Instructions aren't tested there, because the build
+Early, version 0.3. CI runs on macOS 26 for every change, including a test that reads a sample slide off an
+image and matches it to the right notes. Following Keynote and PowerPoint isn't tested in CI, because neither
+app is on the build machines. Instructions aren't tested there, because the build
 machines can't run Apple Intelligence.
 
 <a name="install"></a>
@@ -132,7 +158,7 @@ To build it yourself:
 
 ```bash
 cd tools/speakernotes
-swift test                        # 12 tests
+swift test                        # 21 tests
 ./scripts/build-app.sh            # build/SpeakerNotes.app, icon included
 open build/SpeakerNotes.app
 ```

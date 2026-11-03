@@ -35,6 +35,11 @@ enum Settings {
         get { bool("followSlideKeys", false) }
         set { defaults.set(newValue, forKey: "followSlideKeys") }
     }
+    /// Keep the notes on the slide you're presenting (Keynote, PowerPoint, or by reading the screen).
+    static var followSlides: Bool {
+        get { bool("followSlides", false) }
+        set { defaults.set(newValue, forKey: "followSlides") }
+    }
     static var showMenuBarIcon: Bool {
         get { bool("showMenuBarIcon", true) }
         set { defaults.set(newValue, forKey: "showMenuBarIcon") }
@@ -84,6 +89,7 @@ While your slides are in front (any app):
 ⌃⌥T          Click-through on or off
 ⌃⌥N          Show or hide the notes
 ⌃⌥E          Edit or present
+⌃⌥F          Follow my slides on or off
 
 After clicking in the notes:
 → ← Space    Next / previous slide
