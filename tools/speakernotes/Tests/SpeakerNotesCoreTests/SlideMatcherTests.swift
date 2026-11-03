@@ -63,7 +63,7 @@ final class SlideMatcherTests: XCTestCase {
                                    screenLines: ["The agent loop", "Every agent repeats four steps", "Perceive", "Plan", "Act", "Reflect"],
                                    slides: talk, near: 0)
         XCTAssertEqual(m?.index, 1)
-        XCTAssertTrue(m.map(SlideMatcher.isConfident) ?? false)
+        XCTAssertTrue(m.map { SlideMatcher.isConfident($0) } ?? false)
     }
 
     func testMatchesWithOCRNoise() {
@@ -75,7 +75,7 @@ final class SlideMatcherTests: XCTestCase {
     func testUnrelatedScreenIsNotConfident() {
         let m = SlideMatcher.match(screenTitle: "Quarterly revenue", screenLines: ["Quarterly revenue", "Q3"],
                                    slides: talk, near: 0)
-        XCTAssertFalse(m.map(SlideMatcher.isConfident) ?? false)
+        XCTAssertFalse(m.map { SlideMatcher.isConfident($0) } ?? false)
     }
 
     func testDuplicateTitlesPickTheClosest() {
