@@ -15,14 +15,15 @@ where the evidence does.
 
 <a href="https://github.com/roy-vinay/applied-ai-agents/releases/download/tech60-latest/Tech60-macOS.zip"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-download-tech60-dark.svg"><img src=".github/assets/card-download-tech60-light.svg" width="49%" alt="Download Tech60 for Mac: early build for macOS 14 and later."></picture></a>
 <a href="https://github.com/roy-vinay/mdeditdiff/releases/latest/download/mdEditDiff-macOS.zip"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-download-mdeditdiff-dark.svg"><img src=".github/assets/card-download-mdeditdiff-light.svg" width="49%" alt="Download mdEditDiff for Mac: early release for macOS 14 and later."></picture></a>
+<a href="https://github.com/roy-vinay/applied-ai-agents/releases/download/speakernotes-latest/SpeakerNotes-macOS.zip"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-download-speakernotes-dark.svg"><img src=".github/assets/card-download-speakernotes-light.svg" width="49%" alt="Download SpeakerNotes for Mac: early build for macOS 13 and later."></picture></a>
 
-Release notes: [Tech60](https://github.com/roy-vinay/applied-ai-agents/releases/tag/tech60-latest), [mdEditDiff](https://github.com/roy-vinay/mdeditdiff/releases/latest). Both apps are not yet notarized; follow the first-launch instructions in their documentation.
+Release notes: [Tech60](https://github.com/roy-vinay/applied-ai-agents/releases/tag/tech60-latest), [mdEditDiff](https://github.com/roy-vinay/mdeditdiff/releases/latest), [SpeakerNotes](https://github.com/roy-vinay/applied-ai-agents/releases/tag/speakernotes-latest). The apps are not yet notarized; follow the first-launch instructions in their documentation.
 
 **Start here**
 
 - **Build and evaluate agents:** [run the guarded support agent](#build-and-evaluate-agents) in under a minute, no API key needed.
 - **Explore failure experiments:** [Failure Files](#explore-failure-experiments), public AI incidents reproduced and mitigations measured.
-- **Try the tools:** [Tech60 and mdEditDiff](#try-the-tools), two Mac apps.
+- **Try the tools:** [Tech60, mdEditDiff and SpeakerNotes](#try-the-tools), three Mac apps.
 - **Read the decisions and roadmap:** [decisions and roadmap](#read-the-decisions-and-roadmap).
 
 ## Build and evaluate agents
@@ -80,10 +81,11 @@ measure mitigations one at a time. Every file uses the shared terms in [METHODS.
 
 ## Try the tools
 
-Two free, open-source Mac apps. Both are early.
+Three free, open-source Mac apps. All are early.
 
 <a href="tools/tech60"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-tech60-dark.svg"><img src=".github/assets/card-tech60-light.svg" width="49%" alt="Tech60: a tech news front page for the Mac desktop. Summaries must pass checks against the source."></picture></a>
 <a href="https://github.com/roy-vinay/mdeditdiff"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-mdeditdiff-dark.svg"><img src=".github/assets/card-mdeditdiff-light.svg" width="49%" alt="mdEditDiff: a Markdown editor for people and a change diff for agents. Mac app, CLI, and MCP server."></picture></a>
+<a href="tools/speakernotes"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-speakernotes-dark.svg"><img src=".github/assets/card-speakernotes-light.svg" width="49%" alt="SpeakerNotes: speaker notes that float over your slides on Zoom and Meet. Hidden from your screen share."></picture></a>
 
 **[Tech60](tools/tech60)**: a tech news front page for the Mac desktop. It shows only stories with signal
 (several outlets, a Techmeme pick, or the company's own post) and gives each a short summary from Apple's
@@ -97,6 +99,12 @@ person or agent last read it, across sessions and coding tools. Agents get back 
 get a native Mac app for reading and editing Markdown. The app, CLI, MCP server, releases, and
 [website](https://roy-vinay.github.io/mdeditdiff/) all live in [its own repository](https://github.com/roy-vinay/mdeditdiff).
 Releases up to 0.5.3 also remain on this repository's Releases page, so older download links keep working.
+
+**[SpeakerNotes](tools/speakernotes)**: speaker notes that float over your slides on Zoom and Google Meet, one
+slide at a time, and ask macOS to leave them out of your screen share (CI checks this with a full-screen
+capture). Emphasize phrases by hand, or describe what to emphasize and Apple's on-device model finds it.
+[Download for Mac](https://github.com/roy-vinay/applied-ai-agents/releases/download/speakernotes-latest/SpeakerNotes-macOS.zip)
+(macOS 13 or later), or [read how it works](tools/speakernotes).
 
 ## Read the decisions and roadmap
 
