@@ -10,18 +10,36 @@ DOMAIN=io.github.roy-vinay.speakernotes
 mkdir -p "$OUT"
 rm -f "$OUT"/app-*.png "$OUT"/capture-*.png
 
+# Emphasis the screenshots show: what an instruction like "highlight the names of the engines" produces.
+RULES='[{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","label":"Highlight the names of the engines","phrases":["Planning Engine","Routing Engine","Learning Engine"],"style":"highlight"},{"id":"7A1B2C3D-8B86-D011-B42D-00C04FC964FF","label":"understand, decide, execute, learn","phrases":["understand","decide","execute","learn"],"style":"color"}]'
+
+# Put a sample slide on the desktop, so captures show what an audience would see behind the notes.
+SLIDE="$PWD/examples/sample-slide.png"
+osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$SLIDE\"" >/dev/null 2>&1 \
+  || echo "Couldn't set the desktop picture; captures will show the plain desktop."
+sleep 2
+
 launch() { # extra app arguments...
   defaults delete "$DOMAIN" >/dev/null 2>&1 || true
+  defaults write "$DOMAIN" "emphasis:$NOTES" -data "$(printf '%s' "$RULES" | xxd -p | tr -d '\n')"
   open -n -a "$APP" --args -hiddenFromShare NO "$@"
   sleep 6
 }
 quit() { pkill -x SpeakerNotes || true; sleep 2; }
 
-window() { # name
+window() { # name: just the notes window
   local id
   id="$(swift scripts/window_id.swift SpeakerNotes)"
   screencapture -x -o -l "$id" "$OUT/$1.png"
   echo "Saved $OUT/$1.png"
+}
+
+region() { # name [padding]: the notes window plus what's around it (popovers, the desktop)
+  local pad="${2:-36}" b x y w h
+  b="${BOUNDS:-$(swift scripts/window_id.swift SpeakerNotes --bounds)}"
+  IFS=, read -r x y w h <<< "$b"
+  screencapture -x -R "$((x - pad)),$((y - pad)),$((w + 2 * pad)),$((h + 2 * pad))" "$OUT/$1.png"
+  echo "Saved $OUT/$1.png ($b)"
 }
 
 launch -filePath "$NOTES" -slideIndex 1
@@ -36,21 +54,24 @@ launch -filePath "$NOTES" -slideIndex 1 -startEditing YES
 window app-edit
 quit
 
-# Popovers are their own windows, so capture the whole screen for these.
+# Popovers are their own windows, so capture the area around the notes window.
 launch -filePath "$NOTES" -slideIndex 1 -openPopover text
-screencapture -x "$OUT/app-text-settings.png"
+region app-text-settings
 quit
 launch -filePath "$NOTES" -slideIndex 1 -openPopover emphasis
-screencapture -x "$OUT/app-emphasize.png"
+region app-emphasize
 quit
 
-# The real test: a full-screen capture with hiding on, then off.
+# The real test: the same part of the screen captured with "Hide from Screen Share" off, then on.
+launch -filePath "$NOTES" -slideIndex 1
+BOUNDS="$(swift scripts/window_id.swift SpeakerNotes --bounds)"
+screencapture -x "$OUT/capture-visible.png"
+region capture-visible-crop 60
+quit
 defaults delete "$DOMAIN" >/dev/null 2>&1 || true
 open -n -a "$APP" --args -filePath "$NOTES" -slideIndex 1 -hiddenFromShare YES
 sleep 6
 screencapture -x "$OUT/capture-hidden.png"
-quit
-launch -filePath "$NOTES" -slideIndex 1
-screencapture -x "$OUT/capture-visible.png"
+region capture-hidden-crop 60
 quit
 ls -la "$OUT"
