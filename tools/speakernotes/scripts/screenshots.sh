@@ -74,4 +74,21 @@ sleep 6
 screencapture -x "$OUT/capture-hidden.png"
 region capture-hidden-crop 60
 quit
-ls -la "$OUT"
+# Frames for the animated demo: three slides, each with the notes on the matching slide, captured as you
+# see it (hiding off) and as a full-screen share receives it (hiding on).
+mkdir -p "$OUT/demo"
+rm -f "$OUT"/demo/*.png
+for i in 1 2 3; do
+  osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$PWD/examples/slides/slide-$i.png\"" >/dev/null 2>&1 || true
+  sleep 2
+  launch -filePath "$NOTES" -slideIndex "$((i - 1))"
+  screencapture -x "$OUT/demo/visible-$i.png"
+  quit
+  defaults delete "$DOMAIN" >/dev/null 2>&1 || true
+  defaults write "$DOMAIN" "emphasis:$NOTES" -data "$(printf '%s' "$RULES" | xxd -p | tr -d '\n')"
+  open -n -a "$APP" --args -filePath "$NOTES" -slideIndex "$((i - 1))" -hiddenFromShare YES
+  sleep 6
+  screencapture -x "$OUT/demo/hidden-$i.png"
+  quit
+done
+ls -la "$OUT" "$OUT/demo"

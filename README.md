@@ -85,7 +85,7 @@ Three free, open-source Mac apps. All are early.
 
 <a href="tools/tech60"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-tech60-dark.svg"><img src=".github/assets/card-tech60-light.svg" width="49%" alt="Tech60: a tech news front page for the Mac desktop. Summaries must pass checks against the source."></picture></a>
 <a href="https://github.com/roy-vinay/mdeditdiff"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-mdeditdiff-dark.svg"><img src=".github/assets/card-mdeditdiff-light.svg" width="49%" alt="mdEditDiff: a Markdown editor for people and a change diff for agents. Mac app, CLI, and MCP server."></picture></a>
-<a href="tools/speakernotes"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-speakernotes-dark.svg"><img src=".github/assets/card-speakernotes-light.svg" width="49%" alt="SpeakerNotes: speaker notes that float over your slides on Zoom and Meet. Hidden from your screen share."></picture></a>
+<a href="tools/speakernotes"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/card-speakernotes-dark.svg"><img src=".github/assets/card-speakernotes-light.svg" width="49%" alt="SpeakerNotes: speaker notes that float over your slides on Zoom and Meet, and move when your slides move. Hidden even when you share your whole screen."></picture></a>
 
 **[Tech60](tools/tech60)**: a tech news front page for the Mac desktop. It shows only stories with signal
 (several outlets, a Techmeme pick, or the company's own post) and gives each a short summary from Apple's
@@ -100,9 +100,9 @@ get a native Mac app for reading and editing Markdown. The app, CLI, MCP server,
 [website](https://roy-vinay.github.io/mdeditdiff/) all live in [its own repository](https://github.com/roy-vinay/mdeditdiff).
 Releases up to 0.5.3 also remain on this repository's Releases page, so older download links keep working.
 
-**[SpeakerNotes](tools/speakernotes)**: speaker notes that float over your slides on Zoom and Google Meet, one
-slide at a time, and ask macOS to leave them out of your screen share (CI checks this with a full-screen
-capture). Emphasize phrases by hand, or describe what to emphasize and Apple's on-device model finds it.
+**[SpeakerNotes](tools/speakernotes)**: speaker notes that float over your slides on Zoom and Google Meet. They
+stay hidden even when you share your entire screen (CI checks this with a full-screen capture), and they move when
+your slides move, in Keynote, PowerPoint, Google Slides or anything else.
 [Download for Mac](https://github.com/roy-vinay/applied-ai-agents/releases/download/speakernotes-latest/SpeakerNotes-macOS.zip)
 (macOS 13 or later), or [read how it works](tools/speakernotes).
 
