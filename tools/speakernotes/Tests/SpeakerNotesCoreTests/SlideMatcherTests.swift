@@ -84,6 +84,32 @@ final class SlideMatcherTests: XCTestCase {
         XCTAssertEqual(SlideMatcher.match(screenTitle: "Thank you", screenLines: ["Thank you"], slides: slides, near: 0)?.index, 1)
     }
 
+    func testOneSharedWordIsNotEnough() {
+        let slides = NotesParser.slides(in: "## Agents on AWS\na\n---\n## Pricing plans\nb\n---\n## Agents in production\nc")
+        let m = SlideMatcher.match(screenTitle: "Agents", slides: slides, near: 0)
+        XCTAssertFalse(m.map { SlideMatcher.isConfident($0) } ?? false)
+        // Words elsewhere on screen don't count, only the title.
+        let m2 = SlideMatcher.match(screenTitle: "Quarterly results", screenLines: ["Pricing plans", "Agents on AWS"], slides: slides, near: 0)
+        XCTAssertFalse(m2.map { SlideMatcher.isConfident($0) } ?? false)
+    }
+
+    func testMisreadLetterStillMatches() {
+        let m = SlideMatcher.match(screenTitle: "Keepinq agents safe", slides: talk, near: 0)
+        XCTAssertEqual(m?.index, 2)
+        XCTAssertTrue(m.map { SlideMatcher.isConfident($0) } ?? false)
+    }
+
+    func testFarJumpNeedsANearExactTitle() {
+        let text = (1...6).map { "## Part \($0) intro\nx" }.joined(separator: "\n---\n") + "\n---\n## The agent loop\ny"
+        let slides = NotesParser.slides(in: text)
+        let m = SlideMatcher.match(screenTitle: "The agent loop overview", slides: slides, near: 0)!
+        XCTAssertEqual(m.index, 6)
+        XCTAssertFalse(SlideMatcher.isConfident(m, from: 0))   // six slides away, title only close
+        XCTAssertTrue(SlideMatcher.isConfident(m, from: 5))    // next door, close is enough
+        let exact = SlideMatcher.match(screenTitle: "The agent loop", slides: slides, near: 0)!
+        XCTAssertTrue(SlideMatcher.isConfident(exact, from: 0))
+    }
+
     func testEditorChromeDoesNotWinOverTheTitle() {
         // A browser editor shows other slide titles in its filmstrip; the large title decides.
         let m = SlideMatcher.match(screenTitle: "Keeping agents safe",

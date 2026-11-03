@@ -83,13 +83,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: - Following your slide keys
 
-    /// When on, pressing → or ← in your slides app also moves the notes.
-    /// Seeing keys sent to other apps needs Accessibility permission.
+    /// "Move with My Slide Keys": when you press → or ← (or Page Down, Page Up, Space) in your slides app,
+    /// the notes move one slide too. Seeing keys pressed in another app needs Accessibility permission.
+    private var isTrusted: Bool { AXIsProcessTrusted() }
+
     @objc private func toggleFollowSlideKeys() {
         if Settings.followSlideKeys {
             Settings.followSlideKeys = false
-            if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
-            keyMonitor = nil
+            stopKeyMonitor()
+            notes.notify("Stopped moving with your slide keys")
         } else {
             Settings.followSlideKeys = true
             startFollowingSlideKeys(prompt: true)
@@ -97,20 +99,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func startFollowingSlideKeys(prompt: Bool) {
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: prompt] as CFDictionary
-        if !AXIsProcessTrustedWithOptions(options) && prompt {
-            let alert = NSAlert()
-            alert.messageText = "Let SpeakerNotes follow your slide keys"
-            alert.informativeText = """
-                In System Settings > Privacy & Security > Accessibility, turn on SpeakerNotes. \
-                Then your notes move when you press → or ← in your slides.
-
-                SpeakerNotes only reacts to the arrow keys, Page Up, Page Down and Space, and never records anything.
-                """
-            NSApp.activate(ignoringOtherApps: true)
-            alert.runModal()
+        installKeyMonitor()
+        if isTrusted {
+            if prompt { notes.notify("Moving with your slide keys: → and ← in your slides move the notes") }
+            return
         }
-        guard keyMonitor == nil else { return }
+        guard prompt else {
+            notes.notify("Move with My Slide Keys needs Accessibility permission (menu bar > SpeakerNotes)", seconds: 6)
+            return
+        }
+        // Ask macOS to add SpeakerNotes to the list, then explain what to switch on.
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
+        let alert = NSAlert()
+        alert.messageText = "Allow SpeakerNotes to see your slide keys"
+        alert.informativeText = """
+            In System Settings > Privacy & Security > Accessibility, turn on SpeakerNotes.
+
+            If SpeakerNotes is already listed and switched on, it's left over from an earlier version and no longer \
+            counts: select it, click −, then add it again with +. (Each update needs this until the app is signed.)
+
+            SpeakerNotes only reacts to the arrow keys, Page Up, Page Down and Space, and never records anything.
+            """
+        alert.addButton(withTitle: "Open Accessibility Settings")
+        alert.addButton(withTitle: "Later")
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+        }
+    }
+
+    private func installKeyMonitor() {
+        stopKeyMonitor()
         keyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self else { return }
             let flags = event.modifierFlags.intersection([.command, .control, .option, .shift])
@@ -121,6 +141,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             default: break
             }
         }
+        keyMonitorTrusted = isTrusted
+    }
+
+    private func stopKeyMonitor() {
+        if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
+        keyMonitor = nil
+    }
+
+    private var keyMonitorTrusted = false
+
+    /// Permission granted while the app was running: start listening again so it takes effect now.
+    func applicationDidBecomeActive(_ notification: Notification) {
+        guard Settings.followSlideKeys, !keyMonitorTrusted, isTrusted else { return }
+        installKeyMonitor()
+        notes.notify("Moving with your slide keys")
     }
 
     // MARK: - Open at login
@@ -311,7 +346,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             case "closeFile":
                 item.isEnabled = notes.fileURL != nil
                 item.title = notes.fileURL.map { "Close \($0.lastPathComponent)" } ?? "Close File"
-            case "follow": item.state = Settings.followSlideKeys ? .on : .off
+            case "follow":
+                item.state = Settings.followSlideKeys ? .on : .off
+                item.title = Settings.followSlideKeys && !isTrusted ? "Move with My Slide Keys (needs Accessibility)" : "Move with My Slide Keys"
+                item.toolTip = "When you press → or ← in your slides app, the notes move one slide too."
             case "followSlides": item.state = notes.sync.isOn ? .on : .off
             case "clickThrough": item.state = notes.clickThrough ? .on : .off
             case "share": item.state = Settings.hiddenFromShare ? .on : .off

@@ -561,6 +561,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
             fileURL = url
             dirty = false
             rules = EmphasisStore.rules(for: url)
+            sync.reset()
             Settings.filePath = url.path
             Settings.addRecent(url)
             setText(contents, keepIndex: restoreIndex ? Settings.slideIndex : 0)
@@ -916,6 +917,9 @@ final class NotesController: NSObject, NSTextViewDelegate {
         panel.orderOut(nil)
         onStateChange?()
     }
+
+    /// Shows a short message in the notes window.
+    func notify(_ text: String, seconds: TimeInterval = 4) { toast.show(text, duration: seconds) }
 
     func prepareToQuit() {
         if editing && fileURL == nil { Settings.scratchNotes = editView.string }

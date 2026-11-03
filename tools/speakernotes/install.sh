@@ -19,8 +19,18 @@ osascript -e 'quit app "SpeakerNotes"' >/dev/null 2>&1 || true
 sleep 1
 pkill -x SpeakerNotes >/dev/null 2>&1 || true
 
+UPDATING=0
+[ -d "$DEST" ] && UPDATING=1
 rm -rf "$DEST"
 mv "$TMP/SpeakerNotes.app" "$DEST"
+if [ "$UPDATING" = 1 ]; then
+  # The app isn't signed with a fixed identity yet, so macOS treats each update as a new app and quietly
+  # stops honoring permissions given to the old one. Clear them so macOS asks again when they're needed.
+  for service in Accessibility ScreenCapture AppleEvents; do
+    tccutil reset "$service" io.github.roy-vinay.speakernotes >/dev/null 2>&1 || true
+  done
+  echo "Permissions were reset for the new version; SpeakerNotes will ask again when it needs them."
+fi
 xattr -dr com.apple.quarantine "$DEST" 2>/dev/null || true
 open "$DEST"
 

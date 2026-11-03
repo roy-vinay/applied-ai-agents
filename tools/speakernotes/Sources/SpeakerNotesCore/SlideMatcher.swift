@@ -65,27 +65,56 @@ public enum SlideMatcher {
     /// The title a notes slide is known by: its first heading, or its first line.
     public static func title(of slide: Slide) -> String { slide.title }
 
-    /// Finds the notes slide whose title is on screen.
+    /// Two words count as the same if they're equal, or one letter apart when long enough
+    /// (text recognition misreads a letter now and then: "Keepinq").
+    static func sameWord(_ a: String, _ b: String) -> Bool {
+        if a == b { return true }
+        guard a.count >= 5, b.count >= 5, abs(a.count - b.count) <= 1 else { return false }
+        return editDistance(Array(a), Array(b), limit: 1) <= 1
+    }
+
+    static func editDistance(_ a: [Character], _ b: [Character], limit: Int) -> Int {
+        var prev = Array(0...b.count)
+        for i in 1...max(a.count, 1) where !a.isEmpty {
+            var cur = [i] + Array(repeating: 0, count: b.count)
+            for j in 1...max(b.count, 1) where !b.isEmpty {
+                cur[j] = min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1))
+            }
+            if cur.min()! > limit { return limit + 1 }
+            prev = cur
+        }
+        return prev[b.count]
+    }
+
+    /// How many of `words` have a match in `other`.
+    static func overlap(_ words: [String], _ other: [String]) -> Int {
+        words.filter { w in other.contains { sameWord(w, $0) } }.count
+    }
+
+    /// Finds the notes slide whose title is the title on screen.
+    ///
+    /// Only the slide's title counts, not every word on screen: slides share words, and an editor shows the
+    /// titles of other slides around the one you're on. A notes slide matches when nearly all of its title's
+    /// words are in the title on screen, and the title on screen is mostly made of its words.
     /// - Parameters:
-    ///   - screenTitle: the line that looks like the slide's title (the largest text near the top), if any.
-    ///   - screenLines: every line of text read from the screen.
-    ///   - near: the slide showing now; among equally good matches, the closest one wins.
-    public static func match(screenTitle: String?, screenLines: [String], slides: [Slide], near: Int) -> Match? {
-        let titleWords = Set(keyWords(screenTitle ?? ""))
-        let allWords = Set(screenLines.flatMap(keyWords))
-        guard !titleWords.isEmpty || !allWords.isEmpty else { return nil }
+    ///   - screenTitle: the title read off the slide (its largest text near the top).
+    ///   - screenLines: kept for callers; not used for scoring.
+    ///   - near: the slide showing now. Ties go to the closest slide.
+    public static func match(screenTitle: String?, screenLines: [String] = [], slides: [Slide], near: Int) -> Match? {
+        let screen = keyWords(screenTitle ?? "")
+        guard !screen.isEmpty else { return nil }
 
         var scored: [(index: Int, score: Double, key: String)] = []
         for (i, slide) in slides.enumerated() {
             let words = keyWords(slide.title)
             guard !words.isEmpty else { continue }
-            let set = Set(words)
-            // How alike the on-screen title and this slide's title are (Dice coefficient).
-            let dice = titleWords.isEmpty ? 0 : 2 * Double(set.intersection(titleWords).count) / Double(set.count + titleWords.count)
-            // How much of this slide's title appears anywhere on screen. Short titles prove less.
-            let contained = Double(set.intersection(allWords).count) / Double(set.count)
-            let weight = set.count >= 3 ? 0.85 : set.count == 2 ? 0.7 : 0.5
-            scored.append((i, max(dice, contained * weight), words.joined(separator: " ")))
+            let shared = Double(overlap(words, screen))
+            let recall = shared / Double(words.count)                 // how much of this slide's title is on screen
+            let precision = Double(overlap(screen, words)) / Double(screen.count) // how much of the screen title is this title
+            var score = recall + precision == 0 ? 0 : 2 * recall * precision / (recall + precision)
+            // One shared word proves little unless the title is that one word.
+            if shared < 2 && !(words.count == 1 && screen.count == 1) { score = min(score, 0.5) }
+            scored.append((i, score, words.joined(separator: " ")))
         }
         guard !scored.isEmpty else { return nil }
 
@@ -97,6 +126,10 @@ public enum SlideMatcher {
         return Match(index: best.index, score: best.score, margin: best.score - runnerUp)
     }
 
-    /// Whether a match is sure enough to move the notes on its own.
-    public static func isConfident(_ m: Match) -> Bool { m.score >= 0.6 && m.margin >= 0.15 }
+    /// Whether a match is sure enough to move the notes on its own. A jump of more than a few slides
+    /// needs a near-exact title.
+    public static func isConfident(_ m: Match, from current: Int? = nil) -> Bool {
+        let far = current.map { abs(m.index - $0) > 3 } ?? false
+        return m.score >= (far ? 0.9 : 0.75) && m.margin >= 0.2
+    }
 }
