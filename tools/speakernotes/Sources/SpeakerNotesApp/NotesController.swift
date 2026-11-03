@@ -387,10 +387,22 @@ final class NotesController: NSObject, NSTextViewDelegate {
     @objc func previousSlide() { go(to: index - 1) }
     @objc func firstSlide() { go(to: 0) }
 
+    /// Who moved the notes.
+    enum MoveOrigin {
+        case notes      // you, in SpeakerNotes: its buttons, keys, slide list, or the ⌃⌥ hotkeys
+        case slideKeys  // you pressed → or ← in your slides app
+        case sync       // Follow My Slides saw the slide change
+    }
+
+    func step(_ delta: Int, from origin: MoveOrigin) { go(to: index + delta, from: origin) }
+
     /// Moving by hand pauses slide following for a few seconds, so it doesn't snap you back.
-    func go(to newIndex: Int, byHand: Bool = true) {
+    /// Moving in SpeakerNotes also moves your slides, when you're presenting with following on.
+    func go(to newIndex: Int, from origin: MoveOrigin = .notes) {
         guard !editing else { return }
-        if byHand { sync.pausedUntil = Date().addingTimeInterval(4) }
+        if origin != .sync { sync.pausedUntil = Date().addingTimeInterval(3) }
+        let from = index
+        defer { if origin == .notes, index != from { moveSlides(from: from, to: index) } }
         let target = min(max(newIndex, 0), slides.count - 1)
         guard target != index else { return }
         stopScrolling()
@@ -729,10 +741,35 @@ final class NotesController: NSObject, NSTextViewDelegate {
     private func setUpSync() {
         sync.slides = { [weak self] in self?.slides ?? [] }
         sync.currentIndex = { [weak self] in self?.index ?? 0 }
-        sync.onMove = { [weak self] i in self?.go(to: i, byHand: false) }
+        sync.onMove = { [weak self] i in self?.go(to: i, from: .sync) }
         sync.onStatus = { [weak self] message in self?.toast.show(message, duration: 5) }
         sync.onSourceChange = { [weak self] _ in self?.refresh() }
         if Settings.followSlides { sync.start() }
+    }
+
+    /// Whether moving the notes should move the slides: only while presenting, meaning following is on.
+    private var drivesSlides: Bool { Settings.moveSlidesToo && (sync.isOn || Settings.followSlideKeys) }
+    private var warnedDrive: Set<String> = []
+
+    private func moveSlides(from: Int, to: Int) {
+        guard drivesSlides, let app = sync.slidesApp else { return }
+        let number = SlideMatcher.declaredNumber(of: slides[to]) ?? to + 1
+        switch SlideDriver.move(app, toSlide: number, steps: to - from) {
+        case .needsAccessibility where !warnedDrive.contains("ax"):
+            warnedDrive.insert("ax")
+            toast.show("To move \(app.localizedName ?? "your slides") too, allow Accessibility for SpeakerNotes", duration: 5)
+        case .needsAutomation where !warnedDrive.contains("ae"):
+            warnedDrive.insert("ae")
+            toast.show("Allow SpeakerNotes to control \(app.localizedName ?? "the app") in Privacy & Security > Automation", duration: 5)
+        default:
+            break
+        }
+    }
+
+    @objc func toggleMoveSlidesToo() {
+        Settings.moveSlidesToo.toggle()
+        toast.show(Settings.moveSlidesToo ? "Moving the notes moves your slides too" : "Notes move on their own")
+        onStateChange?()
     }
 
     @objc func toggleFollowSlides() {

@@ -134,10 +134,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         keyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self else { return }
             let flags = event.modifierFlags.intersection([.command, .control, .option, .shift])
-            guard flags.isEmpty, !self.notes.editing else { return }
+            // Ignore SpeakerNotes' own key presses (when it moves your slides for you).
+            guard flags.isEmpty, !self.notes.editing, Date() >= SlideDriver.quietUntil else { return }
             switch Int(event.keyCode) {
-            case kVK_RightArrow, kVK_DownArrow, kVK_PageDown, kVK_Space: self.notes.nextSlide()
-            case kVK_LeftArrow, kVK_UpArrow, kVK_PageUp: self.notes.previousSlide()
+            case kVK_RightArrow, kVK_DownArrow, kVK_PageDown, kVK_Space: self.notes.step(1, from: .slideKeys)
+            case kVK_LeftArrow, kVK_UpArrow, kVK_PageUp: self.notes.step(-1, from: .slideKeys)
             default: break
             }
         }
@@ -215,6 +216,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         add(menu, "Follow My Slides", #selector(NotesController.toggleFollowSlides), key: "f", target: notes)
             .identifier = .init("followSlides")
+        add(menu, "Moving the Notes Moves My Slides", #selector(NotesController.toggleMoveSlidesToo), target: notes)
+            .identifier = .init("moveSlides")
         add(menu, "Text Size and Typeface…", #selector(NotesController.showTextSettings(_:)), target: notes)
         add(menu, "Emphasize…", #selector(NotesController.showEmphasis(_:)), target: notes)
         menu.addItem(.separator())
@@ -292,6 +295,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         slides.addItem(.separator())
         add(slides, "Follow My Slides", #selector(NotesController.toggleFollowSlides), key: "f", target: notes)
             .identifier = .init("followSlides")
+        add(slides, "Moving the Notes Moves My Slides", #selector(NotesController.toggleMoveSlidesToo), target: notes)
+            .identifier = .init("moveSlides")
         add(slides, "Move with My Slide Keys", #selector(toggleFollowSlideKeys), target: self).identifier = .init("follow")
         slides.addItem(.separator())
         add(slides, "Start Auto-Scroll", #selector(NotesController.toggleScrolling), key: " ", target: notes)
@@ -351,6 +356,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 item.title = Settings.followSlideKeys && !isTrusted ? "Move with My Slide Keys (needs Accessibility)" : "Move with My Slide Keys"
                 item.toolTip = "When you press → or ← in your slides app, the notes move one slide too."
             case "followSlides": item.state = notes.sync.isOn ? .on : .off
+            case "moveSlides": item.state = Settings.moveSlidesToo ? .on : .off
             case "clickThrough": item.state = notes.clickThrough ? .on : .off
             case "share": item.state = Settings.hiddenFromShare ? .on : .off
             case "login": item.state = opensAtLogin ? .on : .off

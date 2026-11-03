@@ -36,6 +36,7 @@ final class SlideSync {
     private var lastAppSlide: (SlideApp, Int)?
     private var pending: (index: Int, count: Int)?
     private var lastScreenTitle: String?
+    private var lastFingerprint: Fingerprint?
     private var modelAnswers: [String: Int?] = [:]
     private var warnedAutomation: Set<SlideApp> = []
     private var warnedScreen = false
@@ -51,7 +52,8 @@ final class SlideSync {
         isOn = true
         lastAppSlide = nil
         pending = nil
-        let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in self?.tick() }
+        // Four looks a second: an exact app answers in milliseconds, and an unchanged screen costs almost nothing.
+        let t = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in self?.tick() }
         RunLoop.main.add(t, forMode: .common)
         timer = t
         tick()
@@ -88,8 +90,8 @@ final class SlideSync {
             followApp(app)
             return
         }
-        // Everything else: read the screen, about once a second.
-        guard let front, tickCount % 2 == 0 else { return }
+        // Everything else: read the screen.
+        guard let front else { return }
         followScreen(front)
     }
 
@@ -130,20 +132,39 @@ final class SlideSync {
         }
         guard !reading else { return }
         reading = true
+        screenApp = app
         let pid = app.processIdentifier
         let name = app.localizedName ?? "screen"
         let slides = self.slides()
         let near = currentIndex()
-        Task.detached(priority: .utility) { [weak self] in
+        let previous = lastFingerprint
+        Task.detached(priority: .userInitiated) { [weak self] in
             defer { DispatchQueue.main.async { self?.reading = false } }
-            guard let image = try? await SlideWindowCapture.capture(pid: pid),
-                  let text = try? ScreenText.read(image) else { return }
-            let match = SlideMatcher.match(screenTitle: text.title, screenLines: text.lines, slides: slides, near: near)
-            await MainActor.run { self?.source = .screen(name) }
-            if let match, SlideMatcher.isConfident(match, from: near) {
-                await MainActor.run { self?.propose(match.index) }
-            } else if let title = text.title, let index = await self?.askModel(title, slides) {
-                await MainActor.run { self?.propose(index) }
+            guard let image = try? await SlideWindowCapture.capture(pid: pid) else { return }
+            // Nothing changed on screen since the last look: nothing to read.
+            let shot = Fingerprint(image)
+            if let shot, shot.matches(previous) { return }
+            await MainActor.run { self?.lastFingerprint = shot; self?.source = .screen(name) }
+            // A quick read first; a careful one only if the quick one isn't sure.
+            var best: SlideMatcher.Match?
+            var title: String?
+            for fast in [true, false] {
+                guard let text = try? ScreenText.read(image, fast: fast) else { continue }
+                title = text.title ?? title
+                if let m = SlideMatcher.match(screenTitle: text.title, screenLines: text.lines, slides: slides, near: near),
+                   SlideMatcher.isConfident(m, from: near) {
+                    best = m
+                    break
+                }
+            }
+            if let found = best {
+                let index = found.index, sure = found.score >= 0.95 && found.margin >= 0.3
+                await MainActor.run { self?.propose(index, sure: sure) }
+            } else if let readTitle = title, let index = await self?.askModel(readTitle, slides) {
+                await MainActor.run { self?.propose(index, sure: false) }
+            } else {
+                // Couldn't tell: look again next time even if the screen hasn't changed.
+                await MainActor.run { self?.lastFingerprint = nil }
             }
         }
     }
@@ -166,16 +187,40 @@ final class SlideSync {
         lastAppSlide = nil
     }
 
-    /// Moves only when two readings in a row agree, so a passing animation or a half-drawn slide can't jump the notes.
-    private func propose(_ index: Int) {
+    /// A near-exact title moves the notes at once. Anything less waits for a second reading to agree,
+    /// so a passing animation or a half-drawn slide can't jump the notes.
+    private func propose(_ index: Int, sure: Bool) {
         guard Date() >= pausedUntil else { return }
         if let p = pending, p.index == index {
             pending = (index, p.count + 1)
         } else {
             pending = (index, 1)
         }
-        if let p = pending, p.count >= 2, index != currentIndex() {
+        if let p = pending, sure || p.count >= 2, index != currentIndex() {
             onMove?(index)
         }
+    }
+
+    /// The app showing the slides right now, if SpeakerNotes knows it: what the notes should move along with.
+    var slidesApp: NSRunningApplication? {
+        let front = NSWorkspace.shared.frontmostApplication
+        if let front, front.bundleIdentifier != Bundle.main.bundleIdentifier, !ignoredApps.contains(front.bundleIdentifier ?? "") {
+            return front
+        }
+        switch source {
+        case .app(let a)?:
+            let id = a == .keynote ? SlideApp.keynoteID : SlideApp.powerpointID
+            return NSRunningApplication.runningApplications(withBundleIdentifier: id).first
+        case .screen?:
+            return screenApp
+        case nil:
+            return nil
+        }
+    }
+    private var screenApp: NSRunningApplication?
+
+    /// Remember that the notes are already on a slide, so the next reading doesn't count as news.
+    func settle(on index: Int) {
+        pending = (index, 2)
     }
 }
