@@ -13,6 +13,12 @@ rm -f "$OUT"/app-*.png "$OUT"/capture-*.png
 # Emphasis the screenshots show: what an instruction like "highlight the names of the engines" produces.
 RULES='[{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","label":"Highlight the names of the engines","phrases":["Planning Engine","Routing Engine","Learning Engine"],"style":"highlight"},{"id":"7A1B2C3D-8B86-D011-B42D-00C04FC964FF","label":"understand, decide, execute, learn","phrases":["understand","decide","execute","learn"],"style":"color"}]'
 
+# Put a sample slide on the desktop, so captures show what an audience would see behind the notes.
+SLIDE="$PWD/examples/sample-slide.png"
+osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$SLIDE\"" >/dev/null 2>&1 \
+  || echo "Couldn't set the desktop picture; captures will show the plain desktop."
+sleep 2
+
 launch() { # extra app arguments...
   defaults delete "$DOMAIN" >/dev/null 2>&1 || true
   defaults write "$DOMAIN" "emphasis:$NOTES" -data "$(printf '%s' "$RULES" | xxd -p | tr -d '\n')"

@@ -38,9 +38,9 @@ captures the same part of the screen with hiding off, then on.
 
 <p>
   <img src="docs/img/capture-visible-crop.png" width="49%" alt="Hiding off: the notes window appears in the capture">
-  <img src="docs/img/capture-hidden-crop.png" width="49%" alt="Hiding on: the same capture shows only the desktop">
+  <img src="docs/img/capture-hidden-crop.png" width="49%" alt="Hiding on: the same capture shows only the slide behind the notes">
 </p>
-<p><sub>Left: hiding off, the notes are captured. Right: hiding on, the same capture shows only what's behind them.</sub></p>
+<p><sub>Left: hiding off, the notes are captured. Right: hiding on, the same capture shows only the slide behind them.</sub></p>
 
 Most video apps honor this, but not every capture method on every macOS version does. Test once on the Mac you
 present from (see [Before a real call](#before-a-real-call)). Sharing a single window or tab never includes the
