@@ -82,7 +82,7 @@ hotkeys.
 - **Keynote and PowerPoint: exact.** SpeakerNotes asks the app which slide is showing, twice a second, even
   while it plays full screen. When your notes number their slides (`## 7. Pricing`), those numbers win, so a
   slide without notes doesn't throw the rest off.
-- **Google Slides, Canva, PDFs, anything else: it reads the slide.** About once a second it takes a quiet look at
+- **Google Slides, Canva, PDFs, anything else: it reads the slide.** It takes a quiet look at
   the slides window four times a second (reading only when something changed), reads the title with Apple's on-device
   text recognition, and finds the notes slide with that title. Only the title counts, not other words on screen. It moves only when nearly all of a notes title is on
   screen, and two readings in a row agree; a jump of more than three slides needs a near-exact title. If a title doesn't match word for
