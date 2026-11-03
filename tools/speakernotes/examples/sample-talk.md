@@ -9,13 +9,15 @@ Thank everyone for joining. Last time you asked what sits **underneath** the pro
 
 ## The operating loop
 
-Everything fits into four steps: **understand**, **decide**, **execute** and **learn**.
+Everything fits into four steps: understand, decide, execute and learn.
 
-- The ==Planning Engine== turns what's true right now into a plan
-- The ==Routing Engine== picks the order of stops
-- The ==Learning Engine== compares what happened with what we expected
+- The Planning Engine turns what's true right now into a plan
+- The Routing Engine picks the order of stops
+- The Learning Engine compares what happened with what we expected
 
 > Pause here. Ask who has seen this loop before.
+
+==Land this one:== the loop gets better with every delivery.
 
 ---
 
