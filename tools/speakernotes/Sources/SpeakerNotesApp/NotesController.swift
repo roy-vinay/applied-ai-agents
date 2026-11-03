@@ -28,6 +28,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
     private var editView: NSTextView { editScroll.documentView as! NSTextView }
     private var textButton: IconButton!
     private var emphasisButton: IconButton!
+    private var syncButton: IconButton!
     private var openButton: IconButton!
     private var editButton: IconButton!
     private var moreButton: IconButton!
@@ -56,6 +57,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
     private var assistantTask: Task<Void, Never>?
     private let textSettings = TextSettingsViewController()
     private let emphasisPanel = EmphasisViewController()
+    let sync = SlideSync()
     private lazy var textPopover = makePopover(textSettings)
     private lazy var emphasisPopover = makePopover(emphasisPanel)
 
@@ -74,6 +76,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
         setUpFooter()
         setUpContent()
         setUpPopovers()
+        setUpSync()
         loadInitialNotes()
     }
 
@@ -132,6 +135,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
         fileLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         textButton = IconButton("textformat.size", tip: "Text size and typeface", target: self, action: #selector(showTextSettings(_:)))
+        syncButton = IconButton("arrow.triangle.2.circlepath", tip: "Follow my slides (⌃⌥F)", target: self, action: #selector(toggleFollowSlides))
         emphasisButton = IconButton("highlighter", tip: "Emphasize words and phrases", target: self, action: #selector(showEmphasis(_:)))
         openButton = IconButton("folder", tip: "Open notes (⌘O)", target: self, action: #selector(openDocument))
         editButton = IconButton("square.and.pencil", tip: "Edit notes (⌘E)", target: self, action: #selector(toggleEditing))
@@ -139,9 +143,9 @@ final class NotesController: NSObject, NSTextViewDelegate {
 
         let spacer = NSView()
         spacer.setContentHuggingPriority(.init(1), for: .horizontal)
-        let stack = NSStackView(views: [pill, fileLabel, spacer, textButton, emphasisButton, openButton, editButton, moreButton])
+        let stack = NSStackView(views: [pill, fileLabel, spacer, syncButton, textButton, emphasisButton, openButton, editButton, moreButton])
         stack.spacing = 8
-        for b in [textButton!, emphasisButton!, openButton!, editButton!] { stack.setCustomSpacing(2, after: b) }
+        for b in [syncButton!, textButton!, emphasisButton!, openButton!, editButton!] { stack.setCustomSpacing(2, after: b) }
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 12, bottom: 0, right: 8)
         stack.translatesAutoresizingMaskIntoConstraints = false
         header.addSubview(stack)
@@ -271,6 +275,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
         emptyState.onOpen = { [weak self] in self?.openDocument() }
         emptyState.onWrite = { [weak self] in self?.writeNotes() }
         emptyState.onOpenRecent = { [weak self] url in self?.open(url) }
+        emptyState.onImport = { [weak self] in self?.importFromDeck() }
         background.addSubview(emptyState)
         background.addSubview(toast)
         NSLayoutConstraint.activate([
@@ -343,12 +348,15 @@ final class NotesController: NSObject, NSTextViewDelegate {
         pill.isClickable = !editing && !empty && slides.count > 1
         var name = fileURL?.deletingPathExtension().lastPathComponent ?? (empty ? "" : "My Notes")
         if dirty { name += " · Edited" }
+        if sync.isOn, !editing, !empty { name += sync.source.map { " · Following \($0.label)" } ?? " · Following slides" }
         fileLabel.stringValue = name
         fileLabel.toolTip = fileURL?.path
 
         editButton.setSymbol(editing ? "checkmark" : "square.and.pencil",
                              tip: editing ? "Done editing (⌘E)" : "Edit notes (⌘E)")
         editButton.isOn = editing
+        syncButton.isOn = sync.isOn
+        syncButton.isEnabled = !empty
         editButton.isEnabled = !clickThrough
         textButton.isEnabled = !clickThrough
         emphasisButton.isEnabled = !clickThrough && !editing && !empty
@@ -379,8 +387,10 @@ final class NotesController: NSObject, NSTextViewDelegate {
     @objc func previousSlide() { go(to: index - 1) }
     @objc func firstSlide() { go(to: 0) }
 
-    func go(to newIndex: Int) {
+    /// Moving by hand pauses slide following for a few seconds, so it doesn't snap you back.
+    func go(to newIndex: Int, byHand: Bool = true) {
         guard !editing else { return }
+        if byHand { sync.pausedUntil = Date().addingTimeInterval(4) }
         let target = min(max(newIndex, 0), slides.count - 1)
         guard target != index else { return }
         stopScrolling()
@@ -711,6 +721,72 @@ final class NotesController: NSObject, NSTextViewDelegate {
 
     private func textChanged() {
         if editing { highlightEditor() } else { renderSlide() }
+    }
+
+    // MARK: - Following your slides
+
+    private func setUpSync() {
+        sync.slides = { [weak self] in self?.slides ?? [] }
+        sync.currentIndex = { [weak self] in self?.index ?? 0 }
+        sync.onMove = { [weak self] i in self?.go(to: i, byHand: false) }
+        sync.onStatus = { [weak self] message in self?.toast.show(message, duration: 5) }
+        sync.onSourceChange = { [weak self] _ in self?.refresh() }
+        if Settings.followSlides { sync.start() }
+    }
+
+    @objc func toggleFollowSlides() {
+        if sync.isOn {
+            sync.stop()
+            Settings.followSlides = false
+            toast.show("Stopped following your slides")
+        } else {
+            sync.start()
+            Settings.followSlides = true
+            toast.show("Following your slides", duration: 2.5)
+        }
+        refresh()
+    }
+
+    /// Makes a notes file from the deck open in Keynote or PowerPoint: one numbered heading per slide,
+    /// with each slide's presenter notes. Then opens it and follows the slides.
+    @objc func importFromDeck() {
+        let front = SlideApp(bundleID: NSWorkspace.shared.frontmostApplication?.bundleIdentifier)
+        guard let app = front ?? [SlideApp.keynote, .powerpoint].first(where: { $0.isRunning }) else {
+            alert("Open your deck in Keynote or PowerPoint first",
+                  "SpeakerNotes reads the deck that's open in Keynote or PowerPoint. For Google Slides, choose File > Download > Microsoft PowerPoint, open it in Keynote or PowerPoint, then import.")
+            return
+        }
+        let imported: (deck: URL?, slides: [(title: String, notes: String)])
+        do {
+            imported = try app.importNotes()
+        } catch let error as SlideApp.ScriptError where error.notAllowed {
+            alert("Allow SpeakerNotes to read \(app.name)",
+                  "In System Settings > Privacy & Security > Automation, turn on \(app.name) under SpeakerNotes, then try again.")
+            return
+        } catch {
+            alert("Couldn't read the deck in \(app.name)", "Make sure a presentation is open. (\(error.localizedDescription))")
+            return
+        }
+        guard !imported.slides.isEmpty else {
+            alert("No slides found", "The front presentation in \(app.name) has no slides.")
+            return
+        }
+        let save = NSSavePanel()
+        save.allowedContentTypes = [UTType(filenameExtension: "md") ?? .plainText]
+        let deckName = imported.deck?.deletingPathExtension().lastPathComponent ?? "Presentation"
+        save.nameFieldStringValue = "\(deckName) Notes.md"
+        if let folder = imported.deck?.deletingLastPathComponent() { save.directoryURL = folder }
+        save.message = "Save the notes from \(imported.slides.count) slides"
+        NSApp.activate(ignoringOtherApps: true)
+        guard save.runModal() == .OK, let url = save.url else { return }
+        do {
+            try SlideApp.markdown(from: imported.slides).write(to: url, atomically: true, encoding: .utf8)
+        } catch {
+            alert("Couldn't save the notes", error.localizedDescription)
+            return
+        }
+        open(url)
+        if !sync.isOn { toggleFollowSlides() }
     }
 
     // MARK: - Text settings and emphasis

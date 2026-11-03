@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- **Follow My Slides** (the ⟳ button or **⌃⌥F**): the notes move with your presentation on their own.
+  - **Keynote and PowerPoint:** exact. SpeakerNotes asks the app which slide is showing, even during a full-screen slideshow. Numbered headings in your notes (`## 7. Pricing`) are matched by number.
+  - **Google Slides, Canva, PDFs and other apps:** SpeakerNotes reads the slide's title with Apple's on-device text recognition and moves to the notes slide with that title, only when the match is clear and two readings agree. On macOS 26 with Apple Intelligence, titles that don't match word for word are matched by meaning.
+  - Moving by hand pauses following for a few seconds. Call apps like Zoom are ignored.
+- **Import Notes from Keynote or PowerPoint** (File menu, or the welcome screen): turns the open deck's presenter notes into a notes file, one numbered heading per slide, and starts following.
+- macOS asks once for Automation (Keynote, PowerPoint) and Screen Recording (other apps) when you first use these.
+
 ## 0.2.1
 
 - SpeakerNotes now lives in [applied-ai-agents](https://github.com/roy-vinay/applied-ai-agents/tree/main/tools/speakernotes), next to Tech60. The install command, **Check for Updates** and downloads point there. Your notes and settings are kept.
