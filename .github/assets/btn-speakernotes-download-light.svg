@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="210" viewBox="0 0 480 210" role="img" aria-label="Download for Mac: Free for macOS 13 and later, Apple silicon and Intel. Early build, MIT. Get SpeakerNotes-macOS.zip">
+<defs><clipPath id="c-btn-speakernotes-download-light"><rect x="1.5" y="1.5" width="477" height="207" rx="14"/></clipPath></defs>
+<rect x="1.5" y="1.5" width="477" height="207" rx="14" fill="#18202C" stroke="#FF8A3D" stroke-width="3"/>
+<g clip-path="url(#c-btn-speakernotes-download-light)"><text x="486" y="262" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-size="220" font-weight="700" fill="#222C3B">D</text></g>
+<text x="28" y="40" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="1.2" fill="#FF8A3D">START HERE</text>
+<text x="28" y="82" font-family="Georgia, 'Times New Roman', serif" font-size="29" font-weight="700" fill="#F0F3F6">Download for Mac</text>
+<text x="28" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">Free for macOS 13 and later, Apple silicon</text><text x="28" y="147" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">and Intel. Early build, MIT.</text>
+<text x="28" y="186" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FF8A3D">Get SpeakerNotes-macOS.zip  →</text>
+</svg>

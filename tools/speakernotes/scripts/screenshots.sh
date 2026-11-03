@@ -10,8 +10,8 @@ DOMAIN=io.github.roy-vinay.speakernotes
 mkdir -p "$OUT"
 rm -f "$OUT"/app-*.png "$OUT"/capture-*.png
 
-# Emphasis the screenshots show: what an instruction like "highlight the names of the engines" produces.
-RULES='[{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","label":"Highlight the names of the engines","phrases":["Planning Engine","Routing Engine","Learning Engine"],"style":"highlight"},{"id":"7A1B2C3D-8B86-D011-B42D-00C04FC964FF","label":"understand, decide, execute, learn","phrases":["understand","decide","execute","learn"],"style":"color"}]'
+# Emphasis the screenshots show: what an instruction like "highlight the parts of an agent" produces.
+RULES='[{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","label":"Highlight the parts of an agent","phrases":["Planner","Tool Router","Memory"],"style":"highlight"},{"id":"7A1B2C3D-8B86-D011-B42D-00C04FC964FF","label":"perceive, plan, act, reflect","phrases":["perceive","plan","act","reflect"],"style":"color"}]'
 
 # Put a sample slide on the desktop, so captures show what an audience would see behind the notes.
 SLIDE="$PWD/examples/sample-slide.png"

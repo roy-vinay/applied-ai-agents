@@ -1,140 +1,123 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-masthead-dark.svg">
-  <img src="../../.github/assets/speakernotes-masthead-light.svg" width="100%" alt="SpeakerNotes: speaker notes that float over your slides and stay out of your screen share. By Vinay Roy.">
-</picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-masthead-dark.svg"><img src="../../.github/assets/speakernotes-masthead-light.svg" width="100%" alt="SpeakerNotes: speaker notes that float over your slides and stay out of your screen share. By Vinay Roy."></picture>
 
-Speaker notes that float over your slides on Zoom and Google Meet, one slide at a time, and stay out of your
-screen share. You see them; your audience doesn't.
+**Speaker notes that float over your slides on Zoom and Google Meet, one slide at a time, and stay out of your
+screen share.** You see them; your audience sees your slides.
 
 <p>
-  <img src="docs/img/app-present.png" width="32%" alt="Presenting: one slide's notes, with the engine names highlighted">
+<a href="https://github.com/roy-vinay/applied-ai-agents/releases/download/speakernotes-latest/SpeakerNotes-macOS.zip"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/btn-speakernotes-download-dark.svg"><img src="../../.github/assets/btn-speakernotes-download-light.svg" width="49%" alt="Download for Mac: free for macOS 13 and later. Get SpeakerNotes-macOS.zip"></picture></a>
+<a href="#install"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/btn-speakernotes-install-dark.svg"><img src="../../.github/assets/btn-speakernotes-install-light.svg" width="49%" alt="One-line install: paste one command, run it again to update"></picture></a>
+</p>
+
+<p>
+  <img src="docs/img/app-present.png" width="32%" alt="Presenting: one slide's notes, with the parts of an agent highlighted">
   <img src="docs/img/app-emphasize.png" width="32%" alt="The Emphasize panel: describe what to emphasize, see what's emphasized">
   <img src="docs/img/app-text-settings.png" width="32%" alt="Text settings: size, typeface and line spacing">
 </p>
 
-**[Download for Mac](https://github.com/roy-vinay/applied-ai-agents/releases/download/speakernotes-latest/SpeakerNotes-macOS.zip)** · macOS 13 or later · free, MIT
+Jump to: [how it hides](#share) · [slides](#slides) · [reading](#read) · [demo-safe](#demo) · [decisions](#decisions) · [shortcuts](#shortcuts) · [install](#install)
 
-## The problem
+<a name="problem"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-problem-dark.svg"><img src="../../.github/assets/speakernotes-sec-problem-light.svg" width="100%" alt="The problem: your notes, or your audience's view"></picture>
 
 On one laptop screen, Presenter View doesn't survive a full-screen share. Either the share takes over and your
-notes disappear, or you share the whole screen and everyone reads your notes. A second monitor fixes it, but not
-in a hotel room or on a sales call from the car.
+notes disappear, or you share the whole screen and everyone reads them. A second monitor fixes it, but not in a
+hotel room or on a call from the car.
 
 SpeakerNotes is the smallest fix: a small window that sits on top of everything, shows the notes for the slide
-you're on, and asks macOS to leave it out of every screen capture. You click your slides as usual. The notes
-never move out of the way.
+you're on, and asks macOS to leave it out of every screen capture.
 
-## How it stays out of your share
+<a name="glance"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-glance-dark.svg"><img src="../../.github/assets/speakernotes-sec-glance-light.svg" width="100%" alt="At a glance: what it does"></picture>
 
-```
- your screen  →  macOS screen capture  →  Zoom, Meet, recordings
-     ↑                    ↑
- notes visible     notes window left out
-```
+<p>
+<a href="#share"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-private-dark.svg"><img src="../../.github/assets/speakernotes-glance-private-light.svg" width="49%" alt="Private: asks macOS to leave the notes out of every screen capture. Checked in CI on every change."></picture></a>
+<a href="#slides"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-slides-dark.svg"><img src="../../.github/assets/speakernotes-glance-slides-light.svg" width="49%" alt="One slide at a time: Markdown notes with --- between slides, moved from any app."></picture></a>
+<a href="#read"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-readable-dark.svg"><img src="../../.github/assets/speakernotes-glance-readable-light.svg" width="49%" alt="Easy to read: size, typeface and spacing, plus emphasis by hand or on-device AI."></picture></a>
+<a href="#demo"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-demo-dark.svg"><img src="../../.github/assets/speakernotes-glance-demo-light.svg" width="49%" alt="Demo-safe: Dock icon, Open at Login, reopens on the same slide, never steals focus."></picture></a>
+</p>
 
-macOS lets an app mark its windows as private to screen capture. SpeakerNotes does that for its notes window,
-so a whole-screen share or a recording shows what's underneath instead. CI checks this on every change: it
-captures the same part of the screen with hiding off, then on.
+<a name="share"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-share-dark.svg"><img src="../../.github/assets/speakernotes-sec-share-light.svg" width="100%" alt="How it stays out of your share"></picture>
+
+macOS lets an app mark a window as private to screen capture. SpeakerNotes does that for its notes window, so a
+whole-screen share or a recording shows what's underneath instead. CI checks it on every change by capturing the
+same part of the screen with hiding off, then on:
 
 <p>
   <img src="docs/img/capture-visible-crop.png" width="49%" alt="Hiding off: the notes window appears in the capture">
   <img src="docs/img/capture-hidden-crop.png" width="49%" alt="Hiding on: the same capture shows only the slide behind the notes">
 </p>
-<p><sub>Left: hiding off, the notes are captured. Right: hiding on, the same capture shows only the slide behind them.</sub></p>
+<p><sub><b>Left:</b> what you see. <b>Right:</b> what your screen share and recordings see, from the same capture with hiding on.</sub></p>
 
-Most video apps honor this, but not every capture method on every macOS version does. Test once on the Mac you
-present from (see [Before a real call](#before-a-real-call)). Sharing a single window or tab never includes the
-notes either way.
+Most video apps honor this, but not every capture method on every macOS version does, so test once on the Mac you
+present from: share your **entire screen** in a call with just yourself, and record it. If the notes ever show
+up, share only your slides window; the notes then can't appear.
 
-## One slide at a time
+<a name="slides"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-slides-dark.svg"><img src="../../.github/assets/speakernotes-sec-slides-light.svg" width="100%" alt="One slide at a time"></picture>
 
 Write notes in Markdown with a line of `---` between slides. With no `---` lines, each `#` or `##` heading starts
-a new slide. A Word or PDF script converts easily: one heading per slide.
+a slide, so a Word or PDF script converts easily.
 
 ```markdown
-# Opening
-- Thank everyone for joining
-- **The one number:** three hours saved every week
+# What is an AI agent?
+- A model that can **take actions**, not just answer
 
 ---
 
-## The problem
-Pause here. Ask who has seen this before.
+## The agent loop
+Perceive, plan, act, reflect. ==Pause here.==
 ```
 
-- **Move between slides from any app.** <kbd>⌃⌥→</kbd> and <kbd>⌃⌥←</kbd> work while your slides are in front.
-- **Or let it follow your slides.** Turn on **Move with My Slide Keys** and your usual <kbd>→</kbd> and
-  <kbd>←</kbd> move the notes too. macOS asks for Accessibility permission once.
-- **Jump anywhere.** Click the slide counter for a list of every slide by title, or click the progress bar.
-- **Teleprompter.** <kbd>⌃⌥Space</kbd> scrolls the notes at your pace; <kbd>⌃⌥↑</kbd> and <kbd>⌃⌥↓</kbd> change the speed.
-- **Edit in place.** <kbd>⌘E</kbd> switches to editing; edits save back to your file. Edit the file in another app
-  and the notes reload.
+<kbd>⌃⌥→</kbd> and <kbd>⌃⌥←</kbd> move between slides from any app. Turn on **Move with My Slide Keys** and your
+usual arrow keys move the notes too. Click the slide counter to jump to any slide by title, press
+<kbd>⌃⌥Space</kbd> for a teleprompter scroll, and <kbd>⌘E</kbd> to edit in place.
 
-## Make it easy to read
+<a name="read"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-read-dark.svg"><img src="../../.github/assets/speakernotes-sec-read-light.svg" width="100%" alt="Make it easy to read"></picture>
 
-- **Text.** The **Aa** button sets size, typeface (System, Rounded, Serif, Mono) and line spacing.
-- **Emphasis.** Highlight, bold, color or underline a phrase everywhere it appears. Select text and right-click,
-  write `==like this==` in your notes, or use the Emphasize panel.
-- **Describe it instead.** Type "highlight the names of the engines" and Apple's on-device model reads every slide
-  and finds them. It runs on your Mac (macOS 26 with Apple Intelligence), so client scripts never leave it. On
-  other Macs, type the exact phrase.
+The **Aa** button sets size, typeface (System, Rounded, Serif, Mono) and line spacing. Highlight, bold, color or
+underline a phrase everywhere it appears: select text and right-click, write `==like this==`, or describe it. Type
+"highlight the parts of an agent" and Apple's on-device model reads every slide and finds them, on your Mac, with
+macOS 26 and Apple Intelligence. Emphasis is saved beside each file and never changes the file itself.
 
-Emphasis is saved beside each file and never changes the file itself.
-
-## Built for a live demo
+<a name="demo"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-demo-dark.svg"><img src="../../.github/assets/speakernotes-sec-demo-light.svg" width="100%" alt="Built for a live demo"></picture>
 
 <p>
   <img src="docs/img/app-empty.png" width="49%" alt="With nothing open: Open Notes, Write Notes, and recent files">
   <img src="docs/img/app-edit.png" width="49%" alt="Editing: Markdown with headings and slide breaks colored">
 </p>
 
-- **Always one click away.** A Dock icon and a menu bar icon. Clicking the Dock icon always brings the notes back.
-- **Ready before the call.** **SpeakerNotes > Open at Login** starts it with your Mac.
-- **Comes back where you left it.** If it ever quits, it reopens on the same file and the same slide.
-- **Survives a projector.** If a display is unplugged mid-talk, the window moves back onto a screen you can see.
-- **Never steals focus.** Clicking your slides keeps them in front. **Click-through** (<kbd>⌃⌥T</kbd>) lets clicks
-  pass through the notes entirely, with an amber border so you know it's on.
+A Dock icon that always brings the notes back, **Open at Login**, and a relaunch that returns to the same file and
+slide. Unplug a projector mid-talk and the window moves back onto a screen you can see. It never takes focus from
+your slides, and **Click-through** (<kbd>⌃⌥T</kbd>) lets clicks pass through it entirely.
 
-## Decisions and trade-offs
+<a name="decisions"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-decisions-dark.svg"><img src="../../.github/assets/speakernotes-sec-decisions-light.svg" width="100%" alt="Decisions and trade-offs"></picture>
 
-- **Hide, don't detect.** macOS has no public way to know a share has started, so the notes are always private
-  to capture rather than hidden when a share is noticed. Nothing to forget to turn on.
-- **The model only finds; code decides.** Instructions return phrases, and a phrase is kept only if it appears
-  word for word in your notes. A made-up phrase can't be emphasized.
-- **Emphasis beside the file, not in it.** Your notes file stays exactly as you wrote it, so it still works in
-  any editor and in version control.
-- **No permissions by default.** The global shortcuts need none. Following your slide keys is opt-in because it
-  needs Accessibility access.
+<p>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-decision-hide-dark.svg"><img src="../../.github/assets/speakernotes-decision-hide-light.svg" width="49%" alt="Hide, don't detect: the notes are always private to capture."></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-decision-model-dark.svg"><img src="../../.github/assets/speakernotes-decision-model-light.svg" width="49%" alt="The model finds, code decides: a phrase is kept only if it appears word for word."></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-decision-file-dark.svg"><img src="../../.github/assets/speakernotes-decision-file-light.svg" width="49%" alt="Emphasis beside the file: the notes file stays exactly as written."></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-decision-permissions-dark.svg"><img src="../../.github/assets/speakernotes-decision-permissions-light.svg" width="49%" alt="No permissions by default: following slide keys is opt-in."></picture>
+</p>
 
-## Before a real call
+<a name="shortcuts"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-shortcuts-dark.svg"><img src="../../.github/assets/speakernotes-sec-shortcuts-light.svg" width="100%" alt="Shortcuts"></picture>
 
-Start a Zoom or Meet with just yourself, share your **entire screen**, and record it. If the notes show up in
-the recording, share just your slides window instead; the notes then can't appear.
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-shortcuts-dark.svg"><img src="../../.github/assets/speakernotes-shortcuts-light.svg" width="100%" alt="Shortcuts. From any app: Control Option arrows for next or previous slide, Control Option Space to auto-scroll, Control Option up and down for speed, Control Option T for click-through, Control Option N to show or hide. In the notes: arrows or Space for slides, Command O and S to open and save, Command E to edit, Command T and plus and minus for text, Command brackets for see-through."></picture>
 
-## Shortcuts
+<a name="status"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-status-dark.svg"><img src="../../.github/assets/speakernotes-sec-status-light.svg" width="100%" alt="Status"></picture>
 
-**From any app, while your slides are in front**
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-status-dark.svg"><img src="../../.github/assets/speakernotes-status-light.svg" width="100%" alt="Status: 12 parser tests on every change; Apple silicon and Intel builds that open on macOS 13; launch, linking and capture hiding checked in CI; instructions not tested in CI."></picture>
 
-- <kbd>⌃⌥→</kbd> <kbd>⌃⌥←</kbd> next or previous slide
-- <kbd>⌃⌥Space</kbd> start or stop auto-scroll, <kbd>⌃⌥↑</kbd> <kbd>⌃⌥↓</kbd> faster or slower
-- <kbd>⌃⌥T</kbd> click-through on or off
-- <kbd>⌃⌥N</kbd> show or hide the notes, <kbd>⌃⌥E</kbd> edit or present
+Early, version 0.2. CI runs on macOS 26 for every change. Instructions aren't tested there, because the build
+machines can't run Apple Intelligence.
 
-**After clicking in the notes**
-
-- <kbd>→</kbd> <kbd>←</kbd> <kbd>Space</kbd> next or previous slide
-- <kbd>⌘O</kbd> open a file, <kbd>⌘S</kbd> save, <kbd>⌘E</kbd> edit or present
-- <kbd>⌘T</kbd> text settings, <kbd>⌘+</kbd> <kbd>⌘−</kbd> text size
-- <kbd>⌘]</kbd> <kbd>⌘[</kbd> less or more see-through
-
-## Status
-
-Early, version 0.2. CI runs on macOS 26 for every change: 12 parser tests, a build for Apple silicon and Intel,
-a launch check, screenshots, the screen-capture check above, and a check that the on-device model framework is
-linked so the app still opens on macOS 13. Instructions aren't tested in CI, because the build machines can't
-run Apple Intelligence.
-
-## Install
+<a name="install"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-install-dark.svg"><img src="../../.github/assets/speakernotes-sec-install-light.svg" width="100%" alt="Install and build"></picture>
 
 Paste this in Terminal. Run it again any time to update; your notes and settings are kept.
 
@@ -142,11 +125,10 @@ Paste this in Terminal. Run it again any time to update; your notes and settings
 curl -fsSL https://raw.githubusercontent.com/roy-vinay/applied-ai-agents/main/tools/speakernotes/install.sh | bash
 ```
 
-Or download **[SpeakerNotes-macOS.zip](https://github.com/roy-vinay/applied-ai-agents/releases/download/speakernotes-latest/SpeakerNotes-macOS.zip)**
-(always the latest build from main), double-click it, and move **SpeakerNotes.app** to Applications. It isn't
-notarized yet, so the first time, right-click it and choose **Open**.
+Or download **[SpeakerNotes-macOS.zip](https://github.com/roy-vinay/applied-ai-agents/releases/download/speakernotes-latest/SpeakerNotes-macOS.zip)** (the latest build from main), double-click it, and move
+**SpeakerNotes.app** to Applications. It isn't notarized yet, so the first time, right-click it and choose **Open**.
 
-## Build it yourself
+To build it yourself:
 
 ```bash
 cd tools/speakernotes

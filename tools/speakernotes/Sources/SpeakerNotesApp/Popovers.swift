@@ -120,7 +120,7 @@ final class EmphasisViewController: NSViewController, NSTextFieldDelegate {
 
     override func loadView() {
         field.placeholderString = Assistant.isAvailable
-            ? "e.g. Highlight the names of the engines"
+            ? "e.g. Highlight the parts of an agent"
             : "Type a word or phrase to highlight"
         field.font = .systemFont(ofSize: 13)
         field.bezelStyle = .roundedBezel
