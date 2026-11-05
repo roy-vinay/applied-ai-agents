@@ -69,6 +69,10 @@ open -n -a "$APP" --args -hiddenFromShare NO -filePath "$NOTES" -slideIndex 3 -o
 sleep 6
 region app-parking
 quit
+open -n -a "$APP" --args -hiddenFromShare NO -filePath "$NOTES" -slideIndex 1 -openPopover quickpark
+sleep 6
+region app-quickpark
+quit
 
 # Popovers are their own windows, so capture the area around the notes window.
 launch -filePath "$NOTES" -slideIndex 1 -openPopover text
