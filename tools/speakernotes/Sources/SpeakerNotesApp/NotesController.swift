@@ -17,6 +17,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
     private let footer = NSView()
     private let pill = SlidePill(frame: .zero)
     private let fileLabel = NSTextField(labelWithString: "")
+    private let hearingLabel = NSTextField(labelWithString: "")
     private let editHint = NSTextField(labelWithString: "Put a line of --- between slides  ·  ⌘S saves  ·  ⌘E presents")
     private let progress = SlideProgress(frame: .zero)
     private let speedLabel = NSTextField(labelWithString: "1.0×")
@@ -211,7 +212,13 @@ final class NotesController: NSObject, NSTextViewDelegate {
         editHint.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         editHint.isHidden = true
 
-        let stack = NSStackView(views: [navGroup, progress, editHint, scrollGroup])
+        hearingLabel.font = .systemFont(ofSize: 11.5, weight: .medium)
+        hearingLabel.textColor = Theme.accent
+        hearingLabel.lineBreakMode = .byTruncatingHead
+        hearingLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        hearingLabel.setContentHuggingPriority(.init(1), for: .horizontal)
+        hearingLabel.isHidden = true
+        let stack = NSStackView(views: [navGroup, progress, hearingLabel, editHint, scrollGroup])
         stack.spacing = 12
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -384,7 +391,8 @@ final class NotesController: NSObject, NSTextViewDelegate {
 
         let presenting = !editing && !empty
         navGroup.isHidden = !presenting
-        progress.isHidden = !presenting
+        progress.isHidden = !presenting || voice.isOn
+        hearingLabel.isHidden = !presenting || !voice.isOn
         scrollGroup.isHidden = !presenting
         editHint.isHidden = !editing
         prevButton.isEnabled = presenting && index > 0
@@ -891,8 +899,13 @@ final class NotesController: NSObject, NSTextViewDelegate {
             self.toast.show("Copied \(self.parked.count) question\(self.parked.count == 1 ? "" : "s")")
         }
         voice.onHeard = { [weak self] words in self?.heard(words) }
-        voice.onStatus = { [weak self] message in self?.toast.show(message, duration: 5) }
+        voice.onStatus = { [weak self] message in
+            guard let self else { return }
+            self.refresh()
+            self.alert("Scroll as I Speak", message)
+        }
         voice.onChange = { [weak self] in self?.refresh() }
+        voice.onHearing = { [weak self] text in self?.hearingLabel.stringValue = "Hearing: " + text }
     }
 
     @objc func showTextSettings(_ sender: Any?) {
