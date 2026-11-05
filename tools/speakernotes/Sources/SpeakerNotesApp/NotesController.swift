@@ -161,10 +161,12 @@ final class NotesController: NSObject, NSTextViewDelegate {
         openButton = IconButton("folder", tip: "Open notes (⌘O)", target: self, action: #selector(openDocument))
         editButton = IconButton("square.and.pencil", tip: "Edit notes (⌘E)", target: self, action: #selector(toggleEditing))
         moreButton = IconButton("ellipsis", tip: "More", size: 14, target: self, action: #selector(showMoreMenu(_:)))
+        let closeButton = IconButton("xmark", tip: "Hide notes (⌘W). Click the Dock icon to bring them back", size: 12,
+                                     target: self, action: #selector(hideWindow))
 
         let spacer = NSView()
         spacer.setContentHuggingPriority(.init(1), for: .horizontal)
-        let stack = NSStackView(views: [pill, fileLabel, spacer, parkButton, syncButton, textButton, emphasisButton, openButton, editButton, moreButton])
+        let stack = NSStackView(views: [pill, fileLabel, spacer, parkButton, syncButton, textButton, emphasisButton, openButton, editButton, moreButton, closeButton])
         stack.spacing = 8
         for b in [parkButton!, syncButton!, textButton!, emphasisButton!, openButton!, editButton!] { stack.setCustomSpacing(2, after: b) }
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 12, bottom: 0, right: 8)

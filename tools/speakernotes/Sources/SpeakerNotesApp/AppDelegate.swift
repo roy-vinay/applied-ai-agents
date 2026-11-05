@@ -35,7 +35,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Used by the screenshot script: -openPopover text|emphasis
         if let which = UserDefaults.standard.string(forKey: "openPopover") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-                if which == "text" { self?.notes.showTextSettings(nil) } else { self?.notes.showEmphasis(nil) }
+                switch which {
+                case "text": self?.notes.showTextSettings(nil)
+                case "parking": self?.notes.showParking(nil)
+                default: self?.notes.showEmphasis(nil)
+                }
             }
         }
     }
@@ -240,9 +244,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         add(menu, "Keyboard Shortcuts", #selector(showShortcuts), target: self)
         if includeQuit {
             add(menu, "Show Notes", #selector(NotesController.show), key: "n", target: notes)
-            menu.addItem(.separator())
-            add(menu, "Quit SpeakerNotes", #selector(NSApplication.terminate(_:)), key: "q", mods: [.command], target: NSApp)
+        } else {
+            add(menu, "Hide Notes", #selector(NotesController.hideWindow), key: "w", mods: [.command], target: notes)
         }
+        menu.addItem(.separator())
+        add(menu, "Quit SpeakerNotes", #selector(NSApplication.terminate(_:)), key: "q", mods: [.command], target: NSApp)
         return menu
     }
 

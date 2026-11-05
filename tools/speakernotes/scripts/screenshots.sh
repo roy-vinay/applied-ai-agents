@@ -60,6 +60,16 @@ sleep 7
 window app-voice
 quit
 
+# The question parking lot, with a few questions parked during a talk.
+PARKED='[{"id":"0B1C2D3E-4F50-4617-8293-A4B5C6D7E8F9","text":"How do you handle EDI with our carriers?","slide":2,"slideTitle":"The agent loop","date":0,"answered":false},{"id":"1C2D3E4F-5061-4728-93A4-B5C6D7E8F90A","text":"Can we pilot this in one region first?","slide":3,"slideTitle":"Keeping agents safe","date":0,"answered":false},{"id":"2D3E4F50-6172-4839-A4B5-C6D7E8F90A1B","text":"What happens when the agent is unsure?","slide":2,"slideTitle":"The agent loop","date":0,"answered":true}]'
+launch -filePath "$NOTES" -slideIndex 3
+quit
+defaults write "$DOMAIN" "parked:$NOTES" -data "$(printf '%s' "$PARKED" | xxd -p | tr -d '\n')"
+open -n -a "$APP" --args -hiddenFromShare NO -filePath "$NOTES" -slideIndex 3 -openPopover parking
+sleep 6
+region app-parking
+quit
+
 # Popovers are their own windows, so capture the area around the notes window.
 launch -filePath "$NOTES" -slideIndex 1 -openPopover text
 region app-text-settings
