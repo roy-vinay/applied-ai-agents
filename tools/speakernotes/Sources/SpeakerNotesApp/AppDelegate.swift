@@ -244,9 +244,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         add(menu, "Keyboard Shortcuts", #selector(showShortcuts), target: self)
         if includeQuit {
             add(menu, "Show Notes", #selector(NotesController.show), key: "n", target: notes)
-            menu.addItem(.separator())
-            add(menu, "Quit SpeakerNotes", #selector(NSApplication.terminate(_:)), key: "q", mods: [.command], target: NSApp)
+        } else {
+            add(menu, "Hide Notes", #selector(NotesController.hideWindow), key: "w", mods: [.command], target: notes)
         }
+        menu.addItem(.separator())
+        add(menu, "Quit SpeakerNotes", #selector(NSApplication.terminate(_:)), key: "q", mods: [.command], target: NSApp)
         return menu
     }
 

@@ -57,6 +57,9 @@ final class ParkingViewController: NSViewController, NSTextFieldDelegate {
     override func loadView() {
         let title = label("Park a question", size: 13, color: Theme.text)
         let hint = label("Press Return to park it with this slide. You'll see the list at the end.", size: 11.5, weight: .regular)
+        hint.lineBreakMode = .byWordWrapping
+        hint.maximumNumberOfLines = 2
+        hint.preferredMaxLayoutWidth = 320
         field.placeholderString = "e.g. How do you handle EDI?"
         field.font = .systemFont(ofSize: 13)
         field.bezelStyle = .roundedBezel

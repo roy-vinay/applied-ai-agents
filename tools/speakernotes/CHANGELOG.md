@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.3
+
+- **A close button.** The × at the right of the header hides the notes (⌘W); click the Dock icon to bring them back. **Quit SpeakerNotes** (⌘Q) is now at the bottom of the ••• menu too.
+- The parking lot's hint no longer gets cut off.
+
 ## 0.5.2
 
 - **Fixed: Scroll as I Speak heard you but didn't move.** Dimming what you've said and scrolling now use a method that draws reliably on every macOS version, and the footer shows where it thinks you are ("word 37 of 210").
