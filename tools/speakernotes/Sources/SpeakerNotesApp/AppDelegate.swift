@@ -79,6 +79,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         hotKeys.register(kVK_ANSI_N) { [weak self] in self?.notes.toggleVisible() }
         hotKeys.register(kVK_ANSI_E) { [weak self] in self?.notes.toggleEditing() }
         hotKeys.register(kVK_ANSI_F) { [weak self] in self?.notes.toggleFollowSlides() }
+        hotKeys.register(kVK_ANSI_V) { [weak self] in self?.notes.toggleVoice() }
+        hotKeys.register(kVK_ANSI_P) { [weak self] in self?.notes.showParking(nil) }
     }
 
     // MARK: - Following your slide keys
@@ -218,6 +220,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             .identifier = .init("followSlides")
         add(menu, "Moving the Notes Moves My Slides", #selector(NotesController.toggleMoveSlidesToo), target: notes)
             .identifier = .init("moveSlides")
+        add(menu, "Scroll as I Speak", #selector(NotesController.toggleVoice), key: "v", target: notes)
+            .identifier = .init("voice")
+        add(menu, "Park a Question…", #selector(NotesController.showParking(_:)), key: "p", target: notes)
         add(menu, "Text Size and Typeface…", #selector(NotesController.showTextSettings(_:)), target: notes)
         add(menu, "Emphasize…", #selector(NotesController.showEmphasis(_:)), target: notes)
         menu.addItem(.separator())
@@ -297,6 +302,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             .identifier = .init("followSlides")
         add(slides, "Moving the Notes Moves My Slides", #selector(NotesController.toggleMoveSlidesToo), target: notes)
             .identifier = .init("moveSlides")
+        add(slides, "Scroll as I Speak", #selector(NotesController.toggleVoice), key: "v", target: notes)
+            .identifier = .init("voice")
+        add(slides, "Park a Question…", #selector(NotesController.showParking(_:)), key: "p", target: notes)
         add(slides, "Move with My Slide Keys", #selector(toggleFollowSlideKeys), target: self).identifier = .init("follow")
         slides.addItem(.separator())
         add(slides, "Start Auto-Scroll", #selector(NotesController.toggleScrolling), key: " ", target: notes)
@@ -357,6 +365,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 item.toolTip = "When you press → or ← in your slides app, the notes move one slide too."
             case "followSlides": item.state = notes.sync.isOn ? .on : .off
             case "moveSlides": item.state = Settings.moveSlidesToo ? .on : .off
+            case "voice": item.state = notes.voice.isOn ? .on : .off
             case "clickThrough": item.state = notes.clickThrough ? .on : .off
             case "share": item.state = Settings.hiddenFromShare ? .on : .off
             case "login": item.state = opensAtLogin ? .on : .off

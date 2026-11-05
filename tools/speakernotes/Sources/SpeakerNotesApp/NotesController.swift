@@ -29,6 +29,8 @@ final class NotesController: NSObject, NSTextViewDelegate {
     private var textButton: IconButton!
     private var emphasisButton: IconButton!
     private var syncButton: IconButton!
+    private var parkButton: IconButton!
+    private var voiceButton: IconButton!
     private var openButton: IconButton!
     private var editButton: IconButton!
     private var moreButton: IconButton!
@@ -60,6 +62,14 @@ final class NotesController: NSObject, NSTextViewDelegate {
     let sync = SlideSync()
     private lazy var textPopover = makePopover(textSettings)
     private lazy var emphasisPopover = makePopover(emphasisPanel)
+    private let parkingPanel = ParkingViewController()
+    private lazy var parkingPopover = makePopover(parkingPanel)
+    private(set) var parked: [ParkedQuestion] = []
+    private var appBeforeParking: NSRunningApplication?
+    private var remindedParked = false
+    let voice = VoiceFollower()
+    private var aligner: ScriptAligner?
+    private var voicePausedUntil = Date.distantPast
 
     /// True when there are no notes to show, so the window offers to open or write some.
     var isEmpty: Bool { fileURL == nil && text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -136,6 +146,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
 
         textButton = IconButton("textformat.size", tip: "Text size and typeface", target: self, action: #selector(showTextSettings(_:)))
         syncButton = IconButton("arrow.triangle.2.circlepath", tip: "Follow my slides (⌃⌥F)", target: self, action: #selector(toggleFollowSlides))
+        parkButton = IconButton("tray", tip: "Parked questions (⌃⌥P)", target: self, action: #selector(showParking(_:)))
         emphasisButton = IconButton("highlighter", tip: "Emphasize words and phrases", target: self, action: #selector(showEmphasis(_:)))
         openButton = IconButton("folder", tip: "Open notes (⌘O)", target: self, action: #selector(openDocument))
         editButton = IconButton("square.and.pencil", tip: "Edit notes (⌘E)", target: self, action: #selector(toggleEditing))
@@ -143,9 +154,9 @@ final class NotesController: NSObject, NSTextViewDelegate {
 
         let spacer = NSView()
         spacer.setContentHuggingPriority(.init(1), for: .horizontal)
-        let stack = NSStackView(views: [pill, fileLabel, spacer, syncButton, textButton, emphasisButton, openButton, editButton, moreButton])
+        let stack = NSStackView(views: [pill, fileLabel, spacer, parkButton, syncButton, textButton, emphasisButton, openButton, editButton, moreButton])
         stack.spacing = 8
-        for b in [syncButton!, textButton!, emphasisButton!, openButton!, editButton!] { stack.setCustomSpacing(2, after: b) }
+        for b in [parkButton!, syncButton!, textButton!, emphasisButton!, openButton!, editButton!] { stack.setCustomSpacing(2, after: b) }
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 12, bottom: 0, right: 8)
         stack.translatesAutoresizingMaskIntoConstraints = false
         header.addSubview(stack)
@@ -190,7 +201,8 @@ final class NotesController: NSObject, NSTextViewDelegate {
         speedGroup.wantsLayer = true
         speedGroup.layer?.cornerRadius = 8
         speedGroup.layer?.backgroundColor = Theme.fill.cgColor
-        scrollGroup = NSStackView(views: [playButton, speedGroup])
+        voiceButton = IconButton("waveform", tip: "Scroll as I speak (⌃⌥V)", target: self, action: #selector(toggleVoice))
+        scrollGroup = NSStackView(views: [voiceButton, playButton, speedGroup])
         scrollGroup.spacing = 4
 
         editHint.font = .systemFont(ofSize: 11.5, weight: .medium)
@@ -234,6 +246,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
         showView.textContainerInset = NSSize(width: 22, height: 18)
         showView.selectedTextAttributes = [.backgroundColor: NSColor(white: 1, alpha: 0.18)]
         showView.onKey = { [weak self] event in self?.presentKey(event) ?? false }
+        showView.onManualScroll = { [weak self] in self?.voicePausedUntil = Date().addingTimeInterval(3) }
         showView.onEmphasize = { [weak self] phrase, style in self?.emphasize(phrase, style) }
         showView.onAskToEmphasize = { [weak self] in
             guard let self else { return }
@@ -314,6 +327,8 @@ final class NotesController: NSObject, NSTextViewDelegate {
         } else {
             Settings.filePath = nil
             rules = EmphasisStore.rules(for: nil)
+            parked = ParkingStore.load(for: nil)
+        parked = ParkingStore.load(for: nil)
             setText(Settings.scratchNotes, keepIndex: Settings.slideIndex)
         }
         if UserDefaults.standard.bool(forKey: "startEditing") { toggleEditing() }
@@ -333,6 +348,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
             MarkdownRenderer.render(slides[index].text, style: .current, emphasis: rules))
         showView.scroll(.zero)
         Settings.slideIndex = index
+        resetVoice()
         refresh()
     }
 
@@ -357,6 +373,10 @@ final class NotesController: NSObject, NSTextViewDelegate {
         editButton.isOn = editing
         syncButton.isOn = sync.isOn
         syncButton.isEnabled = !empty
+        let waiting = parked.filter { !$0.answered }.count
+        parkButton.isOn = waiting > 0
+        parkButton.setSymbol(waiting > 0 ? "tray.full" : "tray",
+                             tip: waiting > 0 ? "\(waiting) parked question\(waiting == 1 ? "" : "s") (⌃⌥P)" : "Park a question (⌃⌥P)")
         editButton.isEnabled = !clickThrough
         textButton.isEnabled = !clickThrough
         emphasisButton.isEnabled = !clickThrough && !editing && !empty
@@ -376,6 +396,10 @@ final class NotesController: NSObject, NSTextViewDelegate {
         playButton.setSymbol(scrolling ? "pause.fill" : "play.fill",
                              tip: scrolling ? "Stop auto-scroll (⌃⌥Space)" : "Start auto-scroll (⌃⌥Space)")
         playButton.isOn = scrolling
+        voiceButton.isOn = voice.isOn
+        voiceButton.isEnabled = presenting
+        voiceButton.setSymbol(voice.isOn ? "waveform.circle.fill" : "waveform",
+                              tip: voice.isOn ? "Stop scrolling as I speak (⌃⌥V)" : "Scroll as I speak (⌃⌥V)")
         speedLabel.stringValue = String(format: "%.1f×", Settings.scrollSpeed / 30)
 
         background.layer?.borderWidth = clickThrough ? 2 : 0
@@ -408,6 +432,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
         stopScrolling()
         index = target
         renderSlide()
+        if index == slides.count - 1 { remindParked() }
     }
 
     private func showSlideMenu(from view: NSView) {
@@ -573,6 +598,8 @@ final class NotesController: NSObject, NSTextViewDelegate {
             fileURL = url
             dirty = false
             rules = EmphasisStore.rules(for: url)
+            parked = ParkingStore.load(for: url)
+            remindedParked = false
             sync.reset()
             Settings.filePath = url.path
             Settings.addRecent(url)
@@ -633,6 +660,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
 
     func startScrolling() {
         guard !editing, !isEmpty, !scrolling else { return }
+        if voice.isOn { toggleVoice() }
         scrolling = true
         lastTick = Date()
         let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in self?.tick() }
@@ -850,6 +878,21 @@ final class NotesController: NSObject, NSTextViewDelegate {
             self.setRules(self.rules.map { var r = $0; if r.id == id { r.style = style }; return r })
         }
         emphasisPanel.onClearAll = { [weak self] in self?.setRules([]) }
+        parkingPanel.onPark = { [weak self] text in self?.park(text) }
+        parkingPanel.onToggle = { [weak self] id in
+            self?.updateParked { items in if let i = items.firstIndex(where: { $0.id == id }) { items[i].answered.toggle() } }
+        }
+        parkingPanel.onRemove = { [weak self] id in self?.updateParked { $0.removeAll { $0.id == id } } }
+        parkingPanel.onClearAnswered = { [weak self] in self?.updateParked { $0.removeAll { $0.answered } } }
+        parkingPanel.onCopy = { [weak self] in
+            guard let self else { return }
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(ParkingStore.text(self.parked), forType: .string)
+            self.toast.show("Copied \(self.parked.count) question\(self.parked.count == 1 ? "" : "s")")
+        }
+        voice.onHeard = { [weak self] words in self?.heard(words) }
+        voice.onStatus = { [weak self] message in self?.toast.show(message, duration: 5) }
+        voice.onChange = { [weak self] in self?.refresh() }
     }
 
     @objc func showTextSettings(_ sender: Any?) {
@@ -958,7 +1001,111 @@ final class NotesController: NSObject, NSTextViewDelegate {
     /// Shows a short message in the notes window.
     func notify(_ text: String, seconds: TimeInterval = 4) { toast.show(text, duration: seconds) }
 
+    // MARK: - Scroll as I speak
+
+    @objc func toggleVoice() {
+        if voice.isOn {
+            voice.stop()
+            clearSpoken()
+            toast.show("Stopped scrolling with your voice")
+        } else {
+            guard !editing, !isEmpty else { return }
+            stopScrolling()
+            resetVoice()
+            voice.start()
+            toast.show("Listening to your mic: the notes scroll as you speak", duration: 2.5)
+        }
+        refresh()
+    }
+
+    /// A new slide (or new notes): start reading from the top.
+    private func resetVoice() {
+        aligner = ScriptAligner(text: showView.string)
+        voice.hints = Array(Set((aligner?.words ?? []).filter(\.isContent).map(\.text))).sorted()
+        clearSpoken()
+    }
+
+    private func heard(_ words: [String]) {
+        guard voice.isOn, !editing, Date() >= voicePausedUntil, let aligner,
+              let position = aligner.update(heard: words) else { return }
+        showSpoken(through: aligner.words[position].range)
+    }
+
+    /// Dims what you've said and keeps the line you're on about a third of the way down.
+    private func showSpoken(through range: NSRange) {
+        guard let lm = showView.layoutManager, let tc = showView.textContainer else { return }
+        let length = (showView.string as NSString).length
+        let said = NSRange(location: 0, length: min(range.upperBound, length))
+        lm.removeTemporaryAttribute(.foregroundColor, forCharacterRange: NSRange(location: 0, length: length))
+        lm.addTemporaryAttribute(.foregroundColor, value: NSColor(white: 1, alpha: 0.36), forCharacterRange: said)
+        let glyphs = lm.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+        var rect = lm.boundingRect(forGlyphRange: glyphs, in: tc)
+        rect.origin.y += showView.textContainerOrigin.y
+        let clip = showScroll.contentView
+        let maxY = max(0, showView.frame.height - clip.bounds.height)
+        let target = min(max(0, rect.midY - clip.bounds.height * 0.35), maxY)
+        guard abs(target - clip.bounds.origin.y) > 3 else { return }
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.35
+            ctx.allowsImplicitAnimation = true
+            clip.animator().setBoundsOrigin(NSPoint(x: 0, y: target))
+        } completionHandler: { [weak self] in
+            guard let self else { return }
+            self.showScroll.reflectScrolledClipView(self.showScroll.contentView)
+        }
+    }
+
+    private func clearSpoken() {
+        guard let lm = showView.layoutManager else { return }
+        lm.removeTemporaryAttribute(.foregroundColor,
+                                    forCharacterRange: NSRange(location: 0, length: (showView.string as NSString).length))
+    }
+
+    // MARK: - Question parking lot
+
+    /// Opens the parking lot. From the ⌃⌥P hotkey it comes up ready to type, prefilled with what you just said
+    /// (when your voice is being followed), and Return sends you back to your slides.
+    @objc func showParking(_ sender: Any?) {
+        let front = NSWorkspace.shared.frontmostApplication
+        appBeforeParking = front?.bundleIdentifier == Bundle.main.bundleIdentifier ? nil : front
+        if editing { finishEditing() }
+        show()
+        NSApp.activate(ignoringOtherApps: true)
+        panel.makeKey()
+        parkingPanel.prepare(prefill: voice.isOn ? voice.recentText : "")
+        parkingPanel.setItems(parked)
+        parkingPopover.show(relativeTo: parkButton.bounds, of: parkButton, preferredEdge: .maxY)
+    }
+
+    private func park(_ text: String) {
+        let title = slides[index].title.isEmpty ? "Slide \(index + 1)" : slides[index].title
+        let number = SlideMatcher.declaredNumber(of: slides[index]) ?? index + 1
+        updateParked { $0.append(ParkedQuestion(text: text, slide: number, slideTitle: title)) }
+        parkingPopover.close()
+        toast.show("Parked. \(parked.filter { !$0.answered }.count) waiting")
+        appBeforeParking?.activate(options: [])
+        appBeforeParking = nil
+    }
+
+    private func updateParked(_ change: (inout [ParkedQuestion]) -> Void) {
+        change(&parked)
+        ParkingStore.save(parked, for: fileURL)
+        parkingPanel.setItems(parked)
+        refresh()
+    }
+
+    /// On the last slide, a reminder of the questions you promised to come back to.
+    private func remindParked() {
+        let waiting = parked.filter { !$0.answered }
+        guard !waiting.isEmpty, !remindedParked else { return }
+        remindedParked = true
+        let first = waiting[0].text.count > 40 ? String(waiting[0].text.prefix(40)) + "…" : waiting[0].text
+        toast.show("Before you finish: \(waiting.count) parked question\(waiting.count == 1 ? "" : "s"), starting with \u{201C}\(first)\u{201D}", duration: 8)
+        parkButton.isOn = true
+    }
+
     func prepareToQuit() {
+        voice.stop()
         if editing && fileURL == nil { Settings.scratchNotes = editView.string }
         if dirty { save() }
     }

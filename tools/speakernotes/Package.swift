@@ -19,6 +19,8 @@ let package = Package(
                 .linkedFramework("Carbon"),
                 .linkedFramework("Vision"),
                 .linkedFramework("ScreenCaptureKit"),
+                .linkedFramework("Speech"),
+                .linkedFramework("AVFoundation"),
                 // The on-device model only exists on macOS 26; weak-link it so the app still opens on older macOS.
                 .unsafeFlags(["-Xlinker", "-weak_framework", "-Xlinker", "FoundationModels"]),
             ]

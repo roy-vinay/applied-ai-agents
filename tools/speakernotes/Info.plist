@@ -10,13 +10,15 @@
 	<key>CFBundleName</key><string>SpeakerNotes</string>
 	<key>CFBundleDisplayName</key><string>SpeakerNotes</string>
 	<key>CFBundlePackageType</key><string>APPL</string>
-	<key>CFBundleShortVersionString</key><string>0.4.0</string>
-	<key>CFBundleVersion</key><string>6</string>
+	<key>CFBundleShortVersionString</key><string>0.5.0</string>
+	<key>CFBundleVersion</key><string>7</string>
 	<key>LSMinimumSystemVersion</key><string>13.0</string>
 	<key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
 	<key>NSHighResolutionCapable</key><true/>
 	<key>NSPrincipalClass</key><string>NSApplication</string>
 	<key>NSAppleEventsUsageDescription</key><string>SpeakerNotes asks Keynote and PowerPoint which slide is showing, so your notes follow along, and reads a deck's presenter notes when you import them.</string>
+	<key>NSMicrophoneUsageDescription</key><string>With Scroll as I Speak on, SpeakerNotes listens to your microphone on this Mac so the notes scroll along as you talk. Nothing is recorded or sent anywhere.</string>
+	<key>NSSpeechRecognitionUsageDescription</key><string>SpeakerNotes recognizes your speech on this Mac, only to scroll your notes as you talk. Nothing leaves your Mac.</string>
 	<key>NSHumanReadableCopyright</key><string>Copyright 2026 Vinay Roy. MIT License.</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>

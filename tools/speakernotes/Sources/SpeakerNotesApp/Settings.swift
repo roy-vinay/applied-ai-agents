@@ -95,6 +95,8 @@ While your slides are in front (any app):
 ⌃⌥N          Show or hide the notes
 ⌃⌥E          Edit or present
 ⌃⌥F          Follow my slides on or off
+⌃⌥V          Scroll as I speak on or off
+⌃⌥P          Park an audience question
 
 After clicking in the notes:
 → ← Space    Next / previous slide
