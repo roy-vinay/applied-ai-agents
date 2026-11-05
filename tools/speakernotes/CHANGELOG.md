@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.2
+
+- **Fixed: Scroll as I Speak heard you but didn't move.** Dimming what you've said and scrolling now use a method that draws reliably on every macOS version, and the footer shows where it thinks you are ("word 37 of 210").
+- **Follows real speech better.** It allows for how speech recognition gets words wrong: a letter or two off on long words, and words cut short or run together ("dispatch OS" for "DispatchOS"). If you skip ahead, it finds you again after a few sentences anywhere on the slide.
+
 ## 0.5.1
 
 - **Scroll as I Speak shows what it hears.** While it's on, the footer shows "Hearing: …" with your last few words, so you can tell at a glance whether the mic and recognition are working.

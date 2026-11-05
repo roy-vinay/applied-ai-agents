@@ -69,6 +69,21 @@ final class ScriptAlignerTests: XCTestCase {
         XCTAssertEqual(say(a, "it reads a goal picks a tool"), index(a, "tool"))
     }
 
+    func testRecognitionStyleMistakes() {
+        let a = ScriptAligner(text: "Built on DispatchOS, the routing engines plan every delivery for our dispatchers.")
+        XCTAssertNotNil(say(a, "built on dispatch os the routing engine"))
+        XCTAssertEqual(a.words[a.position].text, "engines")
+        XCTAssertNotNil(say(a, "plan every delivery for our dispatcher"))
+        XCTAssertEqual(a.words[a.position].text, "dispatchers")
+    }
+
+    func testFindsYouAfterSkippingAhead() {
+        let a = ScriptAligner(text: script)
+        for _ in 0..<3 { XCTAssertNil(say(a, "blah blah weather sunny")) }
+        XCTAssertNil(say(a, "start with read only tools then add actions"))
+        XCTAssertEqual(say(a, "start with read only tools then add actions"), index(a, "actions", after: index(a, "start")))
+    }
+
     func testRepeatedWordsPreferTheNextOccurrence() {
         let a = ScriptAligner(text: script)
         a.reset(to: index(a, "keeps"))
