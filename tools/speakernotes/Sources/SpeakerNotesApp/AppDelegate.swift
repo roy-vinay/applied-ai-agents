@@ -28,6 +28,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if let url = pendingURLs.last { notes.open(url) }
         pendingURLs = []
         notes.show()
+        // Used by the screenshot script: -simulateSpeech "words as if spoken"
+        if let transcript = UserDefaults.standard.string(forKey: "simulateSpeech") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.notes.simulateVoice(transcript) }
+        }
         // Used by the screenshot script: -openPopover text|emphasis
         if let which = UserDefaults.standard.string(forKey: "openPopover") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in

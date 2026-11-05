@@ -24,7 +24,16 @@ final class NotesController: NSObject, NSTextViewDelegate {
     private let toast = Toast(frame: .zero)
     private let emptyState = EmptyStateView(frame: .zero)
     private let showScroll = NSScrollView()
-    private let showView = PresentTextView(frame: NSRect(x: 0, y: 0, width: 500, height: 300))
+    /// Built on TextKit 1 explicitly, so following your voice can measure and dim lines the same way on every macOS.
+    private let showView: PresentTextView = {
+        let storage = NSTextStorage()
+        let layout = NSLayoutManager()
+        storage.addLayoutManager(layout)
+        let container = NSTextContainer(size: NSSize(width: 500, height: CGFloat.greatestFiniteMagnitude))
+        container.widthTracksTextView = true
+        layout.addTextContainer(container)
+        return PresentTextView(frame: NSRect(x: 0, y: 0, width: 500, height: 300), textContainer: container)
+    }()
     private let editScroll = NSTextView.scrollableTextView()
     private var editView: NSTextView { editScroll.documentView as! NSTextView }
     private var textButton: IconButton!
@@ -351,8 +360,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
     }
 
     private func renderSlide() {
-        showView.textStorage?.setAttributedString(
-            MarkdownRenderer.render(slides[index].text, style: .current, emphasis: rules))
+        showView.textStorage?.setAttributedString(renderedSlide())
         showView.scroll(.zero)
         Settings.slideIndex = index
         resetVoice()
@@ -1035,22 +1043,36 @@ final class NotesController: NSObject, NSTextViewDelegate {
     private func resetVoice() {
         aligner = ScriptAligner(text: showView.string)
         voice.hints = Array(Set((aligner?.words ?? []).filter(\.isContent).map(\.text))).sorted()
-        clearSpoken()
+        dimmedThrough = 0
     }
 
+    private var dimmedThrough = 0
+
     private func heard(_ words: [String]) {
-        guard voice.isOn, !editing, Date() >= voicePausedUntil, let aligner,
-              let position = aligner.update(heard: words) else { return }
-        showSpoken(through: aligner.words[position].range)
+        guard voice.isOn, !editing, let aligner else { return }
+        let moved = Date() >= voicePausedUntil ? aligner.update(heard: words) : nil
+        // Where you are, beside what was heard, so you can see it following.
+        if aligner.position >= 0 {
+            hearingLabel.stringValue += "  \u{00B7}  word \(aligner.position + 1) of \(aligner.words.count)"
+        }
+        if let moved { showSpoken(through: aligner.words[moved].range) }
     }
 
     /// Dims what you've said and keeps the line you're on about a third of the way down.
     private func showSpoken(through range: NSRange) {
-        guard let lm = showView.layoutManager, let tc = showView.textContainer else { return }
-        let length = (showView.string as NSString).length
-        let said = NSRange(location: 0, length: min(range.upperBound, length))
-        lm.removeTemporaryAttribute(.foregroundColor, forCharacterRange: NSRange(location: 0, length: length))
-        lm.addTemporaryAttribute(.foregroundColor, value: NSColor(white: 1, alpha: 0.36), forCharacterRange: said)
+        guard let storage = showView.textStorage, let lm = showView.layoutManager, let tc = showView.textContainer else { return }
+        let end = min(range.upperBound, storage.length)
+        if end < dimmedThrough {
+            // Rereading: start the dimming over from the top of the slide.
+            storage.setAttributedString(renderedSlide())
+            dimmedThrough = 0
+        }
+        if end > dimmedThrough {
+            storage.addAttribute(.foregroundColor, value: NSColor(white: 1, alpha: 0.34),
+                                 range: NSRange(location: dimmedThrough, length: end - dimmedThrough))
+            dimmedThrough = end
+        }
+        lm.ensureLayout(for: tc)
         let glyphs = lm.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
         var rect = lm.boundingRect(forGlyphRange: glyphs, in: tc)
         rect.origin.y += showView.textContainerOrigin.y
@@ -1059,19 +1081,32 @@ final class NotesController: NSObject, NSTextViewDelegate {
         let target = min(max(0, rect.midY - clip.bounds.height * 0.35), maxY)
         guard abs(target - clip.bounds.origin.y) > 3 else { return }
         NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.35
-            ctx.allowsImplicitAnimation = true
+            ctx.duration = 0.3
             clip.animator().setBoundsOrigin(NSPoint(x: 0, y: target))
         } completionHandler: { [weak self] in
             guard let self else { return }
-            self.showScroll.reflectScrolledClipView(self.showScroll.contentView)
+            // Make sure it lands even if the animation didn't run.
+            if abs(clip.bounds.origin.y - target) > 1 { clip.setBoundsOrigin(NSPoint(x: 0, y: target)) }
+            self.showScroll.reflectScrolledClipView(clip)
         }
     }
 
     private func clearSpoken() {
-        guard let lm = showView.layoutManager else { return }
-        lm.removeTemporaryAttribute(.foregroundColor,
-                                    forCharacterRange: NSRange(location: 0, length: (showView.string as NSString).length))
+        guard dimmedThrough > 0, let storage = showView.textStorage else { return }
+        storage.setAttributedString(renderedSlide())
+        dimmedThrough = 0
+    }
+
+    private func renderedSlide() -> NSAttributedString {
+        MarkdownRenderer.render(slides[index].text, style: .current, emphasis: rules)
+    }
+
+    /// For the screenshot script: plays a transcript as if spoken, to show voice scrolling.
+    func simulateVoice(_ transcript: String) {
+        stopScrolling()
+        resetVoice()
+        voice.simulate(transcript)
+        refresh()
     }
 
     // MARK: - Question parking lot

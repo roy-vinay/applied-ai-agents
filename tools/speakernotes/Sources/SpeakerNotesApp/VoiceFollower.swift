@@ -87,6 +87,23 @@ final class VoiceFollower {
         onChange?()
     }
 
+    /// Plays a transcript at a speaking pace instead of listening, for screenshots and tests.
+    func simulate(_ transcript: String, wordsPerSecond: Double = 3) {
+        isOn = true
+        onChange?()
+        let words = transcript.split(separator: " ").map(String.init)
+        var heard: [String] = []
+        var i = 0
+        restartTimer = Timer.scheduledTimer(withTimeInterval: 1 / wordsPerSecond, repeats: true) { [weak self] timer in
+            guard let self, self.isOn, i < words.count else { timer.invalidate(); return }
+            heard.append(words[i])
+            i += 1
+            self.recentText = heard.suffix(24).joined(separator: " ")
+            self.onHearing?(heard.suffix(6).joined(separator: " "))
+            self.onHeard?(Array(heard.suffix(10)))
+        }
+    }
+
     func stop() {
         guard isOn else { return }
         isOn = false

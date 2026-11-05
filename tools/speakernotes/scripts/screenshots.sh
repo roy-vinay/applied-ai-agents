@@ -54,6 +54,12 @@ launch -filePath "$NOTES" -slideIndex 1 -startEditing YES
 window app-edit
 quit
 
+# Scroll as I speak, with a transcript played as if spoken (with a few recognition-style mistakes).
+launch -filePath "$NOTES" -slideIndex 1 -simulateSpeech "every agent repeats for steps perceive plan act and reflect the planner breaks the goal into small steps the tool router picks the right tool for each step the memory keeps what worked"
+sleep 7
+window app-voice
+quit
+
 # Popovers are their own windows, so capture the area around the notes window.
 launch -filePath "$NOTES" -slideIndex 1 -openPopover text
 region app-text-settings
