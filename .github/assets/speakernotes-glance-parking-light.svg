@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="224" viewBox="0 0 480 224" role="img" aria-label="Question parking lot: One hotkey parks an audience question with its slide. The list comes back on your last slide, ready for the follow-up. No more forgotten “I'll come back to that.”">
+<defs><clipPath id="c-speakernotes-glance-parking-light"><rect x="0.5" y="0.5" width="479" height="223" rx="14"/></clipPath></defs>
+<rect x="0.5" y="0.5" width="479" height="223" rx="14" fill="#18202C" stroke="#18202C"/>
+<g clip-path="url(#c-speakernotes-glance-parking-light)"><text x="486" y="268" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-size="230" font-weight="700" fill="#222C3B">Q</text></g>
+<text x="28" y="56" font-family="Georgia, 'Times New Roman', serif" font-size="29" font-weight="700" fill="#F0F3F6">Question parking lot</text>
+<text x="28" y="100" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">One hotkey parks an audience question</text><text x="28" y="125" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">with its slide. The list comes back on your</text><text x="28" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" fill="#C9D1D9">last slide, ready for the follow-up.</text>
+<text x="28" y="200" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FF8A3D">No more forgotten “I'll come back to that.”</text>
+</svg>

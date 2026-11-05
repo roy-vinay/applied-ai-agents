@@ -35,7 +35,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Used by the screenshot script: -openPopover text|emphasis
         if let which = UserDefaults.standard.string(forKey: "openPopover") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-                if which == "text" { self?.notes.showTextSettings(nil) } else { self?.notes.showEmphasis(nil) }
+                switch which {
+                case "text": self?.notes.showTextSettings(nil)
+                case "parking": self?.notes.showParking(nil)
+                default: self?.notes.showEmphasis(nil)
+                }
             }
         }
     }

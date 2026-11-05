@@ -9,7 +9,7 @@
 
 <img src="../../.github/assets/speakernotes-demo.gif" width="100%" alt="Animated demo. Left, what you see: you press Next, and the slide and your notes advance together. Right, what your audience sees while you share your entire screen: the same slides, with the notes window hidden.">
 
-<p align="center"><a href="#share">How it hides</a> · <a href="#slides">Slides</a> · <a href="#follow">Following</a> · <a href="#read">Reading</a> · <a href="#demo">Demo-safe</a> · <a href="#decisions">Decisions</a> · <a href="#shortcuts">Shortcuts</a> · <a href="#install">Install</a></p>
+<p align="center"><a href="#share">How it hides</a> · <a href="#slides">Slides</a> · <a href="#follow">Following</a> · <a href="#voice">Voice</a> · <a href="#read">Reading</a> · <a href="#demo">Demo-safe</a> · <a href="#decisions">Decisions</a> · <a href="#shortcuts">Shortcuts</a> · <a href="#install">Install</a></p>
 
 <a name="problem"></a>
 <picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-problem-dark.svg"><img src="../../.github/assets/speakernotes-sec-problem-light.svg" width="100%" alt="The problem: your notes, or your audience's view"></picture>
@@ -26,6 +26,8 @@ on top of everything, with the notes for the slide you're on, that macOS leaves 
 <a href="#share"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-private-dark.svg"><img src="../../.github/assets/speakernotes-glance-private-light.svg" width="49%" alt="Private: asks macOS to leave the notes out of every screen capture. Checked in CI on every change."></picture></a>
 <a href="#follow"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-slides-dark.svg"><img src="../../.github/assets/speakernotes-glance-slides-light.svg" width="49%" alt="Follows your slides: exactly with Keynote and PowerPoint, and by reading the slide title elsewhere."></picture></a>
 <a href="#read"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-readable-dark.svg"><img src="../../.github/assets/speakernotes-glance-readable-light.svg" width="49%" alt="Easy to read: size, typeface and spacing, plus emphasis by hand or on-device AI."></picture></a>
+<a href="#voice"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-voice-dark.svg"><img src="../../.github/assets/speakernotes-glance-voice-light.svg" width="49%" alt="Scrolls as you speak: what you've said dims and your line stays in view. Your mic only, on your Mac."></picture></a>
+<a href="#voice"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-parking-dark.svg"><img src="../../.github/assets/speakernotes-glance-parking-light.svg" width="49%" alt="Question parking lot: one hotkey parks an audience question with its slide; the list comes back on your last slide."></picture></a>
 <a href="#demo"><picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-glance-demo-dark.svg"><img src="../../.github/assets/speakernotes-glance-demo-light.svg" width="49%" alt="Demo-safe: Dock icon, Open at Login, reopens on the same slide, never steals focus."></picture></a>
 </p>
 
@@ -72,15 +74,6 @@ Perceive, plan, act, reflect. ==Pause here.==
 - **Two-way.** <kbd>⌃⌥→</kbd>, the arrow keys in the notes, or the slide list move your slides too. Moving by hand
   pauses following for a moment.
 
-**Scroll as I speak.** Turn on the waveform button (<kbd>⌃⌥V</kbd>) and the notes scroll as you talk: what you've said
-dims and your current line stays near the top. It listens to your microphone only, on your Mac. The recognizer only
-supplies words; code decides where you are, so an ad-lib or a misheard word can't throw you to the wrong place, and
-scrolling by hand pauses it.
-
-**Park a question.** Press <kbd>⌃⌥P</kbd> from anywhere to note an audience question you promise to return to. It's
-saved with the slide, prefilled with what you just said if you're using Scroll as I speak, and the list comes back
-on your last slide, ready to copy into the follow-up email.
-
 **Import a deck's notes** with **File > Import Notes from Keynote or PowerPoint**: one numbered heading per slide,
 ready to follow. For Google Slides, download the deck as PowerPoint first.
 
@@ -88,6 +81,23 @@ ready to follow. For Google Slides, download the deck as PowerPoint first.
 > macOS asks once for **Automation** (to ask Keynote or PowerPoint for the slide), **Screen Recording** (to read
 > other apps), **Accessibility** (to move your slides with keys), and **Microphone** and **Speech Recognition** (for
 > Scroll as I speak, your voice only). Nothing leaves your Mac.
+
+<a name="voice"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-sec-voice-dark.svg"><img src="../../.github/assets/speakernotes-sec-voice-light.svg" width="100%" alt="Scroll as you speak, park questions"></picture>
+<img src="../../.github/assets/speakernotes-feature-voice.svg" width="100%" alt="Scroll as I speak: read naturally; what you've said dims and your line stays in view. Control Option V, your mic only.">
+
+Turn it on with the waveform button or <kbd>⌃⌥V</kbd>. The footer shows what it hears and where you are ("word 36 of
+64"). The recognizer only supplies words; code decides where you are, so an ad-lib or a misheard word can't throw
+you to the wrong line, and scrolling by hand pauses it. It never changes slides on its own.
+
+<img src="../../.github/assets/speakernotes-feature-parking.svg" width="100%" alt="Question parking lot: Control Option P parks an audience question with its slide; the list comes back on your last slide.">
+
+Press <kbd>⌃⌥P</kbd> from any app, type a few words (or keep what it heard you say), and press Return to go
+straight back to your slides. The tray icon fills while questions are waiting; on your last slide you get a
+reminder. Check them off, or **Copy All** for the follow-up email.
+
+> [!NOTE]
+> Scroll as I speak listens to **your microphone only**, never the call's audio, and nothing is recorded or sent.
 
 <a name="read"></a>
 
