@@ -72,12 +72,22 @@ Perceive, plan, act, reflect. ==Pause here.==
 - **Two-way.** <kbd>⌃⌥→</kbd>, the arrow keys in the notes, or the slide list move your slides too. Moving by hand
   pauses following for a moment.
 
+**Scroll as I speak.** Turn on the waveform button (<kbd>⌃⌥V</kbd>) and the notes scroll as you talk: what you've said
+dims and your current line stays near the top. It listens to your microphone only, on your Mac. The recognizer only
+supplies words; code decides where you are, so an ad-lib or a misheard word can't throw you to the wrong place, and
+scrolling by hand pauses it.
+
+**Park a question.** Press <kbd>⌃⌥P</kbd> from anywhere to note an audience question you promise to return to. It's
+saved with the slide, prefilled with what you just said if you're using Scroll as I speak, and the list comes back
+on your last slide, ready to copy into the follow-up email.
+
 **Import a deck's notes** with **File > Import Notes from Keynote or PowerPoint**: one numbered heading per slide,
 ready to follow. For Google Slides, download the deck as PowerPoint first.
 
 > [!NOTE]
 > macOS asks once for **Automation** (to ask Keynote or PowerPoint for the slide), **Screen Recording** (to read
-> other apps) and **Accessibility** (to move your slides with keys). Nothing leaves your Mac.
+> other apps), **Accessibility** (to move your slides with keys), and **Microphone** and **Speech Recognition** (for
+> Scroll as I speak, your voice only). Nothing leaves your Mac.
 
 <a name="read"></a>
 
@@ -115,7 +125,7 @@ entirely, with an amber border so you always know it's on.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/speakernotes-status-dark.svg"><img src="../../.github/assets/speakernotes-status-light.svg" width="100%" alt="Status: tests, builds, CI checks, and what isn't tested yet."></picture>
 
-Early, version 0.4. CI runs on macOS 26 for every change, including reading a sample slide's title and matching it
+Early, version 0.5. CI runs on macOS 26 for every change, including reading a sample slide's title and matching it
 to the right notes. Keynote, PowerPoint and Apple Intelligence aren't on the build machines, so those paths are
 tested by hand.
 
@@ -137,7 +147,7 @@ Run it again any time to update; your notes and settings are kept. Or download
 
 ```bash
 cd tools/speakernotes
-swift test                        # 24 tests
+swift test                        # 32 tests
 ./scripts/build-app.sh            # build/SpeakerNotes.app, icon included
 open build/SpeakerNotes.app
 ```

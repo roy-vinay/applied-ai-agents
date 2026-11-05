@@ -17,6 +17,13 @@ final class NotesPanel: NSPanel {
 /// The presenting view: read-only; arrow keys or space move between slides, and right-click emphasizes.
 final class PresentTextView: NSTextView {
     var onKey: ((NSEvent) -> Bool)?
+    /// You scrolled the notes yourself (voice following pauses for a moment).
+    var onManualScroll: (() -> Void)?
+
+    override func scrollWheel(with event: NSEvent) {
+        onManualScroll?()
+        super.scrollWheel(with: event)
+    }
     /// A phrase to emphasize with a style, or to un-emphasize when the style is nil.
     var onEmphasize: ((String, EmphasisStyle?) -> Void)?
     var onAskToEmphasize: (() -> Void)?

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0
+
+- **Scroll as I Speak** (the waveform button, or **⌃⌥V**): the notes scroll as you talk, with the words you've said dimmed and your current line kept near the top. Apple's on-device speech recognition listens to your microphone only, never the call, and nothing is saved or sent. Code, not the recognizer, decides where you are: small steps forward move at once, bigger jumps need two readings to agree, going back needs a long near-exact match, and filler words or ad-libs never move it. Scrolling by hand pauses it for a few seconds; it never changes slides on its own.
+- **Question parking lot** (the tray button, or **⌃⌥P** from any app): park an audience question you promise to come back to, in one line, tagged with the slide. With Scroll as I Speak on, it's prefilled with what you just said, so repeating the question aloud captures it. Return sends you back to your slides. On the last slide you get a reminder; check questions off, or copy the list for the follow-up email.
+
 ## 0.4.0
 
 - **Moving the notes moves your slides too.** While following is on (Follow My Slides or Move with My Slide Keys), the ⌃⌥ arrow hotkeys, the arrow keys in the notes, the ‹ › buttons and the slide list also move your presentation. Keynote and PowerPoint go to the exact slide; other apps (Google Slides in a browser, a PDF viewer) get → or ← once per slide. Turn it off with **Slides > Moving the Notes Moves My Slides**. Sending keys to another app needs Accessibility permission.
