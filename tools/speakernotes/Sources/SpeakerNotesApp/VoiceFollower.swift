@@ -14,6 +14,10 @@ final class VoiceFollower {
     }
     /// A little more of what was heard, for prefilling a parked question.
     private(set) var recentText = ""
+    /// What the recognizer heard last, shown in the notes window so you can see it's working.
+    var onHearing: ((String) -> Void)?
+    private var quickFailures = 0
+    private var taskStarted = Date()
 
     private(set) var isOn = false
     private let engine = AVAudioEngine()
@@ -47,15 +51,16 @@ final class VoiceFollower {
 
     private func begin() {
         guard !isOn else { return }
-        let recognizer = SFSpeechRecognizer(locale: Locale.current) ?? SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
-        guard let recognizer, recognizer.isAvailable else {
-            onStatus?("Speech recognition isn't available right now")
+        // Your Mac's language first; if it has no on-device model (some regions don't), US English.
+        let candidates = [Locale.current, Locale(identifier: "en-US")]
+        let recognizers = candidates.compactMap { SFSpeechRecognizer(locale: $0) }
+        let recognizer = recognizers.first { $0.supportsOnDeviceRecognition && $0.isAvailable }
+        guard let recognizer else {
+            onStatus?("macOS has no on-device speech model yet. Turn on Dictation in System Settings > Keyboard, wait a minute for it to download, then press ⌃⌥V again.")
+            NSLog("SpeakerNotes voice: no on-device recognizer for \(candidates.map(\.identifier))")
             return
         }
-        guard recognizer.supportsOnDeviceRecognition else {
-            onStatus?("This Mac can't recognize speech on device, so voice following stays off")
-            return
-        }
+        NSLog("SpeakerNotes voice: listening in \(recognizer.locale.identifier)")
         self.recognizer = recognizer
         let input = engine.inputNode
         input.removeTap(onBus: 0)
@@ -74,6 +79,8 @@ final class VoiceFollower {
             return
         }
         isOn = true
+        quickFailures = 0
+        onHearing?("Listening… start reading your notes")
         startTask()
         // Short recognition sessions keep the recognizer quick and its guesses focused on what you just said.
         restartTimer = Timer.scheduledTimer(withTimeInterval: 45, repeats: true) { [weak self] _ in self?.startTask() }
@@ -102,6 +109,7 @@ final class VoiceFollower {
         guard isOn, let recognizer else { return }
         let id = UUID()
         taskID = id
+        taskStarted = Date()
         task?.cancel()
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
@@ -118,7 +126,21 @@ final class VoiceFollower {
                 if let result {
                     let segments = result.bestTranscription.segments.map(\.substring)
                     self.recentText = segments.suffix(24).joined(separator: " ")
+                    self.quickFailures = 0
+                    self.onHearing?(segments.suffix(6).joined(separator: " "))
                     self.onHeard?(Array(segments.suffix(10)))
+                }
+                if let error {
+                    NSLog("SpeakerNotes voice: recognition error \(error.localizedDescription)")
+                    // Failing again and again right away means recognition can't run at all: say why and stop.
+                    if Date().timeIntervalSince(self.taskStarted) < 2 {
+                        self.quickFailures += 1
+                        if self.quickFailures >= 3 {
+                            self.stop()
+                            self.onStatus?("Speech recognition isn't working (\(error.localizedDescription)). Turn on Dictation in System Settings > Keyboard so macOS downloads its on-device model, then press ⌃⌥V again.")
+                            return
+                        }
+                    }
                 }
                 if error != nil || result?.isFinal == true {
                     // The session ended (silence, or an error): start a fresh one shortly.

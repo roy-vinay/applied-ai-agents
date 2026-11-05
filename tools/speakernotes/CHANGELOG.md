@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1
+
+- **Scroll as I Speak shows what it hears.** While it's on, the footer shows "Hearing: …" with your last few words, so you can tell at a glance whether the mic and recognition are working.
+- **It explains when it can't run.** If your Mac's language has no on-device speech model, it uses US English. If recognition keeps failing (usually because Dictation's on-device model isn't downloaded), it stops and tells you the fix: turn on Dictation in System Settings > Keyboard.
+
 ## 0.5.0
 
 - **Scroll as I Speak** (the waveform button, or **⌃⌥V**): the notes scroll as you talk, with the words you've said dimmed and your current line kept near the top. Apple's on-device speech recognition listens to your microphone only, never the call, and nothing is saved or sent. Code, not the recognizer, decides where you are: small steps forward move at once, bigger jumps need two readings to agree, going back needs a long near-exact match, and filler words or ad-libs never move it. Scrolling by hand pauses it for a few seconds; it never changes slides on its own.
