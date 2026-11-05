@@ -74,6 +74,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
     private lazy var emphasisPopover = makePopover(emphasisPanel)
     private let parkingPanel = ParkingViewController()
     private lazy var parkingPopover = makePopover(parkingPanel)
+    private let quickPark = QuickParkPanel()
     private(set) var parked: [ParkedQuestion] = []
     private var appBeforeParking: NSRunningApplication?
     private var remindedParked = false
@@ -897,6 +898,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
         }
         emphasisPanel.onClearAll = { [weak self] in self?.setRules([]) }
         parkingPanel.onPark = { [weak self] text in self?.park(text) }
+        quickPark.onPark = { [weak self] text in self?.park(text) }
         parkingPanel.onToggle = { [weak self] id in
             self?.updateParked { items in if let i = items.firstIndex(where: { $0.id == id }) { items[i].answered.toggle() } }
         }
@@ -921,7 +923,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
     @objc func showTextSettings(_ sender: Any?) {
         NSApp.activate(ignoringOtherApps: true)
         textSettings.refresh()
-        textPopover.show(relativeTo: textButton.bounds, of: textButton, preferredEdge: .maxY)
+        showPopover(textPopover, from: textButton)
     }
 
     @objc func showEmphasis(_ sender: Any?) {
@@ -931,7 +933,7 @@ final class NotesController: NSObject, NSTextViewDelegate {
         panel.makeKey()
         _ = emphasisPanel.view
         refreshEmphasisList()
-        emphasisPopover.show(relativeTo: emphasisButton.bounds, of: emphasisButton, preferredEdge: .maxY)
+        showPopover(emphasisPopover, from: emphasisButton)
     }
 
     private func setRules(_ newRules: [EmphasisRule]) {
@@ -1115,16 +1117,31 @@ final class NotesController: NSObject, NSTextViewDelegate {
 
     /// Opens the parking lot. From the ⌃⌥P hotkey it comes up ready to type, prefilled with what you just said
     /// (when your voice is being followed), and Return sends you back to your slides.
+    /// From the ⌃⌥P hotkey or a menu: the quick box, which takes your typing without leaving your slides.
+    /// From the tray button: the list of parked questions.
     @objc func showParking(_ sender: Any?) {
-        let front = NSWorkspace.shared.frontmostApplication
-        appBeforeParking = front?.bundleIdentifier == Bundle.main.bundleIdentifier ? nil : front
         if editing { finishEditing() }
         show()
+        guard sender is NSButton else {
+            let title = slides[index].title
+            let number = SlideMatcher.declaredNumber(of: slides[index]) ?? index + 1
+            quickPark.present(prefill: voice.isOn ? voice.recentText : "",
+                              slide: "Slide \(number)" + (title.isEmpty ? "" : " \u{00B7} \(title)"),
+                              over: panel, hiddenFromShare: Settings.hiddenFromShare)
+            return
+        }
+        appBeforeParking = nil
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKey()
         parkingPanel.prepare(prefill: voice.isOn ? voice.recentText : "")
         parkingPanel.setItems(parked)
-        parkingPopover.show(relativeTo: parkButton.bounds, of: parkButton, preferredEdge: .maxY)
+        showPopover(parkingPopover, from: parkButton)
+    }
+
+    /// Popovers are their own windows: keep them out of screen share like the notes.
+    private func showPopover(_ popover: NSPopover, from button: NSView) {
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .maxY)
+        popover.contentViewController?.view.window?.sharingType = Settings.hiddenFromShare ? .none : .readOnly
     }
 
     private func park(_ text: String) {

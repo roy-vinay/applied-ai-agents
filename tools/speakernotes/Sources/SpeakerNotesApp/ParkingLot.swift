@@ -158,3 +158,107 @@ final class ParkingViewController: NSViewController, NSTextFieldDelegate {
     @objc private func copyAll() { onCopy?() }
     @objc private func clearAnswered() { onClearAnswered?() }
 }
+
+/// A Spotlight-style box for parking a question without leaving your slides: it takes your typing while
+/// Keynote or your browser stays the active app, so Return parks the question and you're right back where you were.
+final class QuickParkPanel: NSPanel, NSTextFieldDelegate {
+    var onPark: ((String) -> Void)?
+    private let field = NSTextField()
+    private let context = NSTextField(labelWithString: "")
+
+    init() {
+        super.init(contentRect: NSRect(x: 0, y: 0, width: 460, height: 112),
+                   styleMask: [.nonactivatingPanel, .titled, .fullSizeContentView], backing: .buffered, defer: false)
+        titleVisibility = .hidden
+        titlebarAppearsTransparent = true
+        for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] { standardWindowButton(kind)?.isHidden = true }
+        isFloatingPanel = true
+        level = .statusBar
+        collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
+        hidesOnDeactivate = false
+        becomesKeyOnlyIfNeeded = false
+        isReleasedWhenClosed = false
+        isMovableByWindowBackground = true
+        appearance = NSAppearance(named: .darkAqua)
+        isOpaque = false
+        backgroundColor = .clear
+        hasShadow = true
+
+        let background = NSVisualEffectView()
+        background.material = .hudWindow
+        background.blendingMode = .behindWindow
+        background.state = .active
+        background.wantsLayer = true
+        background.layer?.cornerRadius = 14
+        background.layer?.masksToBounds = true
+        background.layer?.borderWidth = 1
+        background.layer?.borderColor = Theme.accent.withAlphaComponent(0.6).cgColor
+        contentView = background
+
+        let icon = NSImageView(image: NSImage(systemSymbolName: "tray.and.arrow.down.fill", accessibilityDescription: nil)!
+            .withSymbolConfiguration(.init(pointSize: 15, weight: .semibold))!)
+        icon.contentTintColor = Theme.accent
+        let title = label("Park a question", size: 13, color: Theme.text)
+        context.font = .systemFont(ofSize: 11.5, weight: .medium)
+        context.textColor = Theme.secondary
+        context.lineBreakMode = .byTruncatingTail
+        let head = NSStackView(views: [icon, title, context])
+        head.spacing = 8
+
+        field.placeholderString = "Type the question in a few words"
+        field.font = .systemFont(ofSize: 16)
+        field.bezelStyle = .roundedBezel
+        field.focusRingType = .none
+        field.delegate = self
+        let hint = label("Return parks it  ·  Esc cancels  ·  Hidden from your screen share", size: 11, weight: .regular)
+
+        let stack = NSStackView(views: [head, field, hint])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 9
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        background.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: background.leadingAnchor, constant: 16),
+            stack.trailingAnchor.constraint(equalTo: background.trailingAnchor, constant: -16),
+            stack.topAnchor.constraint(equalTo: background.topAnchor, constant: 14),
+            stack.bottomAnchor.constraint(lessThanOrEqualTo: background.bottomAnchor, constant: -12),
+            field.widthAnchor.constraint(equalTo: stack.widthAnchor),
+        ])
+    }
+
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
+
+    /// Shows the box over the notes window (or at the top of the screen), ready to type.
+    func present(prefill: String, slide: String, over notes: NSWindow, hiddenFromShare: Bool) {
+        sharingType = hiddenFromShare ? .none : .readOnly
+        context.stringValue = slide
+        field.stringValue = prefill
+        let f = notes.isVisible ? notes.frame : (NSScreen.main?.visibleFrame ?? .zero)
+        let size = frame.size
+        var origin = NSPoint(x: f.midX - size.width / 2, y: f.maxY - size.height - 56)
+        if let screen = (notes.screen ?? NSScreen.main)?.visibleFrame {
+            origin.x = min(max(origin.x, screen.minX + 8), screen.maxX - size.width - 8)
+            origin.y = min(max(origin.y, screen.minY + 8), screen.maxY - size.height - 8)
+        }
+        setFrameOrigin(origin)
+        makeKeyAndOrderFront(nil)
+        makeFirstResponder(field)
+        field.currentEditor()?.selectAll(nil)
+    }
+
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
+        if selector == #selector(NSResponder.cancelOperation(_:)) {
+            orderOut(nil)
+            return true
+        }
+        if selector == #selector(NSResponder.insertNewline(_:)) {
+            let text = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            orderOut(nil)
+            if !text.isEmpty { onPark?(text) }
+            return true
+        }
+        return false
+    }
+}

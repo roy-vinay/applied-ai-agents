@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.4
+
+- **Fixed: parking a question from your slides.** ⌃⌥P now opens a small Spotlight-style box that takes your typing while your slides app stays in front. Before, your typing could go to Keynote or the browser instead. Return parks it, Esc cancels, and you never leave your slides. The tray button still opens the full list.
+- **Fixed: popovers showed in screen shares.** The parking list, Text and Emphasize panels are now hidden from screen share like the notes window.
+
 ## 0.5.3
 
 - **A close button.** The × at the right of the header hides the notes (⌘W); click the Dock icon to bring them back. **Quit SpeakerNotes** (⌘Q) is now at the bottom of the ••• menu too.

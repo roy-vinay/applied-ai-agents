@@ -37,7 +37,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
                 switch which {
                 case "text": self?.notes.showTextSettings(nil)
-                case "parking": self?.notes.showParking(nil)
+                case "parking": self?.notes.showParking(NSButton())
+                case "quickpark": self?.notes.showParking(nil)
                 default: self?.notes.showEmphasis(nil)
                 }
             }
