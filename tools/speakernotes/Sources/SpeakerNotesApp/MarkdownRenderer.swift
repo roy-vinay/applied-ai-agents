@@ -31,11 +31,17 @@ enum MarkdownRenderer {
                 para.paragraphSpacing = size * 0.45
                 content = t
             case .bullet(let indent, let t), .numbered(let indent, _, let t):
-                if case .numbered(_, let number, _) = block { prefix = number + "\t" } else { prefix = "•\t" }
+                var markerWidth = bulletWidth
+                if case .numbered(_, let number, _) = block {
+                    prefix = number + "\t"
+                    // "10." and up are wider than a bullet: give the number room so the text stays on its line.
+                    let numberWidth = (number as NSString).size(withAttributes: [.font: font]).width
+                    markerWidth = max(bulletWidth, ceil(numberWidth + size * 0.4))
+                } else { prefix = "•\t" }
                 let left = CGFloat(indent) * indentStep
                 para.firstLineHeadIndent = left
-                para.headIndent = left + bulletWidth
-                para.tabStops = [NSTextTab(textAlignment: .left, location: left + bulletWidth)]
+                para.headIndent = left + markerWidth
+                para.tabStops = [NSTextTab(textAlignment: .left, location: left + markerWidth)]
                 para.paragraphSpacing = size * 0.3
                 content = t
             case .quote(let t):

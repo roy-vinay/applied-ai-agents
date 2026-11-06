@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.5
+
+- **Fixed: numbered lists past 9.** Numbers like 10. and 11. no longer push their text onto the next line.
+
 ## 0.5.4
 
 - **Fixed: parking a question from your slides.** ⌃⌥P now opens a small Spotlight-style box that takes your typing while your slides app stays in front. Before, your typing could go to Keynote or the browser instead. Return parks it, Esc cancels, and you never leave your slides. The tray button still opens the full list.
