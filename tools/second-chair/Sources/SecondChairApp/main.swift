@@ -43,7 +43,13 @@ enum CLI {
         let box = Box()
         let done = DispatchSemaphore(value: 0)
         Task.detached {
-            if Settings.engine == .analyzer, let p = await AnalyzerEngine.prepare(status: { print($0) }) { box.problem = p; done.signal(); return }
+            if Settings.engine == .analyzer, let p = await AnalyzerEngine.prepare(status: { print($0) }) {
+                print("SpeechAnalyzer not ready: \(p)")
+                guard AppleSpeechEngine.supportsOnDevice else { box.problem = p; done.signal(); return }
+                print("Falling back to the older on-device recognizer")
+                Settings.engine = .legacy
+            }
+            print("Engine: \(Settings.engine.title)")
             guard let file = try? AVAudioFile(forReading: URL(fileURLWithPath: path)) else { box.problem = "can't read \(path)"; done.signal(); return }
             let listener = ChannelListener(channel: .them, engine: Settings.makeEngine())
             listener.onUtterance = { u in box.lines.append(u.text); print("heard: \(u.text)") }

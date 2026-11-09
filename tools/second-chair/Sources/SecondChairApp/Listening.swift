@@ -106,6 +106,10 @@ final class AnalyzerEngine: SpeechEngine {
     static func prepare(status: @escaping (String) -> Void) async -> String? {
         let transcriber = makeTranscriber()
         do {
+            // The app has to reserve a language before the system will download or use its model.
+            if !(await AssetInventory.reservedLocales).contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) {
+                _ = try await AssetInventory.reserve(locale: locale)
+            }
             if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
                 status("Downloading Apple's on-device speech model (one time)…")
                 try await request.downloadAndInstall()

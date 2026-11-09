@@ -65,6 +65,14 @@ final class SessionController: NSObject {
         guard Settings.engine == .analyzer else { return true }
         onStatus?("Getting speech recognition ready…")
         if let problem = await AnalyzerEngine.prepare(status: { [weak self] s in DispatchQueue.main.async { self?.onStatus?(s) } }) {
+            // Fall back to the older on-device recognizer rather than listening to nothing.
+            NSLog("Second Chair: \(problem)")
+            if AppleSpeechEngine.supportsOnDevice {
+                Settings.engine = .legacy
+                onStatus?("Using Apple's older speech recognizer")
+                if let p = await MicCapture.requestPermissions() { onWarning?("Can't listen", p); return false }
+                return true
+            }
             onWarning?("Speech recognition isn't ready", problem)
             onStatus?("Speech recognition isn't ready")
             return false
