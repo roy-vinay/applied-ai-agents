@@ -303,56 +303,34 @@ struct AskView: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass").font(.system(size: 16)).foregroundStyle(.secondary)
-                    TextField("Ask anything your documents cover", text: $draft)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 18))
-                        .focused($focused)
-                        .onSubmit { model.ask(draft); draft = "" }
-                    if !draft.isEmpty {
-                        Button("Ask") { model.ask(draft); draft = "" }
-                            .buttonStyle(.borderedProminent)
-                    }
-                }
-                .padding(.horizontal, 16).padding(.vertical, 14)
-                .background(.background, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(focused ? Color.accentColor.opacity(0.7) : Color.secondary.opacity(0.25), lineWidth: focused ? 2 : 1))
-
-                if model.sessionActive { LivePanel() }
-
-                if let item = model.current {
-                    AnswerView(item: item)
-                } else {
-                    StarterTips()
-                }
-
-                if model.history.count > (model.current == nil ? 0 : 1) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Earlier").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
-                        ForEach(model.history.filter { $0.id != model.current?.id }) { h in
-                            Button { model.current = h } label: {
-                                HStack(spacing: 10) {
-                                    Circle().fill(h.card?.label.color ?? .gray).frame(width: 7, height: 7)
-                                    Text(h.question).font(.system(size: 13)).lineLimit(1)
-                                    Spacer()
-                                    Text(h.card?.label.title ?? "").font(.system(size: 11)).foregroundStyle(.secondary)
-                                }
-                                .contentShape(Rectangle())
-                                .padding(.vertical, 6).padding(.horizontal, 10)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass").font(.system(size: 16)).foregroundStyle(.secondary)
+                TextField("Ask anything your documents cover", text: $draft)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 18))
+                    .focused($focused)
+                    .onSubmit { model.ask(draft); draft = "" }
+                if !draft.isEmpty {
+                    Button("Ask") { model.ask(draft); draft = "" }
+                        .buttonStyle(.borderedProminent)
                 }
             }
-            .padding(24)
-            .frame(maxWidth: 860, alignment: .leading)
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 16).padding(.vertical, 12)
+            .background(.background, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(focused ? Color.accentColor.opacity(0.7) : Color.secondary.opacity(0.25), lineWidth: focused ? 2 : 1))
+
+            if model.sessionActive { LivePanel() }
+
+            if let item = model.current {
+                ResultsView(item: item)
+            } else {
+                ScrollView { StarterTips() }
+            }
         }
+        .padding(.horizontal, 22).padding(.top, 18).padding(.bottom, 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear { focused = true }
     }
 }
@@ -382,128 +360,196 @@ struct StarterTips: View {
     }
 }
 
-/// Label and sources first (they arrive first), the sayable answer in large type beneath the label.
-struct AnswerView: View {
+/// Like reading your prep doc: matches and similar questions on the left, the whole section on the right,
+/// exactly as it reads in the document, with the answer marked in place.
+struct ResultsView: View {
+    @EnvironmentObject var model: AppModel
     var item: Asked
+    @State private var tab = 0
+    @State private var selected: String?
+
+    var shown: SectionMatch? {
+        let all = item.results + item.similar
+        return all.first { $0.id == selected } ?? item.results.first
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(item.question)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.secondary)
-
-            if let card = item.card {
-                Card {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 10) {
-                            LabelPill(label: card.label)
-                            Text(card.matchedQuestion != nil ? "You wrote this answer. Shown as written."
-                                 : card.label == .notInDocs && !card.candidates.isEmpty ? "No single passage answers this directly. The closest possibilities are below."
-                                 : card.label.explanation)
-                                .font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(2)
-                            Spacer()
-                        }
-                        if let asked = card.matchedQuestion {
-                            HStack(spacing: 6) {
-                                Image(systemName: "text.quote").foregroundStyle(.green)
-                                Text("Your prepared answer to: \u{201C}\(asked)\u{201D}")
-                                    .font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 10) {
+            AnswerStrip(item: item)
+            HStack(alignment: .top, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Picker("", selection: $tab) {
+                        Text("Matches \(item.results.count)").tag(0)
+                        Text("Similar \(item.similar.count)").tag(1)
+                        Text("Earlier").tag(2)
+                    }
+                    .pickerStyle(.segmented).labelsHidden()
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 4) {
+                            switch tab {
+                            case 0:
+                                if item.results.isEmpty {
+                                    note(item.answering ? "Searching your documents…" : "Nothing in your documents matches. Try Similar.")
+                                }
+                                ForEach(item.results) { m in row(m) }
+                            case 1:
+                                if item.similar.isEmpty { note("No similar questions or sections.") }
+                                ForEach(item.similar) { m in row(m) }
+                            default:
+                                let earlier = model.history.filter { $0.id != item.id }
+                                if earlier.isEmpty { note("Nothing asked yet.") }
+                                ForEach(earlier) { h in
+                                    Button { model.current = h } label: {
+                                        HStack(spacing: 8) {
+                                            Circle().fill(h.card?.label.color ?? .gray).frame(width: 7, height: 7)
+                                            Text(h.question).font(.system(size: 13)).lineLimit(2)
+                                            Spacer()
+                                        }
+                                        .contentShape(Rectangle()).padding(8)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
                         }
-                        if let answer = card.answer {
-                            Text(answer)
-                                .font(.system(size: 20, weight: .regular))
-                                .lineSpacing(4)
-                                .textSelection(.enabled)
-                                .fixedSize(horizontal: false, vertical: true)
-                        } else if item.answering && card.label != .notInDocs {
-                            HStack(spacing: 8) {
-                                ProgressView().controlSize(.small)
-                                Text("Writing an answer you can say…").font(.system(size: 14)).foregroundStyle(.secondary)
-                            }
-                        } else if let withheld = card.withheld {
-                            Label(withheld, systemImage: "hand.raised.fill")
-                                .font(.system(size: 13)).foregroundStyle(.orange)
-                        }
-                        Text(footnote(card)).font(.system(size: 11)).foregroundStyle(.tertiary)
                     }
                 }
+                .frame(width: 300)
 
-                let options = card.candidates.filter { $0.chunk.text != card.answer }
-                if !options.isEmpty {
-                    HStack {
-                        Text(options.count == 1 ? "Possible answer in your documents" : "\(options.count) possible answers in your documents")
-                            .font(.system(size: 13, weight: .semibold))
+                if let m = shown {
+                    SectionDetail(match: m, question: item.question)
+                        .id(m.id)
+                } else {
+                    VStack {
                         Spacer()
-                        Text("Best first · answer sentences in bold").font(.system(size: 11)).foregroundStyle(.tertiary)
+                        if item.answering { ProgressView() } else {
+                            Text("Your documents don't cover this. Answer from judgement, then add it to your prep.")
+                                .font(.system(size: 14)).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                        }
+                        Spacer()
                     }
-                    .padding(.top, 4)
-                    ForEach(Array(options.enumerated()), id: \.element.chunk.id) { i, hit in
-                        CandidateCard(rank: i + 1, hit: hit, question: item.question)
-                    }
-                } else if card.label == .notInDocs {
-                    Text("Nothing in your documents comes close.").font(.system(size: 13)).foregroundStyle(.secondary)
-                }
-            } else {
-                HStack(spacing: 8) {
-                    ProgressView().controlSize(.small)
-                    Text("Searching your documents…").foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
         }
+        .onChange(of: item.id) { selected = nil; tab = 0 }
     }
 
-    func footnote(_ card: AnswerCard) -> String {
-        var bits = [String(format: "Source in %.1fs", card.sourceLatency)]
-        if let by = card.answeredBy {
-            bits.append(by == "extract" ? "answer lifted from the passage" : by == Answerer.preparedAnswer ? "written by you, no model" : "answer by \(by)")
-            bits.append(String(format: "%.1fs", card.answerLatency))
+    func note(_ text: String) -> some View {
+        Text(text).font(.system(size: 12.5)).foregroundStyle(.secondary).padding(8)
+    }
+
+    func row(_ m: SectionMatch) -> some View {
+        let isShown = shown?.id == m.id
+        return Button { selected = m.id } label: {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 5) {
+                    if m.prepared { Text("ANSWER").font(.system(size: 9.5, weight: .bold, design: .monospaced)).foregroundStyle(.green) }
+                    Text(m.section.parents.last ?? m.section.fileName)
+                        .font(.system(size: 10.5, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1)
+                }
+                Text(m.section.title).font(.system(size: 13.5, weight: .semibold)).lineLimit(2).multilineTextAlignment(.leading)
+                Text(snippet(m)).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(10)
+            .background(isShown ? Color.accentColor.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(alignment: .leading) {
+                if isShown { RoundedRectangle(cornerRadius: 2).fill(Color.accentColor).frame(width: 3).padding(.vertical, 6) }
+            }
+            .contentShape(Rectangle())
         }
-        return bits.joined(separator: " · ")
+        .buttonStyle(.plain)
+    }
+
+    func snippet(_ m: SectionMatch) -> String {
+        let source = m.matched.first ?? m.section.text
+        return source.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "#", with: "").trimmingCharacters(in: .whitespaces)
     }
 }
 
-/// One possible answer, shown in place: the whole passage, with the sentences that answer the question in bold.
-struct CandidateCard: View {
-    var rank: Int
-    var hit: Hit
-    var question: String
+/// The label and, when a model wrote one, the short answer to say. Document text is shown in place below.
+struct AnswerStrip: View {
+    var item: Asked
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                Text("\(rank)").font(.system(size: 11, weight: .bold)).foregroundStyle(.white)
-                    .frame(width: 18, height: 18).background(Color.accentColor.opacity(rank == 1 ? 1 : 0.55), in: Circle())
-                Text(hit.chunk.fileName).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
-                if !hit.chunk.headings.isEmpty {
-                    Text("›").foregroundStyle(.tertiary)
-                    Text(hit.chunk.headingPath).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1)
+        HStack(alignment: .top, spacing: 10) {
+            if let card = item.card {
+                LabelPill(label: card.label, compact: true)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(item.question).font(.system(size: 13, weight: .medium)).foregroundStyle(.secondary).lineLimit(2)
+                    if let a = card.answer, let by = card.answeredBy, by != "extract", by != Answerer.preparedAnswer {
+                        Text(a).font(.system(size: 16, weight: .semibold)).textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("Said in your words by \(by) from the marked text").font(.system(size: 10.5)).foregroundStyle(.tertiary)
+                    } else if item.answering && card.label != .notInDocs && card.answer == nil {
+                        HStack(spacing: 6) { ProgressView().controlSize(.mini); Text("Writing a short version…").font(.system(size: 11.5)).foregroundStyle(.secondary) }
+                    } else if let w = card.withheld {
+                        Text(w).font(.system(size: 11.5)).foregroundStyle(.orange)
+                    }
                 }
-                if hit.primary {
-                    Text("PRIMARY").font(.system(size: 9, weight: .bold)).foregroundStyle(.orange)
-                        .padding(.horizontal, 5).padding(.vertical, 1)
-                        .overlay(Capsule().strokeBorder(.orange.opacity(0.6)))
-                }
-                Spacer()
-                Button { NSWorkspace.shared.open(URL(fileURLWithPath: hit.chunk.file)) } label: {
-                    Image(systemName: "arrow.up.forward.square")
-                }
-                .buttonStyle(.borderless)
-                .help("Open the document")
+            } else if item.answering {
+                ProgressView().controlSize(.small)
+                Text(item.question).font(.system(size: 13, weight: .medium)).foregroundStyle(.secondary)
+            } else {
+                Text(item.question).font(.system(size: 13, weight: .medium)).foregroundStyle(.secondary)
             }
-            if let q = hit.chunk.question {
-                Text("You wrote this for: \u{201C}\(q)\u{201D}").font(.system(size: 12, weight: .medium)).foregroundStyle(.green)
-            }
-            Text(hit.via == .prepared ? AttributedString(hit.chunk.text) : Highlight.inPlace(hit.chunk.text, question: question, size: 15))
-                .font(.system(size: 15))
-                .lineSpacing(3)
-                .textSelection(.enabled)
-                .fixedSize(horizontal: false, vertical: true)
+            Spacer()
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .textBackgroundColor).opacity(rank == 1 ? 0.9 : 0.55), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.secondary.opacity(rank == 1 ? 0.3 : 0.15)))
+    }
+}
+
+/// One section, shown whole and formatted as in the document, with the answer sentences marked.
+struct SectionDetail: View {
+    var match: SectionMatch
+    var question: String
+    @State private var copied = false
+
+    var body: some View {
+        let blocks = SectionText.blocks(match.section.text)
+        let marked = SectionText.answerSentences(match: match, question: question)
+        let firstMarked = blocks.firstIndex { SectionText.isMarked($0.text, marked) }
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(match.section.breadcrumb).font(.system(size: 11.5, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1)
+                Spacer()
+                Button(copied ? "Copied" : "Copy answer") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(match.section.title + "\n\n" + match.section.text.replacingOccurrences(of: "**", with: ""), forType: .string)
+                    copied = true
+                }
+                .controlSize(.small)
+                Button { NSWorkspace.shared.open(URL(fileURLWithPath: match.section.file)) } label: { Image(systemName: "arrow.up.forward.square") }
+                    .buttonStyle(.borderless).help("Open the document")
+            }
+            .padding(.bottom, 10)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 10) {
+                        if match.prepared {
+                            Text("YOUR PREPARED ANSWER").font(.system(size: 10, weight: .bold)).tracking(0.5).foregroundStyle(.green)
+                        }
+                        Text(match.section.title).font(.system(size: 26, weight: .bold)).textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.bottom, 4)
+                        ForEach(Array(blocks.enumerated()), id: \.offset) { i, block in
+                            SectionText.view(block, marked: marked, question: question, size: 16).id(i)
+                        }
+                    }
+                    .padding(.trailing, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .onAppear {
+                    if let i = firstMarked, i > 2 {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { withAnimation { proxy.scrollTo(i, anchor: .top) } }
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(.background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.separator.opacity(0.6)))
     }
 }
 

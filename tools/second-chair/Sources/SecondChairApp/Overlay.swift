@@ -100,66 +100,59 @@ struct OverlayView: View {
     }
 }
 
+/// The interview window's answer: the whole matching section as it reads in your doc, answer marked in place,
+/// with the other matches one click away.
 struct OverlayAnswer: View {
     var item: Asked
+    @State private var selected: String?
+
+    var shown: SectionMatch? { (item.results + item.similar).first { $0.id == selected } ?? item.results.first }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(item.question).font(.system(size: 13, weight: .medium)).foregroundStyle(.secondary).lineLimit(2)
-            if let card = item.card {
-                HStack(spacing: 8) {
-                    LabelPill(label: card.label, compact: true)
-                    if let c = card.passages.first?.chunk {
-                        Text(c.headings.last.map { "\(c.fileName) › \($0)" } ?? c.fileName).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
-                    }
-                }
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                if let card = item.card { LabelPill(label: card.label, compact: true) }
+                Text(item.question).font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary).lineLimit(2)
+            }
+            if let card = item.card, let a = card.answer, let by = card.answeredBy, by != "extract", by != Answerer.preparedAnswer {
+                Text(a).font(.system(size: 15, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
+            }
+            if let m = shown {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 10) {
-                        answerText(card)
-                        let options = card.candidates.filter { $0.chunk.text != card.answer }
-                        if !options.isEmpty {
-                            Text(options.count == 1 ? "POSSIBLE ANSWER" : "\(options.count) POSSIBLE ANSWERS")
-                                .font(.system(size: 9.5, weight: .bold)).tracking(0.5).foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text(m.section.breadcrumb).font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1)
+                        Text(m.section.title).font(.system(size: 17, weight: .bold)).fixedSize(horizontal: false, vertical: true)
+                        let marked = SectionText.answerSentences(match: m, question: item.question)
+                        ForEach(Array(SectionText.blocks(m.section.text).enumerated()), id: \.offset) { _, block in
+                            SectionText.view(block, marked: marked, question: item.question, size: 13.5)
                         }
-                        ForEach(Array(options.enumerated()), id: \.element.chunk.id) { _, hit in
-                            passage(hit, card: card)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .id(m.id)
+                let others = (item.results + item.similar).filter { $0.id != m.id }.prefix(6)
+                if !others.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(Array(others)) { o in
+                                Button { selected = o.id } label: {
+                                    Text(o.section.title).font(.system(size: 11)).lineLimit(1)
+                                        .padding(.horizontal, 8).padding(.vertical, 4)
+                                        .background(Color.primary.opacity(0.07), in: Capsule())
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     }
                 }
-            } else {
+            } else if item.answering {
                 HStack(spacing: 6) { ProgressView().controlSize(.small); Text("Searching…").foregroundStyle(.secondary) }
+                Spacer()
+            } else {
+                Text("Not in your docs. Answer from judgement.").font(.system(size: 15, weight: .semibold)).foregroundStyle(.secondary)
                 Spacer()
             }
         }
-    }
-
-    @ViewBuilder func answerText(_ card: AnswerCard) -> some View {
-        if card.matchedQuestion != nil {
-            Text("YOUR PREPARED ANSWER").font(.system(size: 9.5, weight: .bold)).tracking(0.5).foregroundStyle(.green)
-        }
-        if let a = card.answer {
-            Text(a).font(.system(size: 19, weight: .semibold)).lineSpacing(3).fixedSize(horizontal: false, vertical: true)
-        } else if item.answering && card.label != .notInDocs {
-            HStack(spacing: 6) { ProgressView().controlSize(.small); Text("Writing…").foregroundStyle(.secondary) }
-                .font(.system(size: 13))
-        } else if card.label == .notInDocs {
-            Text("Not in your docs. Answer from judgement.").font(.system(size: 17, weight: .semibold)).foregroundStyle(.secondary)
-        } else if let w = card.withheld {
-            Text(w).font(.system(size: 12)).foregroundStyle(.orange)
-        }
-    }
-
-    func passage(_ hit: Hit, card: AnswerCard) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            if true {
-                Text(hit.chunk.question.map { "You wrote this for: \($0)" } ?? hit.chunk.sourceLine).font(.system(size: 10.5, weight: .semibold)).foregroundStyle(.secondary)
-            }
-            Text(hit.via == .prepared ? AttributedString(hit.chunk.text) : Highlight.inPlace(hit.chunk.text, question: item.question, size: 13))
-                .font(.system(size: 13)).lineSpacing(2)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+        .onChange(of: item.id) { selected = nil }
     }
 }

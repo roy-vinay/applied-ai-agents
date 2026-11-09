@@ -23,6 +23,7 @@ enum Screenshots {
         let questions = [("3-grounded", "How much did revenue grow while you led product at Lumen?"),
                          ("4-prepared", "How would you describe your management style?"),
                          ("4b-several", "Tell me about a launch where you used AI to improve response time."),
+                         ("4c-section", "What would you do in your first 90 days?"),
                          ("5-not-in-docs", "How would you price a freemium consumer mobile game?")]
         for (name, q) in questions {
             model.ask(q)

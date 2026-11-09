@@ -10,6 +10,10 @@ struct Asked: Identifiable {
     var card: AnswerCard?
     var answering = true
     var askedAt = Date()
+    /// Whole sections that answer it, best first, each with the passages that matched.
+    var results: [SectionMatch] = []
+    /// Other sections and questions in your documents that resemble it.
+    var similar: [SectionMatch] = []
 }
 
 /// A document in the library, grouped from the index.
@@ -83,6 +87,9 @@ final class AppModel: ObservableObject {
             self.heardPartial = ""
             self.transcript.append(u)
             if self.transcript.count > 200 { self.transcript.removeFirst() }
+        } }
+        session.onRetract = { [weak self] u in Task { @MainActor in
+            self?.transcript.removeAll { $0.channel == u.channel && $0.text == u.text && $0.at == u.at }
         } }
         session.onLevel = { [weak self] c, v in Task { @MainActor in self?.levels[c] = v } }
         session.onStatus = { [weak self] t in Task { @MainActor in self?.listenStatus = t } }
@@ -196,15 +203,22 @@ final class AppModel: ObservableObject {
         askTask?.cancel()
         askTask = Task { @MainActor in
             let hits = await retriever.retrieve(q, previous: previous)
+            let index = lib.index
+            let results = index.sections(for: hits.filter { answerer.isAlternative($0) }, question: q)
+            let similar = index.similarSections(to: q, excluding: Set(results.map(\.id)))
             let card = await answerer.answer(q, hits: hits, started: started) { source in
                 Task { @MainActor in
                     guard self.current?.id == id else { return }
                     self.current?.card = source
-                    self.overlayItem?.card = source
+                    self.current?.results = results
+                    self.current?.similar = similar
+                    self.overlayItem = self.current
                 }
             }
             guard !Task.isCancelled, self.current?.id == id else { return }
             var finished = item
+            finished.results = results
+            finished.similar = similar
             finished.card = card
             finished.answering = false
             self.current = finished
@@ -213,6 +227,16 @@ final class AppModel: ObservableObject {
             if self.history.count > 30 { self.history.removeLast() }
             if self.session.isActive { self.session.log.review.append(ReviewItem(card: card)) }
         }
+    }
+
+    /// Shows one section as the current result, for a similar question picked from the list.
+    func open(_ match: SectionMatch) {
+        var item = Asked(question: match.section.title)
+        item.answering = false
+        item.results = [match]
+        item.similar = Library.shared.index.similarSections(to: match.section.title, excluding: [match.id])
+        current = item
+        overlayItem = item
     }
 
     func askLastExchange() {

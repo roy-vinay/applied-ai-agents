@@ -162,6 +162,14 @@ public final class SessionLog: @unchecked Sendable {
         transcript.append(u)
     }
 
+    /// Removes an utterance that turned out to be an echo.
+    public func remove(_ u: Utterance) {
+        lock.lock(); defer { lock.unlock() }
+        if let i = transcript.lastIndex(where: { $0.channel == u.channel && $0.text == u.text && $0.at == u.at }) {
+            transcript.remove(at: i)
+        }
+    }
+
     /// Recent questions, oldest first, for follow-up context.
     public func recentQuestions(_ n: Int = 2) -> [String] {
         lock.lock(); defer { lock.unlock() }
@@ -196,5 +204,15 @@ public final class SessionLog: @unchecked Sendable {
             out += m.note.isEmpty ? "\n" : "\n  - \(m.note)\n"
         }
         return out
+    }
+}
+
+/// Speakers leak the other side of a call into your microphone, so the same words arrive on both
+/// channels a moment apart. The "You" copy of anything "Them" also said is an echo.
+public enum Echo {
+    public static func isEcho(_ a: String, _ b: String) -> Bool {
+        let x = Set(Lexicon.terms(a)), y = Set(Lexicon.terms(b))
+        guard !x.isEmpty, !y.isEmpty else { return false }
+        return Double(x.intersection(y).count) / Double(x.union(y).count) >= 0.6
     }
 }

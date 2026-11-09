@@ -272,3 +272,64 @@ final class GateTests: XCTestCase {
         XCTAssertTrue(result.passed, result.failures.joined(separator: "; "))
     }
 }
+
+final class DocxTests: XCTestCase {
+    let styles = """
+    <w:styles xmlns:w="w"><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/></w:style>
+    <w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/></w:style></w:styles>
+    """
+    let numbering = """
+    <w:numbering xmlns:w="w"><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:numFmt w:val="decimal"/></w:lvl></w:abstractNum>
+    <w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>
+    """
+    let document = """
+    <w:document xmlns:w="w"><w:body>
+    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>What is Synopsys</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr><w:r><w:t>How would you price the agents</w:t></w:r></w:p>
+    <w:p><w:r><w:rPr><w:b/></w:rPr><w:t>How not to price</w:t></w:r></w:p>
+    <w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Token based pricing: </w:t></w:r><w:r><w:t>tokens are the wrong unit.</w:t></w:r></w:p>
+    <w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>Outcome based pricing:</w:t></w:r><w:r><w:t xml:space="preserve"> needs reconciliation.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>Price on engine hours instead.</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr><w:r><w:t>Why Synopsys</w:t></w:r></w:p>
+    <w:p><w:r><w:t>Because EDA is where agents pay off.</w:t></w:r></w:p>
+    </w:body></w:document>
+    """
+
+    func testHeadingsListsAndBoldSurvive() {
+        let md = DocxMarkdown.convert(document: Data(document.utf8), styles: Data(styles.utf8), numbering: Data(numbering.utf8))
+        XCTAssertTrue(md.contains("# What is Synopsys\n"))
+        XCTAssertTrue(md.contains("## How would you price the agents\n"))
+        XCTAssertTrue(md.contains("### How not to price\n"), "a short all-bold paragraph is a heading")
+        XCTAssertTrue(md.contains("1. **Token based pricing:** tokens are the wrong unit.\n2. **Outcome based pricing:** needs reconciliation."))
+    }
+
+    func testWholeSectionComesBackInPlace() async {
+        let md = DocxMarkdown.convert(document: Data(document.utf8), styles: Data(styles.utf8), numbering: Data(numbering.utf8))
+        let index = CorpusIndex(chunks: Chunker.chunk(text: md, file: "/p/Synopsys.docx", folder: "/p", markdown: true))
+        let hits = await Retriever(index: index).retrieve("How would you price the agents")
+        let sections = index.sections(for: hits, question: "How would you price the agents")
+        let top = sections.first?.section
+        XCTAssertEqual(top?.title, "How would you price the agents")
+        XCTAssertEqual(top?.parents, ["What is Synopsys"])
+        XCTAssertTrue(top?.text.contains("### How not to price") ?? false)
+        XCTAssertTrue(top?.text.contains("2. **Outcome based pricing:**") ?? false)
+        XCTAssertTrue(top?.text.contains("Price on engine hours instead.") ?? false)
+        XCTAssertFalse(top?.text.contains("EDA is where") ?? true, "the next section isn't included")
+        XCTAssertEqual(Set(sections.map(\.id)).count, sections.count)
+    }
+
+    func testSimilarQuestions() {
+        let md = DocxMarkdown.convert(document: Data(document.utf8), styles: Data(styles.utf8), numbering: Data(numbering.utf8))
+        let index = CorpusIndex(chunks: Chunker.chunk(text: md, file: "/p/S.docx", folder: "/p", markdown: true))
+        let similar = index.similarSections(to: "what pricing would you use for agents")
+        XCTAssertTrue(similar.contains { $0.section.title == "How would you price the agents" })
+    }
+}
+
+final class EchoTests: XCTestCase {
+    func testSpeakerEcho() {
+        XCTAssertTrue(Echo.isEcho("Where the merchant is not actually creating the dispatch, uh, if they want to approve, they can, uh, from an API perspective.",
+                                  "Where the merchant is not actually creating the dispatch. Uh, they wanted approve, they can, uh, from an API perspective."))
+        XCTAssertFalse(Echo.isEcho("How would you price the agents?", "I'd price on engine hours, not tokens."))
+    }
+}
