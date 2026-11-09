@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 import SecondChairCore
 
 /// One question and what came back, for the answer view and its history.
@@ -107,6 +108,25 @@ final class AppModel: ObservableObject {
         Library.shared.folders = list
         if wasEmpty, Library.shared.primaryFolder == nil { Library.shared.primaryFolder = list.first }
         rebuild()
+    }
+
+    func chooseFolders() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = true
+        panel.prompt = "Add"
+        panel.message = "Choose folders of documents to answer from. Nothing else on this Mac is read."
+        NSApp.activate(ignoringOtherApps: true)
+        if panel.runModal() == .OK { addFolders(panel.urls) }
+    }
+
+    func chooseGateFile() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.message = "Choose a question set (JSON). See examples/gate-questions.json for the format."
+        NSApp.activate(ignoringOtherApps: true)
+        if panel.runModal() == .OK, let url = panel.url { runGate(url) }
     }
 
     func removeFolder(_ folder: String) {

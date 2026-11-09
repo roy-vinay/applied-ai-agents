@@ -5,20 +5,18 @@ import SecondChairCore
 /// The app window: your documents on the left, ask and answer on the right.
 struct RootView: View {
     @EnvironmentObject var model: AppModel
-    @State private var importingFolder = false
-    @State private var importingGate = false
     @State private var dropTargeted = false
 
     var body: some View {
         HStack(spacing: 0) {
-            LibrarySidebar(importingFolder: $importingFolder)
+            LibrarySidebar()
                 .frame(width: 290)
             Divider()
             VStack(spacing: 0) {
-                TopBar(showSetup: $model.showSetup, showSettings: $model.showSettings, importingGate: $importingGate)
+                TopBar(showSetup: $model.showSetup, showSettings: $model.showSettings)
                 Divider()
                 if model.folders.isEmpty {
-                    EmptyLibrary(importingFolder: $importingFolder, targeted: dropTargeted)
+                    EmptyLibrary(targeted: dropTargeted)
                 } else {
                     AskView()
                 }
@@ -31,12 +29,6 @@ struct RootView: View {
             model.addFolders(urls)
             return true
         } isTargeted: { dropTargeted = $0 }
-        .fileImporter(isPresented: $importingFolder, allowedContentTypes: [.folder], allowsMultipleSelection: true) { result in
-            if case .success(let urls) = result { model.addFolders(urls) }
-        }
-        .fileImporter(isPresented: $importingGate, allowedContentTypes: [.json]) { result in
-            if case .success(let url) = result { model.runGate(url) }
-        }
         .sheet(isPresented: $model.showSetup) { SessionSetupSheet().environmentObject(model) }
         .sheet(isPresented: $model.showSettings) { SettingsSheet().environmentObject(model) }
         .sheet(isPresented: Binding(get: { model.review != nil }, set: { if !$0 { model.finishReview(saveTranscript: false) } })) {
@@ -57,7 +49,6 @@ struct TopBar: View {
     @EnvironmentObject var model: AppModel
     @Binding var showSetup: Bool
     @Binding var showSettings: Bool
-    @Binding var importingGate: Bool
 
     var body: some View {
         HStack(spacing: 10) {
@@ -83,7 +74,7 @@ struct TopBar: View {
                 .disabled(model.folders.isEmpty)
             }
             Spacer()
-            GateBadge(importingGate: $importingGate)
+            GateBadge()
             Button { showSettings = true } label: { Image(systemName: "gearshape") }
                 .buttonStyle(.borderless)
                 .help("Models and transcription")
@@ -95,27 +86,26 @@ struct TopBar: View {
 
 struct GateBadge: View {
     @EnvironmentObject var model: AppModel
-    @Binding var importingGate: Bool
 
     var body: some View {
         Menu {
-            Button("Run Gate on a Question Set…") { importingGate = true }
+            Button("Check Accuracy on a Question Set…") { model.chooseGateFile() }
             if model.gate != nil {
                 Button("Show Last Result") { model.showGateResult = true }
             }
         } label: {
             HStack(spacing: 5) {
                 if model.gateRunning { ProgressView().controlSize(.small) } else {
-                    Image(systemName: model.gatePassed ? "lock.open.fill" : "lock.fill")
+                    Image(systemName: model.gatePassed ? "checkmark.seal.fill" : "exclamationmark.triangle")
                 }
-                Text(model.gatePassed ? "Live listening on" : "Live listening locked")
+                Text(model.gatePassed ? "Accuracy checked" : model.gate == nil ? "Accuracy not checked" : "Accuracy check failed")
             }
             .font(.system(size: 12, weight: .medium))
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
-        .foregroundStyle(model.gatePassed ? Color.green : Color.secondary)
-        .help("Live listening to another person unlocks when your answers pass the gate on your own questions.")
+        .foregroundStyle(model.gatePassed ? Color.green : Color.orange)
+        .help("Run your own questions through it to see how often it finds the right answer and says \u{201C}not in your docs\u{201D} when it should.")
     }
 }
 
@@ -123,7 +113,6 @@ struct GateBadge: View {
 
 struct LibrarySidebar: View {
     @EnvironmentObject var model: AppModel
-    @Binding var importingFolder: Bool
     @State private var collapsed: Set<String> = []
 
     var body: some View {
@@ -131,7 +120,7 @@ struct LibrarySidebar: View {
             HStack {
                 Text("Your documents").font(.system(size: 13, weight: .semibold))
                 Spacer()
-                Button { importingFolder = true } label: { Image(systemName: "plus") }
+                Button { model.chooseFolders() } label: { Image(systemName: "plus") }
                     .buttonStyle(.borderless)
                     .help("Add a folder")
             }
@@ -267,7 +256,7 @@ struct IndexFooter: View {
 }
 
 struct EmptyLibrary: View {
-    @Binding var importingFolder: Bool
+    @EnvironmentObject var model: AppModel
     var targeted: Bool
 
     var body: some View {
@@ -280,7 +269,7 @@ struct EmptyLibrary: View {
                 .font(.system(size: 22, weight: .semibold))
             Text("Prep notes, story bank, numbers sheet, company research, past PRDs.\nMarkdown, text, PDF and Word. Everything stays on this Mac.")
                 .font(.system(size: 14)).foregroundStyle(.secondary).multilineTextAlignment(.center)
-            Button("Choose Folder…") { importingFolder = true }
+            Button("Choose Folder…") { model.chooseFolders() }
                 .buttonStyle(.borderedProminent).controlSize(.large)
             Spacer()
         }
@@ -394,8 +383,16 @@ struct AnswerView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 10) {
                             LabelPill(label: card.label)
-                            Text(card.label.explanation).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(2)
+                            Text(card.matchedQuestion != nil ? "You wrote this answer. Shown as written." : card.label.explanation)
+                                .font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(2)
                             Spacer()
+                        }
+                        if let asked = card.matchedQuestion {
+                            HStack(spacing: 6) {
+                                Image(systemName: "text.quote").foregroundStyle(.green)
+                                Text("Your prepared answer to: \u{201C}\(asked)\u{201D}")
+                                    .font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary)
+                            }
                         }
                         if let answer = card.answer {
                             Text(answer)
@@ -421,7 +418,8 @@ struct AnswerView: View {
                         .font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
                         .padding(.top, 4)
                     ForEach(Array(card.passages.enumerated()), id: \.offset) { _, hit in
-                        SourceCard(hit: hit, question: item.question, dim: card.label == .notInDocs)
+                        SourceCard(hit: hit, question: item.question, dim: card.label == .notInDocs,
+                                   headerOnly: hit.via == .prepared)
                     }
                 }
             } else {
@@ -436,7 +434,7 @@ struct AnswerView: View {
     func footnote(_ card: AnswerCard) -> String {
         var bits = [String(format: "Source in %.1fs", card.sourceLatency)]
         if let by = card.answeredBy {
-            bits.append(by == "extract" ? "answer lifted from the passage" : "answer by \(by)")
+            bits.append(by == "extract" ? "answer lifted from the passage" : by == Answerer.preparedAnswer ? "written by you, no model" : "answer by \(by)")
             bits.append(String(format: "%.1fs", card.answerLatency))
         }
         return bits.joined(separator: " · ")
@@ -447,6 +445,7 @@ struct SourceCard: View {
     var hit: Hit
     var question: String
     var dim = false
+    var headerOnly = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -469,12 +468,14 @@ struct SourceCard: View {
                 .buttonStyle(.borderless)
                 .help("Open the document")
             }
+            if !headerOnly {
             Text(Highlight.passage(hit.chunk.text, question: question))
                 .font(.system(size: 14))
                 .lineSpacing(3)
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
                 .opacity(dim ? 0.7 : 1)
+            }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)

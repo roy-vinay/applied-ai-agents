@@ -26,6 +26,8 @@ public struct AnswerCard: Sendable {
     public var answeredBy: String?
     /// Why an answer was withheld (the grounding check failed), shown in small type.
     public var withheld: String?
+    /// The question you wrote, when this is your prepared answer to it.
+    public var matchedQuestion: String?
     public var sourceLatency: TimeInterval = 0
     public var answerLatency: TimeInterval = 0
 }
@@ -80,6 +82,8 @@ public struct Answerer: Sendable {
     }
 
     public static let notCovered = "NOT_COVERED"
+    /// `answeredBy` for an answer you wrote yourself.
+    public static let preparedAnswer = "your prepared answer"
 
     public static let system = """
         You help a job candidate during a live interview. You get the interviewer's question and passages \
@@ -91,14 +95,15 @@ public struct Answerer: Sendable {
 
     public func label(_ hits: [Hit]) -> (AnswerLabel, [Hit]) {
         func strong(_ h: Hit) -> Bool {
-            h.via == .keyword ? h.coverage >= thresholds.groundedCoverage : h.similarity >= thresholds.groundedSimilarity
+            h.via == .keyword ? h.coverage >= thresholds.groundedCoverage : h.strength >= thresholds.groundedSimilarity
         }
         func support(_ h: Hit) -> Bool {
-            h.via == .keyword ? h.coverage >= thresholds.supportCoverage : h.similarity >= thresholds.supportSimilarity
+            h.via == .keyword ? h.coverage >= thresholds.supportCoverage : h.strength >= thresholds.supportSimilarity
         }
         func closest(_ h: Hit) -> Bool {
-            h.via == .keyword ? h.coverage >= thresholds.closestCoverage : h.similarity >= thresholds.closestSimilarity
+            h.via == .keyword ? h.coverage >= thresholds.closestCoverage : h.strength >= thresholds.closestSimilarity
         }
+        if let top = hits.first, top.via == .prepared { return (.grounded, [top]) }
         if let top = hits.first, strong(top) { return (.grounded, [top]) }
         let supporting = hits.filter(support)
         if supporting.count >= 2 { return (.synthesized, Array(supporting.prefix(3))) }
@@ -114,6 +119,15 @@ public struct Answerer: Sendable {
         card.sourceLatency = Date().timeIntervalSince(started)
         onSource(card)
         guard label != .notInDocs else { return card }
+
+        // You already wrote the answer to this question: show it as written. No model.
+        if let top = passages.first, top.via == .prepared {
+            card.answer = top.chunk.text
+            card.answeredBy = Self.preparedAnswer
+            card.matchedQuestion = top.chunk.question
+            card.answerLatency = Date().timeIntervalSince(started)
+            return card
+        }
 
         let texts = passages.map(\.chunk.text)
         let prompt = "Question: \(question)\n\n" + passages.enumerated().map { i, h in
