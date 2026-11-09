@@ -110,7 +110,7 @@ extension CorpusIndex {
     /// Section titles and questions you wrote that resemble this question, for browsing nearby answers.
     /// Titles are scored first; only the ones kept are built into sections.
     public func similarSections(to question: String, excluding: Set<String> = [], limit: Int = 12) -> [SectionMatch] {
-        let q = Set(Lexicon.terms(question))
+        let q = Set(corrected(Dictionary(Lexicon.terms(question).map { ($0, 1.0) }, uniquingKeysWith: max)).keys)
         guard !q.isEmpty else { return [] }
         struct Candidate { var key: String; var score: Double; var prepared: Bool; var chunk: Chunk; var path: [String]? }
         var seen = Set<String>()
@@ -143,21 +143,46 @@ extension CorpusIndex {
         }
     }
 
-    /// Sections whose heading (or prepared question) says what the question asks, like "Copilot adoption" for
-    /// "How would you increase the adoption of a copilot?". Most of the heading's words must be in the question.
+    /// Sections whose heading (or prepared question) says what the question asks, like "Why Synopsys" for
+    /// "Why do you want to work at Synopsys?". Weighted by how informative each word is, so a word that is in every
+    /// heading (the company's name) can't carry a match on its own.
+    ///  - recall: the share of the question's weight found in the heading or the headings above it (at least 0.7)
+    ///  - precision: the share of the heading's own weight that the question asks about (at least 0.5)
+    ///  - the heading itself must share two of the question's words (or all of a one- or two-word question)
+    /// Ties go to the closer wording, counting every word, then to the broader heading.
     public func titleMatches(_ question: String, limit: Int = 3) -> [SectionMatch] {
-        let q = Set(Lexicon.terms(question))
-        guard q.count >= 1 else { return [] }
-        var best: [(SectionMatch, Double)] = []
-        for m in similarSections(to: question, limit: 40) {
-            let t = Set(Lexicon.terms(m.section.title))
-            guard !t.isEmpty else { continue }
-            let shared = Double(q.intersection(t).count)
-            let ofTitle = shared / Double(t.count)
-            guard shared >= min(2, Double(t.count)), ofTitle >= 0.66 else { continue }
-            best.append((m, ofTitle + shared / 10))
+        let weighted = corrected(Dictionary(Lexicon.terms(question).map { ($0, 1.0) }, uniquingKeysWith: max))
+        let q = Set(weighted.keys)
+        guard !q.isEmpty else { return [] }
+        let expanded = expansions(weighted)
+        func matched(_ t: String, in pool: Set<String>) -> Double {
+            if pool.contains(t) { return 1 }
+            return expanded.contains { $0.value.source == t && pool.contains($0.key) } ? 0.6 : 0
         }
-        return best.sorted { $0.1 > $1.1 }.prefix(limit).map(\.0)
+        // A question word found nowhere in your documents is usually paraphrase: it counts half.
+        let questionWeight = q.reduce(0) { sum, t in
+            sum + idf(t) * (postings[t] == nil && !expanded.values.contains { $0.source == t } ? 0.5 : 1)
+        }
+        let questionWords = Set(Lexicon.words(question.lowercased()))
+        var found: [(match: SectionMatch, score: Double, closeness: Double, depth: Int)] = []
+        for m in similarSections(to: question, limit: 400) {
+            let s = m.section
+            let titleTerms = Set(Lexicon.terms(s.title))
+            guard !titleTerms.isEmpty else { continue }
+            let pathTerms = Set(Lexicon.terms((s.anchorChunk == nil ? s.path : s.parents + [s.title]).joined(separator: " ")))
+            let recall = q.reduce(0) { $0 + idf($1) * matched($1, in: pathTerms) } / max(questionWeight, 0.0001)
+            let asked = titleTerms.filter { t in q.contains(t) || expanded.contains { $0.key == t && q.contains($0.value.source) } }
+            let precision = asked.reduce(0) { $0 + idf($1) } / max(titleTerms.reduce(0) { $0 + idf($1) }, 0.0001)
+            let ownShared = q.filter { matched($0, in: titleTerms) > 0 }.count
+            guard recall >= 0.7, precision >= 0.5,
+                  ownShared >= min(2, q.count) || (titleTerms.isSubset(of: q) && q.count <= 2) else { continue }
+            let titleWords = Set(Lexicon.words(s.title.lowercased()))
+            let closeness = Double(questionWords.intersection(titleWords).count) / Double(max(1, questionWords.union(titleWords).count))
+            found.append((m, ((recall + precision) * 100).rounded() / 100, closeness, s.path.count))
+        }
+        return found.sorted {
+            $0.score != $1.score ? $0.score > $1.score : $0.closeness != $1.closeness ? $0.closeness > $1.closeness : $0.depth < $1.depth
+        }.prefix(limit).map(\.match)
     }
 
     /// The whole document a section comes from, as Markdown blocks tagged with the passage they came from,

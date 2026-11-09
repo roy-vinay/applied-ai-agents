@@ -33,8 +33,12 @@ public enum Lexicon {
         lower = lower.trimmingCharacters(in: CharacterSet(charactersIn: "'"))
         if stopwords.contains(lower) { return nil }
         if lower.count < 2, !lower.allSatisfy(\.isNumber) { return nil }
-        return stem(lower)
+        let stemmed = stem(lower)
+        // Other forms of a filler word ("makes", "knowing") are filler too.
+        return stemmedStopwords.contains(stemmed) ? nil : stemmed
     }
+
+    static let stemmedStopwords: Set<String> = Set(stopwords.filter { $0.count > 3 }.map(stem))
 
     /// "AgentEngineer" -> ["Agent", "Engineer"]; "VSO.ai" and "RTL" stay whole.
     static func camelParts(_ w: String) -> [String] {
@@ -174,5 +178,21 @@ public enum Lexicon {
             }
         }
         return found
+    }
+
+    /// Whether two words are within `limit` single-letter edits of each other.
+    public static func editDistance(_ a: String, _ b: String, limit: Int) -> Bool {
+        let x = Array(a), y = Array(b)
+        guard abs(x.count - y.count) <= limit, a != b else { return false }
+        var prev = Array(0...y.count)
+        for i in 1...max(1, x.count) where !x.isEmpty {
+            var cur = [i] + Array(repeating: 0, count: y.count)
+            for j in 1...max(1, y.count) where !y.isEmpty {
+                cur[j] = min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (x[i - 1] == y[j - 1] ? 0 : 1))
+            }
+            if cur.min()! > limit { return false }
+            prev = cur
+        }
+        return prev[y.count] <= limit
     }
 }

@@ -464,7 +464,8 @@ struct ResultsView: View {
 
     func snippet(_ m: SectionMatch) -> String {
         let source = m.matched.first ?? m.section.text
-        return source.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "\n", with: " ")
+        return source.replacingOccurrences(of: #"!\[([^\]]*)\]\([^)]*\)"#, with: "[picture]", options: .regularExpression)
+            .replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "\n", with: " ")
             .replacingOccurrences(of: "#", with: "").trimmingCharacters(in: .whitespaces)
     }
 }

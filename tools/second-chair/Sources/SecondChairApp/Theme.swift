@@ -122,7 +122,7 @@ struct Card<Content: View>: View {
 /// with the sentences that answer the question marked in yellow and the question's words underlined.
 enum SectionText {
     struct Block {
-        enum Kind { case heading(Int), bullet(Int), numbered(String, Int), paragraph }
+        enum Kind { case heading(Int), bullet(Int), numbered(String, Int), paragraph, image(String) }
         var kind: Kind
         var text: String
     }
@@ -133,7 +133,11 @@ enum SectionText {
             let indent = raw.prefix(while: { $0 == " " }).count / 2
             let line = raw.trimmingCharacters(in: .whitespaces)
             guard !line.isEmpty else { continue }
-            if line.hasPrefix("#") {
+            if line.hasPrefix("!["), let close = line.range(of: "]("), line.hasSuffix(")") {
+                let alt = String(line[line.index(line.startIndex, offsetBy: 2)..<close.lowerBound])
+                let path = String(line[close.upperBound..<line.index(before: line.endIndex)])
+                out.append(Block(kind: .image(path), text: alt))
+            } else if line.hasPrefix("#") {
                 let level = line.prefix(while: { $0 == "#" }).count
                 out.append(Block(kind: .heading(level), text: line.dropFirst(level).trimmingCharacters(in: .whitespaces)))
             } else if line.hasPrefix("- ") || line.hasPrefix("* ") || line.hasPrefix("• ") {
@@ -208,6 +212,38 @@ enum SectionText {
             .padding(.leading, CGFloat(indent) * 20)
         case .paragraph:
             Text(a).font(.system(size: size)).lineSpacing(4).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+        case .image(let path):
+            DocImage(path: path, caption: block.text == "Diagram" ? nil : block.text)
+        }
+    }
+}
+
+/// A picture from the document, shown where it sits, scaled to fit; click to open it full size.
+struct DocImage: View {
+    var path: String
+    var caption: String?
+    @MainActor private static var cache: [String: NSImage] = [:]
+
+    @MainActor var image: NSImage? {
+        if let cached = Self.cache[path] { return cached }
+        let loaded = NSImage(contentsOfFile: path)
+        if let loaded { Self.cache[path] = loaded }
+        return loaded
+    }
+
+    var body: some View {
+        if let image {
+            VStack(alignment: .leading, spacing: 4) {
+                Image(nsImage: image).resizable().interpolation(.high).aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: min(image.size.width, 900), maxHeight: 560, alignment: .leading)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .onTapGesture { NSWorkspace.shared.open(URL(fileURLWithPath: path)) }
+                    .help("Click to open full size")
+                if let caption { Text(caption).font(.system(size: 11)).foregroundStyle(.secondary) }
+            }
+            .padding(.vertical, 4)
+        } else {
+            Label(caption ?? "Picture", systemImage: "photo").font(.system(size: 12)).foregroundStyle(.secondary)
         }
     }
 }

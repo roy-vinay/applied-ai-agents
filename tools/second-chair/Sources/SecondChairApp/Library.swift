@@ -42,7 +42,24 @@ enum DocumentReader {
             return p.terminationStatus == 0 && !data.isEmpty ? data : nil
         }
         guard let document = part("word/document.xml") else { return nil }
-        return DocxMarkdown.convert(document: document, styles: part("word/styles.xml"), numbering: part("word/numbering.xml"))
+        var md = DocxMarkdown.convert(document: document, styles: part("word/styles.xml"), numbering: part("word/numbering.xml"),
+                                      relationships: part("word/_rels/document.xml.rels"))
+        // Pictures: copy the document's images out once, and point the Markdown at the copies.
+        if md.contains("docx-media:") {
+            // A stable name per file (Swift's own hash changes every launch).
+            let key = String(url.path.utf8.reduce(UInt64(5381)) { ($0 &* 33) &+ UInt64($1) }, radix: 16)
+            let dir = Library.supportDirectory.appendingPathComponent("media/\(key)", isDirectory: true)
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
+            p.arguments = ["-o", "-q", url.path, "word/media/*", "-d", dir.path]
+            p.standardOutput = FileHandle.nullDevice
+            p.standardError = FileHandle.nullDevice
+            try? p.run()
+            p.waitUntilExit()
+            md = md.replacingOccurrences(of: "docx-media:", with: dir.appendingPathComponent("word").path + "/")
+        }
+        return md
     }
 
     /// Every file under a folder, skipping hidden folders, the Obsidian settings and Second Chair's own notes.
@@ -134,7 +151,7 @@ final class Library {
             }
         }
         // The reader version is part of it, so a better reader rebuilds existing indexes once.
-        return "reader3|\(folders.joined(separator: "|"))#\(count)#\(newest.timeIntervalSince1970)"
+        return "reader4|\(folders.joined(separator: "|"))#\(count)#\(newest.timeIntervalSince1970)"
     }
 
     func checkFreshness() {

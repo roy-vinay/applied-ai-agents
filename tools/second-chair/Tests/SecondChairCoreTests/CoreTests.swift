@@ -440,3 +440,103 @@ final class CompoundWordTests: XCTestCase {
         XCTAssertTrue(md.hasPrefix("# Interview answers"))
     }
 }
+
+/// Built from the shape of a real prep doc (headings and wording patterns, not its content), with the questions
+/// that went wrong in use.
+final class RankingTests: XCTestCase {
+    static let md = """
+    # Prep notes
+    # What does Synopsys make? How are they different from Intel
+    ## What Synopsys makes
+    Synopsys doesn't make chips. It sells EDA software, IP and simulation.
+    ## So what does AI actually do?
+    Copilot: AI helps engineers use the tools faster.
+
+    AgentEngineer (on the Autopilot Platform): long-horizon agents that orchestrate task agents.
+    # What is Synopsys
+    ## What Synopsys does
+    Synopsys builds the software chips are designed with.
+    ## Competitors
+    Cadence is the main rival; Siemens is third.
+    ## Core differentiation
+    Breadth of signoff engines and the largest IP portfolio.
+    ## Synopsys Agents and their functions
+    ![Diagram](docx-media:media/image3.png)
+
+    ### AgentEngineers (long-horizon super agents)
+    Verification: runs verification end to end. Implementation: coordinates floorplanning through signoff.
+    ### Task agents (bounded jobs)
+    PrimeTime Agent fixes timing violations. Coverage closure finds the last hard-to-reach scenarios.
+
+    Task agents can be called by an AgentEngineer or directly by an engineer.
+    # Show me where did you price the agents or product
+    ## Task
+    Redesign the membership architecture and pricing tiers.
+    ## Action
+    I worked through five changes and ran a controlled pilot before broad rollout.
+    # Interview answers
+    ## Introduce yourself?
+    I've spent the last decade building AI products.
+    ## Why Synopsys
+    Synopsys has already demonstrated the value of AI across the design flow, and the work here matters.
+    ## 30-60-90 days
+    Days 60 to 90: deliver. Run pricing pilots with design partners. Set up metrics per agent.
+    ## At my time in Nvidia, the workload I was running
+    I ran GPU workloads for graphics and compute.
+    """
+
+    func index() -> CorpusIndex { CorpusIndex(chunks: Chunker.chunk(text: Self.md, file: "/p/Prep.docx", folder: "/p", markdown: true)) }
+
+    func top(_ q: String) async -> String? {
+        let index = index()
+        let hits = await Retriever(index: index).retrieve(q)
+        let titled = index.titleMatches(q)
+        let found = index.sections(for: hits.filter { Answerer().isAlternative($0) }, question: q)
+        return (titled + found.filter { s in !titled.contains { $0.id == s.id } }).first?.section.path.joined(separator: " › ")
+    }
+
+    func testAgentQuestionsLandInTheAgentsSection() async {
+        let t = await top("agent engineer agent task") ?? ""
+        XCTAssertTrue(t.contains("Synopsys Agents and their functions"), t)
+    }
+
+    func testWhyCompanyBeatsEveryHeadingWithItsName() async {
+        let a = await top("Why Synopsys?")
+        XCTAssertEqual(a, "Interview answers › Why Synopsys")
+        let b = await top("Why do you want to work at Synopsys")
+        XCTAssertEqual(b, "Interview answers › Why Synopsys")
+    }
+
+    func testMisheardCompanyName() async {
+        let t = await top("What do you know about synopsis") ?? ""
+        XCTAssertTrue(t.contains("Synopsys"), t)
+    }
+
+    func testCompetitorsAndDifferentiation() async {
+        let a = await top("Who are Synopsys competitors?")
+        XCTAssertEqual(a, "What is Synopsys › Competitors")
+        let b = await top("What are the different agents Synopsys has?") ?? ""
+        XCTAssertFalse(b.contains("Core differentiation"), "different is not differentiation")
+    }
+
+    func testBoldLabelsAreSiblingsAndPicturesComeThrough() {
+        let doc = """
+        <w:document xmlns:w="w" xmlns:wp="wp" xmlns:a="a" xmlns:r="r"><w:body>
+        <w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr><w:r><w:t>Synopsys Agents and their functions</w:t></w:r></w:p>
+        <w:p><w:r><w:drawing><wp:inline><wp:docPr id="2" name="image3.png" descr="Agent architecture"/><a:graphic><a:blip r:embed="rId9"/></a:graphic></wp:inline></w:drawing></w:r></w:p>
+        <w:p><w:r><w:rPr><w:b/></w:rPr><w:t>AgentEngineers (long-horizon super agents)</w:t></w:r></w:p>
+        <w:p><w:r><w:t>Verification runs end to end.</w:t></w:r></w:p>
+        <w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Task agents (bounded jobs)</w:t></w:r></w:p>
+        <w:p><w:r><w:t>PrimeTime Agent fixes timing.</w:t></w:r></w:p>
+        </w:body></w:document>
+        """
+        let rels = #"<Relationships><Relationship Id="rId9" Target="media/image3.png"/></Relationships>"#
+        let md = DocxMarkdown.convert(document: Data(doc.utf8), relationships: Data(rels.utf8))
+        XCTAssertTrue(md.contains("![Agent architecture](docx-media:media/image3.png)"), md)
+        XCTAssertTrue(md.contains("### AgentEngineers"), md)
+        XCTAssertTrue(md.contains("### Task agents"), "a bold label after another is its sibling, not its child")
+        let index = CorpusIndex(chunks: Chunker.chunk(text: md, file: "/p/S.docx", folder: "/p", markdown: true))
+        XCTAssertNil(index.postings["docx"], "picture paths aren't search words")
+        XCTAssertNil(index.postings["media"])
+    }
+}
