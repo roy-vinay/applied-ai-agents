@@ -116,6 +116,9 @@ final class DocumentParser: NSObject, XMLParserDelegate {
     private var bold = false
     private var inText = false
     private var runText = ""
+    // A table of contents is a copy of the headings with page numbers: skip it, or every line becomes a fake heading.
+    private var sdtIsTOC: [Bool] = []
+    private var inTOC: Bool { sdtIsTOC.contains(true) }
     // Tables
     private var tableDepth = 0
     private var cell: [String] = []
@@ -144,6 +147,9 @@ final class DocumentParser: NSObject, XMLParserDelegate {
         case "w:tab" where inRun: runText += " "
         case "w:br" where inRun: runText += " "
         case "w:tbl": tableDepth += 1
+        case "w:sdt": sdtIsTOC.append(false)
+        case "w:docPartGallery" where !sdtIsTOC.isEmpty:
+            if (a["w:val"] ?? "").localizedCaseInsensitiveContains("contents") { sdtIsTOC[sdtIsTOC.count - 1] = true }
         case "w:tr": row = []
         case "w:tc": cell = []
         default: break
@@ -166,6 +172,7 @@ final class DocumentParser: NSObject, XMLParserDelegate {
             let cells = row.filter { !$0.isEmpty }
             if !cells.isEmpty { emit(cells.joined(separator: " | "), list: false) }
         case "w:tbl": tableDepth -= 1
+        case "w:sdt": if !sdtIsTOC.isEmpty { sdtIsTOC.removeLast() }
         default: break
         }
     }
@@ -173,7 +180,7 @@ final class DocumentParser: NSObject, XMLParserDelegate {
     private func endParagraph() {
         inParagraph = false
         let plain = runs.map(\.text).joined().trimmingCharacters(in: .whitespaces)
-        guard !plain.isEmpty else { return }
+        guard !plain.isEmpty, !inTOC, !(style?.uppercased().hasPrefix("TOC") ?? false) else { return }
         if tableDepth > 0 { cell.append(inline()); return }
 
         var level = style.flatMap { headingStyles[$0] } ?? style.flatMap { DocxMarkdown.headingLevel(styleID: $0, name: nil) }
