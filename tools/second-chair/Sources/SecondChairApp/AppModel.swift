@@ -50,12 +50,6 @@ final class AppModel: ObservableObject {
     @Published var history: [Asked] = []
     /// What the overlay shows: the latest question from any source.
     @Published var overlayItem: Asked?
-    @Published var heardPartial = ""
-    /// The live transcript, newest last. Kept only for the session; deleted with it.
-    @Published var transcript: [Utterance] = []
-    @Published var partials: [Channel: String] = [:]
-    @Published var levels: [Channel: Float] = [:]
-    @Published var listenStatus = ""
 
     @Published var sessionActive = false
     @Published var sessionStatus = ""
@@ -74,6 +68,9 @@ final class AppModel: ObservableObject {
     @Published var showSettings = false
 
     let session = SessionController()
+    /// What's being heard right now. Kept apart so meters and words-in-progress, which change many times a
+    /// second, redraw only the live panel and not the answer and document views.
+    let live = LiveState()
     var statusItem: NSStatusItem?
     private var askTask: Task<Void, Never>?
 
@@ -81,23 +78,26 @@ final class AppModel: ObservableObject {
         Library.shared.onChange = { [weak self] in Task { @MainActor in self?.syncLibrary() } }
         session.onQuestion = { [weak self] q in Task { @MainActor in self?.ask(q, fromSession: true) } }
         session.onPartial = { [weak self] c, t in Task { @MainActor in
-            self?.heardPartial = String(t.suffix(160))
-            self?.partials[c] = t
+            self?.live.heardPartial = String(t.suffix(160))
+            self?.live.partials[c] = t
             self?.suggestFromConversation()
         } }
         session.onHeard = { [weak self] u in Task { @MainActor in
             guard let self else { return }
-            self.partials[u.channel] = nil
-            self.heardPartial = ""
-            self.transcript.append(u)
+            self.live.partials[u.channel] = nil
+            self.live.heardPartial = ""
+            self.live.transcript.append(u)
             self.suggestFromConversation(force: true)
-            if self.transcript.count > 200 { self.transcript.removeFirst() }
+            if self.live.transcript.count > 200 { self.live.transcript.removeFirst() }
         } }
         session.onRetract = { [weak self] u in Task { @MainActor in
-            self?.transcript.removeAll { $0.channel == u.channel && $0.text == u.text && $0.at == u.at }
+            self?.live.transcript.removeAll { $0.channel == u.channel && $0.text == u.text && $0.at == u.at }
         } }
-        session.onLevel = { [weak self] c, v in Task { @MainActor in self?.levels[c] = v } }
-        session.onStatus = { [weak self] t in Task { @MainActor in self?.listenStatus = t } }
+        session.onLevel = { [weak self] c, v in Task { @MainActor in
+            guard let self, abs((self.live.levels[c] ?? 0) - v) > 0.03 else { return }
+            self.live.levels[c] = v
+        } }
+        session.onStatus = { [weak self] t in Task { @MainActor in self?.live.listenStatus = t } }
         session.onChange = { [weak self] in Task { @MainActor in self?.syncSession() } }
         session.onWarning = { [weak self] t, x in Task { @MainActor in self?.warning = (t, x) } }
     }
@@ -203,8 +203,8 @@ final class AppModel: ObservableObject {
     /// topic doesn't drown out a new question. Their side first when they've just spoken.
     private var conversationWindow: String {
         func latest(_ c: Channel) -> String? {
-            if let p = partials[c], Lexicon.terms(p).count >= 3 { return p }
-            if let u = transcript.last(where: { $0.channel == c }), Date().timeIntervalSince(u.at) < 20 { return u.text }
+            if let p = live.partials[c], Lexicon.terms(p).count >= 3 { return p }
+            if let u = live.transcript.last(where: { $0.channel == c }), Date().timeIntervalSince(u.at) < 20 { return u.text }
             return nil
         }
         let line = latest(.them) ?? latest(.you) ?? ""
@@ -229,15 +229,19 @@ final class AppModel: ObservableObject {
         liveTask = Task { @MainActor in
             let hits = await retriever.retrieve(window)
             guard !Task.isCancelled, Date() > self.holdLiveUntil else { return }
-            let results = Self.withTitleMatches(lib.index, window, lib.index.sections(for: hits.filter { answerer.isAlternative($0) }, question: window))
-            guard !results.isEmpty else { return }
+            let index = lib.index
+            let (results, similar) = await Task.detached(priority: .userInitiated) {
+                let r = Self.withTitleMatches(index, window, index.sections(for: hits.filter { answerer.isAlternative($0) }, question: window))
+                return (r, index.similarSections(to: window, excluding: Set(r.map(\.id)), limit: 8))
+            }.value
+            guard !Task.isCancelled, !results.isEmpty else { return }
             let card = await answerer.answer(window, hits: hits)
             var item = Asked(question: window)
             item.live = true
             item.answering = false
             item.card = card
             item.results = results
-            item.similar = lib.index.similarSections(to: window, excluding: Set(results.map(\.id)), limit: 8)
+            item.similar = similar
             // Keep the same item while the top match is unchanged, so the view doesn't jump.
             if let cur = self.current, cur.live, cur.results.first?.id == results.first?.id { item.id = cur.id }
             self.current = item
@@ -276,13 +280,15 @@ final class AppModel: ObservableObject {
         let id = item.id
         current = item
         overlayItem = item
-        heardPartial = ""
+        live.heardPartial = ""
         askTask?.cancel()
         askTask = Task { @MainActor in
             let hits = await retriever.retrieve(q, previous: previous)
             let index = lib.index
-            let results = Self.withTitleMatches(index, q, index.sections(for: hits.filter { answerer.isAlternative($0) }, question: q))
-            let similar = index.similarSections(to: q, excluding: Set(results.map(\.id)))
+            let (results, similar) = await Task.detached(priority: .userInitiated) {
+                let r = Self.withTitleMatches(index, q, index.sections(for: hits.filter { answerer.isAlternative($0) }, question: q))
+                return (r, index.similarSections(to: q, excluding: Set(r.map(\.id))))
+            }.value
             let card = await answerer.answer(q, hits: hits, started: started) { source in
                 Task { @MainActor in
                     guard self.current?.id == id else { return }
@@ -325,10 +331,10 @@ final class AppModel: ObservableObject {
     // MARK: Sessions
 
     func startSession(_ consent: ConsentGate, primary: String?) {
-        transcript = []
-        partials = [:]
-        levels = [:]
-        listenStatus = ""
+        live.transcript = []
+        live.partials = [:]
+        live.levels = [:]
+        live.listenStatus = ""
         Library.shared.primaryFolder = primary
         syncLibrary()
         session.start(consent)
@@ -337,9 +343,9 @@ final class AppModel: ObservableObject {
 
     func endSession() {
         if let log = session.end() { review = log }
-        transcript = []
-        partials = [:]
-        levels = [:]
+        live.transcript = []
+        live.partials = [:]
+        live.levels = [:]
         syncSession()
     }
 
@@ -399,4 +405,15 @@ final class AppModel: ObservableObject {
             self.showGateResult = true
         }
     }
+}
+
+/// Fast-changing session state: words in progress, the running transcript, input levels.
+@MainActor
+final class LiveState: ObservableObject {
+    @Published var heardPartial = ""
+    /// The live transcript, newest last. Kept only for the session; deleted with it.
+    @Published var transcript: [Utterance] = []
+    @Published var partials: [Channel: String] = [:]
+    @Published var levels: [Channel: Float] = [:]
+    @Published var listenStatus = ""
 }

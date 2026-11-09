@@ -29,6 +29,7 @@ struct RootView: View {
             model.addFolders(urls)
             return true
         } isTargeted: { dropTargeted = $0 }
+        .environmentObject(model.live)
         .sheet(isPresented: $model.showSetup) { SessionSetupSheet().environmentObject(model) }
         .sheet(isPresented: $model.showSettings) { SettingsSheet().environmentObject(model) }
         .sheet(isPresented: Binding(get: { model.review != nil }, set: { if !$0 { model.finishReview(saveTranscript: false) } })) {
@@ -416,7 +417,7 @@ struct ResultsView: View {
                 .frame(width: 300)
 
                 if let m = shown {
-                    DocumentDetail(match: m, question: item.question)
+                    DocumentDetail(match: m, question: item.question).equatable()
                         .id(m.id)
                 } else {
                     VStack {
@@ -509,6 +510,7 @@ struct AnswerStrip: View {
 /// What it hears, as it hears it: a level meter per channel, the transcript, and words in progress.
 struct LivePanel: View {
     @EnvironmentObject var model: AppModel
+    @EnvironmentObject var live: LiveState
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -517,30 +519,30 @@ struct LivePanel: View {
                 meter(.you, "You")
                 if model.sessionHearing.contains("Them") { meter(.them, "Them") }
                 Spacer()
-                if !model.listenStatus.isEmpty {
-                    Text(model.listenStatus).font(.system(size: 11.5)).foregroundStyle(.secondary).lineLimit(1)
+                if !live.listenStatus.isEmpty {
+                    Text(live.listenStatus).font(.system(size: 11.5)).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 6) {
-                        if model.transcript.isEmpty && model.partials.isEmpty {
+                        if live.transcript.isEmpty && live.partials.isEmpty {
                             Text(model.sessionHearing.isEmpty ? "Not listening right now." : "Start talking. What it hears shows up here as you speak.")
                                 .font(.system(size: 13)).foregroundStyle(.tertiary)
                         }
-                        ForEach(Array(model.transcript.suffix(40).enumerated()), id: \.offset) { _, u in
+                        ForEach(Array(live.transcript.suffix(40).enumerated()), id: \.offset) { _, u in
                             line(u.channel, u.text, live: false)
                         }
                         ForEach([Channel.them, Channel.you], id: \.self) { c in
-                            if let p = model.partials[c], !p.isEmpty { line(c, p, live: true) }
+                            if let p = live.partials[c], !p.isEmpty { line(c, p, live: true) }
                         }
                         Color.clear.frame(height: 1).id("end")
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(height: 96)
-                .onChange(of: model.transcript.count) { proxy.scrollTo("end", anchor: .bottom) }
-                .onChange(of: model.partials) { proxy.scrollTo("end", anchor: .bottom) }
+                .onChange(of: live.transcript.count) { proxy.scrollTo("end", anchor: .bottom) }
+                .onChange(of: live.partials) { proxy.scrollTo("end", anchor: .bottom) }
             }
         }
         .padding(14)
@@ -549,7 +551,7 @@ struct LivePanel: View {
     }
 
     func meter(_ c: Channel, _ name: String) -> some View {
-        let level = CGFloat(model.levels[c] ?? 0)
+        let level = CGFloat(live.levels[c] ?? 0)
         return HStack(spacing: 6) {
             Image(systemName: c == .you ? "mic.fill" : "speaker.wave.2.fill").font(.system(size: 11)).foregroundStyle(.secondary)
             Text(name).font(.system(size: 11.5, weight: .medium))
