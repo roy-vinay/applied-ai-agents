@@ -124,7 +124,7 @@ struct GateBadge: View {
 struct LibrarySidebar: View {
     @EnvironmentObject var model: AppModel
     @Binding var importingFolder: Bool
-    @State private var expanded: Set<String> = []
+    @State private var collapsed: Set<String> = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -140,8 +140,8 @@ struct LibrarySidebar: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(model.folders, id: \.self) { folder in
-                        FolderRow(folder: folder, expanded: expanded.contains(folder)) {
-                            if expanded.contains(folder) { expanded.remove(folder) } else { expanded.insert(folder) }
+                        FolderRow(folder: folder, expanded: !collapsed.contains(folder)) {
+                            if collapsed.contains(folder) { collapsed.remove(folder) } else { collapsed.insert(folder) }
                         }
                     }
                     if model.folders.isEmpty {
@@ -156,7 +156,6 @@ struct LibrarySidebar: View {
             IndexFooter()
         }
         .background(Color(nsColor: .underPageBackgroundColor).opacity(0.5))
-        .onAppear { if let f = model.folders.first { expanded.insert(f) } }
     }
 }
 

@@ -127,6 +127,14 @@ final class AnsweringTests: XCTestCase {
     }
 }
 
+final class ExtractTests: XCTestCase {
+    func testBulletsAreSeparateSentences() {
+        let passage = "- Revenue grew from $12M to $31M ARR over two years.\n- Team: 6 product managers, 4 designers."
+        XCTAssertEqual(Answerer.extract("How much did revenue grow?", from: passage),
+                       "Revenue grew from $12M to $31M ARR over two years.")
+    }
+}
+
 final class GroundingTests: XCTestCase {
     func testNumbersAndNames() {
         let p = ["At Lumen Freight revenue reached $31M with 61 percent margin."]

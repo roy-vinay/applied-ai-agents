@@ -109,8 +109,8 @@ struct OverlayAnswer: View {
             if let card = item.card {
                 HStack(spacing: 8) {
                     LabelPill(label: card.label, compact: true)
-                    if let s = card.passages.first?.chunk.sourceLine {
-                        Text(s).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                    if let c = card.passages.first?.chunk {
+                        Text(c.headings.last.map { "\(c.fileName) › \($0)" } ?? c.fileName).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
                     }
                 }
                 ScrollView {

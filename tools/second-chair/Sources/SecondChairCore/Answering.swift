@@ -170,14 +170,20 @@ public struct Answerer: Sendable {
         return sentences.prefix(3).joined(separator: " ")
     }
 
-    /// Up to two sentences from the passage that share the most terms with the question, in passage order.
+    /// The sentence (or bullet) that shares the most terms with the question, plus the next best one
+    /// only when it's nearly as relevant. Kept in passage order.
     public static func extract(_ question: String, from passage: String) -> String {
         let q = Set(Lexicon.terms(question))
-        let sentences = Lexicon.sentences(passage.replacingOccurrences(of: "\n", with: " "))
-            .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "-*• ")) }
+        let sentences = passage.components(separatedBy: "\n")
+            .flatMap { Lexicon.sentences($0) }
+            .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "-*•> ").union(.whitespaces)) }
             .filter { !$0.isEmpty }
+        guard !sentences.isEmpty else { return passage }
         let scored = sentences.enumerated().map { i, s in (i, Set(Lexicon.terms(s)).intersection(q).count) }
-        let picked = scored.sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0 < $1.0 }.prefix(2).map(\.0).sorted()
-        return picked.map { sentences[$0] }.joined(separator: " ")
+        let ranked = scored.sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0 < $1.0 }
+        let best = ranked[0]
+        var picked = [best.0]
+        if ranked.count > 1, ranked[1].1 >= max(1, Int((Double(best.1) * 0.75).rounded())) { picked.append(ranked[1].0) }
+        return picked.sorted().map { sentences[$0] }.joined(separator: " ")
     }
 }
