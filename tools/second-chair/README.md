@@ -48,11 +48,22 @@ The window floats above everything and is **always excluded from screen capture 
 
 ## How it answers
 
-- **Retrieval:** keyword search first (fast, predictable, easy to debug). Embeddings only when keyword search is thin. The pinned primary prep pack ranks above the general vault. A short follow-up ("why was that?") borrows the previous question's terms.
-- **Fast path:** Apple Intelligence on the device, for compressing one strong passage into speaking length.
-- **Quality path:** Qwen3 8B through Ollama on `127.0.0.1`, for synthesized answers, and as the retry when the fast path fails the grounding check.
-- **Formats:** Markdown and text, then PDF and Word converted on the Mac. Scans and images are listed under **Skipped Files**, never silently included.
-- **Freshness:** the index rebuilds when folders change between sessions, never mid-interview. A stale index says STALE, with its build time.
+1. **Your prepared answers first.** Any question you've already written an answer to is indexed as a question:
+   ```
+   ## Why are you looking for a new job?
+   Your answer...
+
+   Q: What's your management style?
+   A: Your answer...
+
+   **How do you handle conflict?**
+   Your answer...
+   ```
+   When an interview question matches one of yours (same wording, or the same meaning with embeddings on), your answer shows exactly as you wrote it, marked **Your prepared answer**. No model touches it.
+2. **Otherwise, passages.** Keyword search first, meaning search when keywords are thin, the primary prep pack ranked first. A short follow-up borrows the previous question's terms.
+3. **Only then a model.** Apple Intelligence on the device compresses one strong passage into speaking length; Qwen3 8B through Ollama on `127.0.0.1` builds answers from several passages. Every model answer passes the grounding check, or it's withheld.
+
+Formats: Markdown and text, then PDF and Word converted on the Mac. Scans and images are counted as skipped, never silently included. The index updates when folders change between sessions, never mid-interview.
 
 ## Sessions and consent
 
@@ -76,21 +87,19 @@ California is an all-party consent state. **There is no stealth mode**, no stand
 
 A review lists every question, what was shown and its label. Tick the misses: they're written to your primary prep pack as `_second-chair misses <date>.md`, a to-do list. Fix the prep pack, not the tool. The transcript is then deleted unless you choose **Save transcript too**.
 
-## The gate: live listening is earned
+## Checking accuracy
 
-Live listening to another person stays **locked** until the answering half passes a gate on your own questions. Write a labelled set from your real prep pack ([format](examples/gate-questions.json)), then **Run Gate…**.
+Write a labelled question set from your real prep ([format](examples/gate-questions.json)), then **Accuracy › Check Accuracy on a Question Set…**. It reports:
 
-| Gate | Bar |
+| Check | Bar |
 |---|---|
-| Citation correctness (shown passage supports shown answer) | at least 95% |
-| Grounded accuracy on questions the corpus covers | at least 85% |
-| Refusal precision (NOT IN YOUR DOCS exactly when it should be) | at least 90% |
-| Unsupported numbers in any shown answer | zero |
-| Question to source card, median / 90th percentile | under 3s / under 5s |
+| Shown answers backed by their passage | at least 95% |
+| Covered questions answered from the right place | at least 85% |
+| "Not in your docs" exactly when it should be | at least 90% |
+| Invented figures in any shown answer | zero |
+| Question to source, median / slowest 10% | under 3s / under 5s |
 
-Until it passes, sessions run in My Voice Only. After two failures in a row the menu says so: use Ask My Docs until a run passes.
-
-From a terminal: `"/Applications/Second Chair.app/Contents/MacOS/SecondChair" --gate my-questions.json --corpus ~/Prep/ExampleCorp,~/Vault --embeddings ollama --models local`
+It doesn't lock anything. Until a check passes, the top bar and the interview setup say accuracy is unchecked, so you know to glance at the source before you say a number.
 
 ## Transcription engines
 
@@ -101,7 +110,7 @@ From a terminal: `"/Applications/Second Chair.app/Contents/MacOS/SecondChair" --
 
 - **Parakeet V3 is not wired in yet.** The PRD names it the primary engine. 0.1 uses Apple's on-device recognizer, with whisper.cpp as the swap-in. A Parakeet engine slots into the same `SpeechEngine` protocol.
 - **Voice activity detection is energy based**, not Silero. It's tuned for headphones and a quiet room.
-- **The sample gate in CI is small and invented** (`examples/prep-pack`). It proves the pipeline and catches regressions; it proves nothing about your corpus. Only your own gate run unlocks live listening.
+- **The sample accuracy check in CI is small and invented** (`examples/prep-pack`). It proves the pipeline and catches regressions; it proves nothing about your corpus.
 - Latency targets are measured in the gate for retrieval and the source card. End-to-end latency including transcription depends on the engine and your Mac.
 
 ## Layout

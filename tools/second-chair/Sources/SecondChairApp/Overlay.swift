@@ -129,6 +129,9 @@ struct OverlayAnswer: View {
     }
 
     @ViewBuilder func answerText(_ card: AnswerCard) -> some View {
+        if card.matchedQuestion != nil {
+            Text("YOUR PREPARED ANSWER").font(.system(size: 9.5, weight: .bold)).tracking(0.5).foregroundStyle(.green)
+        }
         if let a = card.answer {
             Text(a).font(.system(size: 19, weight: .semibold)).lineSpacing(3).fixedSize(horizontal: false, vertical: true)
         } else if item.answering && card.label != .notInDocs {

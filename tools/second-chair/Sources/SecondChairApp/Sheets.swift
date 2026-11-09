@@ -12,10 +12,7 @@ struct SessionSetupSheet: View {
     @State private var announcing = false
     @State private var copied = false
 
-    /// Live listening to someone else needs a passed gate; until then the session runs as My Voice Only.
-    var effectiveMode: CaptureMode {
-        mode == .announced && kind != .rehearsal && !model.gatePassed ? .myVoiceOnly : mode
-    }
+    var effectiveMode: CaptureMode { mode }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -44,8 +41,10 @@ struct SessionSetupSheet: View {
                 }
                 if mode == .announced && kind != .rehearsal && !model.gatePassed {
                     HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "lock.fill").foregroundStyle(.orange)
-                        Text("Live listening is locked until your answers pass the gate on your own questions. This session will run as My Voice Only.")
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                        Text(model.gate == nil
+                             ? "Accuracy isn't checked yet. Answers may miss or show the wrong passage; always glance at the source."
+                             : "The last accuracy check failed. Answers may miss or show the wrong passage; always glance at the source.")
                             .font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(10)
@@ -260,10 +259,10 @@ struct GateResultSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             if let g = model.gate {
                 HStack(spacing: 10) {
-                    Image(systemName: g.passed ? "lock.open.fill" : "lock.fill")
+                    Image(systemName: g.passed ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
                         .font(.system(size: 22)).foregroundStyle(g.passed ? Color.green : Color.orange)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(g.passed ? "Passed. Live listening is unlocked." : "Not yet. Live listening stays locked.")
+                        Text(g.passed ? "Passed every accuracy bar." : "Missed at least one accuracy bar.")
                             .font(.system(size: 18, weight: .semibold))
                         Text("\(g.rows.count) questions · \(g.date.formatted(date: .abbreviated, time: .shortened))")
                             .font(.system(size: 12)).foregroundStyle(.secondary)
@@ -303,7 +302,7 @@ struct GateResultSheet: View {
                     .frame(maxHeight: 180)
                 }
                 if !g.passed && model.gateFailures >= 2 {
-                    Text("Two failures in a row. Use typed and dictated questions until a run passes.")
+                    Text("Two misses in a row. Add the missing answers to your prep, then check again.")
                         .font(.system(size: 12)).foregroundStyle(.orange)
                 }
             }

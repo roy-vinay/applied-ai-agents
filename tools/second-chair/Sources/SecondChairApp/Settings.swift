@@ -17,8 +17,7 @@ enum Settings {
     }
 }
 
-/// The latest gate result. Live listening (anything that captures another person) stays locked
-/// until the answering half has passed the gate on your own question set.
+/// The latest accuracy check on your own question set. It informs; it doesn't lock anything.
 enum GateStore {
     static var url: URL { Library.supportDirectory.appendingPathComponent("gate.json") }
 

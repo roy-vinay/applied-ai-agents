@@ -16,13 +16,15 @@ public struct CorpusIndex: Codable, Sendable {
     /// Name of the embedder that made `vectors`, or nil when the index is keyword-only.
     public var embedderName: String?
     public var vectors: [String: [Float]] = [:]
+    /// Vectors of the questions you've written answers to, keyed by chunk id.
+    public var questionVectors: [String: [Float]] = [:]
 
     // Keyword index, rebuilt from chunks on load.
     var postings: [String: [Int: Int]] = [:]
     var lengths: [Int] = []
     var averageLength: Double = 1
 
-    enum CodingKeys: String, CodingKey { case chunks, builtAt, skipped, embedderName, vectors }
+    enum CodingKeys: String, CodingKey { case chunks, builtAt, skipped, embedderName, vectors, questionVectors }
 
     public init(chunks: [Chunk] = [], builtAt: Date = Date(), skipped: [String] = []) {
         self.chunks = chunks
@@ -38,6 +40,7 @@ public struct CorpusIndex: Codable, Sendable {
         skipped = try c.decodeIfPresent([String].self, forKey: .skipped) ?? []
         embedderName = try c.decodeIfPresent(String.self, forKey: .embedderName)
         vectors = try c.decodeIfPresent([String: [Float]].self, forKey: .vectors) ?? [:]
+        questionVectors = try c.decodeIfPresent([String: [Float]].self, forKey: .questionVectors) ?? [:]
         buildKeywordIndex()
     }
 
@@ -46,7 +49,7 @@ public struct CorpusIndex: Codable, Sendable {
         lengths = []
         for (i, chunk) in chunks.enumerated() {
             // Headings and file names are part of what a passage is about.
-            let terms = Lexicon.terms(chunk.text + " " + chunk.headings.joined(separator: " ") + " "
+            let terms = Lexicon.terms(chunk.text + " " + chunk.headings.joined(separator: " ") + " " + (chunk.question ?? "") + " "
                                    + (chunk.fileName as NSString).deletingPathExtension.replacingOccurrences(of: "-", with: " "))
             lengths.append(terms.count)
             for t in terms { postings[t, default: [:]][i, default: 0] += 1 }
@@ -65,6 +68,13 @@ public struct CorpusIndex: Codable, Sendable {
             i += batch
         }
         vectors = out
+        let asked = chunks.filter { $0.question != nil }
+        var qv: [String: [Float]] = [:]
+        if !asked.isEmpty {
+            let vs = try await embedder.embed(asked.map { $0.question ?? "" })
+            for (chunk, v) in zip(asked, vs) { qv[chunk.id] = Vector.normalized(v) }
+        }
+        questionVectors = qv
         embedderName = embedder.name
     }
 

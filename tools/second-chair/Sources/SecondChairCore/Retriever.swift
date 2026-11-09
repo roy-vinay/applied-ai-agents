@@ -2,7 +2,11 @@ import Foundation
 
 /// A passage found for a question, with why it was found.
 public struct Hit: Sendable, Equatable {
-    public enum Via: String, Sendable { case keyword, embedding }
+    public enum Via: String, Sendable {
+        case keyword, embedding
+        /// The question matched one you wrote an answer to.
+        case prepared
+    }
     public var chunk: Chunk
     /// Share of the question's terms the passage contains (keyword hits), 0...1.
     public var coverage: Double
@@ -13,7 +17,13 @@ public struct Hit: Sendable, Equatable {
     public var primary: Bool
 
     /// One strength number on a common scale, for labelling and sorting.
-    public var strength: Double { via == .keyword ? coverage : similarity }
+    public var strength: Double {
+        switch via {
+        case .keyword: return coverage
+        case .embedding: return similarity
+        case .prepared: return max(coverage, similarity)
+        }
+    }
 }
 
 public struct RetrievalSettings: Sendable {
@@ -24,6 +34,10 @@ public struct RetrievalSettings: Sendable {
     /// Weight of terms carried over from the previous question in a follow-up.
     public var followUpWeight = 0.5
     public var maxHits = 4
+    /// A question you wrote counts as the same question when it shares this much of its wording...
+    public var preparedOverlap = 0.6
+    /// ...or means this nearly the same (embedding similarity, question to question).
+    public var preparedSimilarity = 0.8
 
     public init() {}
 }
@@ -60,7 +74,42 @@ public struct Retriever: Sendable {
         return weights
     }
 
+    /// The question you wrote an answer to that matches this one best, if it's close enough.
+    public func matchPrepared(_ question: String) async -> Hit? {
+        let asked = index.chunks.filter { $0.question != nil }
+        guard !asked.isEmpty else { return nil }
+        let incoming = Set(Lexicon.terms(question))
+        var sims: [String: Double] = [:]
+        if let embedder, !index.questionVectors.isEmpty, index.embedderName == embedder.name,
+           let qv = try? await embedder.embed([question]).first {
+            let q = Vector.normalized(qv)
+            for chunk in asked { if let v = index.questionVectors[chunk.id] { sims[chunk.id] = Double(max(0, Vector.dot(q, v))) } }
+        }
+        var best: Hit?
+        for chunk in asked {
+            let stored = Set(Lexicon.terms(chunk.question ?? ""))
+            let overlap = incoming.isEmpty || stored.isEmpty ? 0
+                : Double(incoming.intersection(stored).count) / Double(max(incoming.count, stored.count))
+            let sim = sims[chunk.id] ?? 0
+            guard overlap >= settings.preparedOverlap || sim >= settings.preparedSimilarity else { continue }
+            let primary = chunk.folder == primaryFolder
+            let hit = Hit(chunk: chunk, coverage: overlap, similarity: sim,
+                          score: max(overlap, sim) * (primary ? settings.primaryBoost : 1), via: .prepared, primary: primary)
+            if best == nil || hit.score > best!.score { best = hit }
+        }
+        return best
+    }
+
     public func retrieve(_ question: String, previous: [String] = []) async -> [Hit] {
+        // Your own written answer to this question comes first; passages follow as context.
+        if let prepared = await matchPrepared(question) {
+            let rest = await retrievePassages(question, previous: previous).filter { $0.chunk.id != prepared.chunk.id }
+            return [prepared] + rest.prefix(settings.maxHits - 1)
+        }
+        return await retrievePassages(question, previous: previous)
+    }
+
+    public func retrievePassages(_ question: String, previous: [String] = []) async -> [Hit] {
         let weighted = weightedTerms(question, previous: previous)
         var hits: [Hit] = index.keywordSearch(weighted).prefix(settings.maxHits * 3).map { item in
             let (i, score, coverage) = item

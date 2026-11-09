@@ -127,6 +127,51 @@ final class AnsweringTests: XCTestCase {
     }
 }
 
+final class PreparedAnswerTests: XCTestCase {
+    let doc = """
+    # Prep
+    ## Why are you looking for a new job?
+    I want a bigger canvas.
+
+    Q: What's your management style?
+    A: Outcomes over tasks.
+
+    **How do you handle conflict?**
+    I find the missing fact.
+
+    ## Questions to ask them
+    - What would make year one a success?
+    - Where does product sit?
+    """
+
+    func testQuestionFormsBecomePreparedAnswers() {
+        let chunks = Chunker.chunk(text: doc, file: "/p/q.md", folder: "/p", markdown: true)
+        let prepared = chunks.filter { $0.question != nil }
+        XCTAssertEqual(prepared.map(\.question), ["Why are you looking for a new job?", "What's your management style?", "How do you handle conflict?"])
+        XCTAssertEqual(prepared.map(\.text), ["I want a bigger canvas.", "Outcomes over tasks.", "I find the missing fact."])
+        XCTAssertTrue(chunks.contains { $0.question == nil && $0.text.contains("Where does product sit?") },
+                      "a bulleted list of questions to ask is not a set of prepared answers")
+    }
+
+    func testMatchedQuestionShowsWrittenAnswerWithoutModel() async {
+        let index = CorpusIndex(chunks: Chunker.chunk(text: doc, file: "/p/q.md", folder: "/p", markdown: true))
+        let hits = await Retriever(index: index).retrieve("How would you describe your management style?")
+        XCTAssertEqual(hits.first?.via, .prepared)
+        let model = FakeModel(name: "should not be called", reply: "invented")
+        let card = await Answerer(fast: model, quality: model).answer("How would you describe your management style?", hits: hits)
+        XCTAssertEqual(card.label, .grounded)
+        XCTAssertEqual(card.answer, "Outcomes over tasks.")
+        XCTAssertEqual(card.answeredBy, Answerer.preparedAnswer)
+        XCTAssertEqual(card.matchedQuestion, "What's your management style?")
+    }
+
+    func testUnmatchedQuestionFallsBackToModel() async {
+        let index = CorpusIndex(chunks: Chunker.chunk(text: doc, file: "/p/q.md", folder: "/p", markdown: true))
+        let hits = await Retriever(index: index).retrieve("What is your salary expectation?")
+        XCTAssertNotEqual(hits.first?.via, .prepared)
+    }
+}
+
 final class ExtractTests: XCTestCase {
     func testBulletsAreSeparateSentences() {
         let passage = "- Revenue grew from $12M to $31M ARR over two years.\n- Team: 6 product managers, 4 designers."
