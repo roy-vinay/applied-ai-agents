@@ -18,6 +18,7 @@ final class SessionController: NSObject {
     var onChange: (() -> Void)?
     var onWarning: ((String, String) -> Void)?
     var onHeard: ((Utterance) -> Void)?
+    var onRetract: ((Utterance) -> Void)?
     var onLevel: ((Channel, Float) -> Void)?
     var onStatus: ((String) -> Void)?
     private var loudest: [Channel: Float] = [:]
@@ -145,8 +146,21 @@ final class SessionController: NSObject {
         onChange?()
     }
 
+    private var recent: [Utterance] = []
+
     private func heard(_ u: Utterance) {
         guard let gate else { return }
+        // On a call, drop your microphone's copy of their words (speaker echo), whichever arrives first.
+        if gate.kind == .remote {
+            recent.removeAll { u.at.timeIntervalSince($0.at) > 12 }
+            if u.channel == .you, recent.contains(where: { $0.channel == .them && Echo.isEcho($0.text, u.text) }) { return }
+            if u.channel == .them, let echo = recent.last(where: { $0.channel == .you && Echo.isEcho($0.text, u.text) }) {
+                log.remove(echo)
+                recent.removeAll { $0.at == echo.at && $0.channel == .you }
+                onRetract?(echo)
+            }
+            recent.append(u)
+        }
         log.add(u)
         onHeard?(u)
         if dictating && !gate.mayListenContinuously {

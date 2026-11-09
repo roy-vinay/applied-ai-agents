@@ -164,10 +164,17 @@ public struct Answerer: Sendable {
             guard let raw = try? await model.complete(system: Self.system, prompt: prompt) else { continue }
             let reply = Self.clean(raw)
             if reply.contains(Self.notCovered) || reply.isEmpty {
-                // The model says the passages don't answer it. Trust the refusal; keep the passage visible.
+                card.answerLatency = Date().timeIntervalSince(started)
+                if label == .grounded {
+                    // A strong match in your own document outranks a small model's doubt: keep the label and
+                    // lift the answer sentences from the passage instead of a model rewrite.
+                    card.answer = Self.extract(question, from: passages[0].chunk.text)
+                    card.answeredBy = "extract"
+                    return card
+                }
+                // A made-up-on-the-spot answer the model can't support: show the passages, label it honestly.
                 card.label = .notInDocs
                 card.passages = Array(passages.prefix(1))
-                card.answerLatency = Date().timeIntervalSince(started)
                 return card
             }
             let check = Grounding.check(reply, against: texts, question: question)

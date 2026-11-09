@@ -17,12 +17,32 @@ enum DocumentReader {
             text = (try? String(contentsOf: url, encoding: .utf8)) ?? (try? String(contentsOf: url, encoding: .isoLatin1))
         } else if ext == "pdf" {
             text = PDFDocument(url: url)?.string
+        } else if ext == "docx", let md = docxMarkdown(url) {
+            return md.trimmingCharacters(in: .whitespacesAndNewlines).count >= 20 ? (md, true) : nil
         } else {
             let type: NSAttributedString.DocumentType = ext == "docx" ? .officeOpenXML : ext == "doc" ? .docFormat : .rtf
             text = (try? NSAttributedString(url: url, options: [.documentType: type], documentAttributes: nil))?.string
         }
         guard let text, text.trimmingCharacters(in: .whitespacesAndNewlines).count >= 20 else { return nil }
         return (text, markdownExtensions.contains(ext))
+    }
+
+    /// A Word file as Markdown with its headings and lists intact (falls back to plain text if this fails).
+    static func docxMarkdown(_ url: URL) -> String? {
+        func part(_ name: String) -> Data? {
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
+            p.arguments = ["-p", url.path, name]
+            let pipe = Pipe()
+            p.standardOutput = pipe
+            p.standardError = FileHandle.nullDevice
+            do { try p.run() } catch { return nil }
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            p.waitUntilExit()
+            return p.terminationStatus == 0 && !data.isEmpty ? data : nil
+        }
+        guard let document = part("word/document.xml") else { return nil }
+        return DocxMarkdown.convert(document: document, styles: part("word/styles.xml"), numbering: part("word/numbering.xml"))
     }
 
     /// Every file under a folder, skipping hidden folders, the Obsidian settings and Second Chair's own notes.
@@ -113,7 +133,8 @@ final class Library {
                 if let d = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate, d > newest { newest = d }
             }
         }
-        return "\(folders.joined(separator: "|"))#\(count)#\(newest.timeIntervalSince1970)"
+        // The reader version is part of it, so a better reader rebuilds existing indexes once.
+        return "reader2|\(folders.joined(separator: "|"))#\(count)#\(newest.timeIntervalSince1970)"
     }
 
     func checkFreshness() {

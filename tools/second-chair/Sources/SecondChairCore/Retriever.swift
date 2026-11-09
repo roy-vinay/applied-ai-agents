@@ -63,7 +63,9 @@ public struct Retriever: Sendable {
     /// Is this a follow-up that leans on the previous question ("why was that?", "what happened next")?
     public static func isFollowUp(_ question: String) -> Bool {
         let words = Lexicon.words(question.lowercased())
-        return Lexicon.terms(question).count <= 3 || (words.count <= 8 && words.contains(where: followUpCues.contains))
+        // Short and pointing back ("why was that?", "what happened then?"). A short question that names
+        // its own subject ("your first 90 days?") stands on its own.
+        return words.count <= 8 && words.contains(where: followUpCues.contains) && Lexicon.terms(question).count <= 2
     }
 
     public func weightedTerms(_ question: String, previous: [String]) -> [String: Double] {
