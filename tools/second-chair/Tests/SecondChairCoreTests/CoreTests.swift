@@ -335,3 +335,37 @@ final class EchoTests: XCTestCase {
         XCTAssertFalse(Echo.isEcho("How would you price the agents?", "I'd price on engine hours, not tokens."))
     }
 }
+
+final class DocumentViewTests: XCTestCase {
+    let md = """
+    # Synopsys
+    ## How would you price the agents
+    I'd price on engine hours.
+    ## Copilot adoption
+    Start with one painful workflow and measure weekly active designers.
+    ## Why Synopsys
+    EDA is where agents pay off.
+    """
+
+    func testHeadingThatSaysTheQuestionWins() {
+        let index = CorpusIndex(chunks: Chunker.chunk(text: md, file: "/p/S.docx", folder: "/p", markdown: true))
+        let m = index.titleMatches("How would you increase the adoption of a copilot?")
+        XCTAssertEqual(m.first?.section.title, "Copilot adoption")
+    }
+
+    func testWholeDocumentInOrderWithSectionMembership() {
+        let index = CorpusIndex(chunks: Chunker.chunk(text: md, file: "/p/S.docx", folder: "/p", markdown: true))
+        let parts = index.documentParts(file: "/p/S.docx")
+        XCTAssertEqual(parts.map(\.text).filter { $0.hasPrefix("#") }, ["# Synopsys", "## How would you price the agents", "## Copilot adoption", "## Why Synopsys"])
+        let section = index.titleMatches("copilot adoption").first!.section
+        let inside = parts.compactMap(\.chunk).filter(section.contains).map(\.text)
+        XCTAssertEqual(inside, ["Start with one painful workflow and measure weekly active designers."])
+    }
+
+    func testLongListKeepsItsItemsOnSeparateLines() {
+        let items = (1...8).map { "\($0). **Item \($0):** " + String(repeating: "This item explains one pricing model in detail. ", count: 3) }
+        let chunks = Chunker.chunk(text: "## Pricing\n" + items.joined(separator: "\n"), file: "/p/a.md", folder: "/p", markdown: true)
+        XCTAssertGreaterThan(chunks.count, 1)
+        for c in chunks { for line in c.text.components(separatedBy: "\n") { XCTAssertTrue(line.first?.isNumber ?? false, line) } }
+    }
+}

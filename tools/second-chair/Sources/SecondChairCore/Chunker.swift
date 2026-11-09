@@ -157,8 +157,30 @@ public enum Chunker {
         return title.isEmpty ? nil : (level, title)
     }
 
-    /// Splits an over-long passage at sentence boundaries.
+    /// Splits an over-long passage at line boundaries (keeping list items whole), and only splits a single
+    /// over-long line at sentence boundaries.
     static func split(_ body: String) -> [String] {
+        guard body.count > hardLimit else { return [body] }
+        let lines = body.components(separatedBy: "\n")
+        if lines.count > 1 {
+            var out: [String] = []
+            var current = ""
+            for line in lines {
+                for piece in line.count > hardLimit ? splitSentences(line) : [line] {
+                    if !current.isEmpty, current.count + piece.count + 1 > target {
+                        out.append(current)
+                        current = ""
+                    }
+                    current += current.isEmpty ? piece : "\n" + piece
+                }
+            }
+            if !current.isEmpty { out.append(current) }
+            return out
+        }
+        return splitSentences(body)
+    }
+
+    static func splitSentences(_ body: String) -> [String] {
         guard body.count > hardLimit else { return [body] }
         var out: [String] = []
         var current = ""

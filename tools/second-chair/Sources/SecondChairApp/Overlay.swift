@@ -121,17 +121,7 @@ struct OverlayAnswer: View {
                 Text(a).font(.system(size: 15, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
             }
             if let m = shown {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 7) {
-                        Text(m.section.breadcrumb).font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1)
-                        Text(m.section.title).font(.system(size: 17, weight: .bold)).fixedSize(horizontal: false, vertical: true)
-                        let marked = SectionText.answerSentences(match: m, question: item.question)
-                        ForEach(Array(SectionText.blocks(m.section.text).enumerated()), id: \.offset) { _, block in
-                            SectionText.view(block, marked: marked, question: item.question, size: 13.5)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
+                DocumentDetail(match: m, question: item.question, size: 13.5, compact: true)
                 .id(m.id)
                 let others = (item.results + item.similar).filter { $0.id != m.id }.prefix(6)
                 if !others.isEmpty {

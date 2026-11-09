@@ -12,6 +12,17 @@ public struct Section: Sendable, Identifiable, Equatable {
     public var text: String
     /// When this is a prepared answer, the question you wrote.
     public var question: String?
+    /// The heading path this section sits under, title included (empty for a passage outside any heading).
+    public var path: [String] = []
+    /// For a section that is a single passage (a Q:/A: answer, or text outside any heading), that passage.
+    public var anchorChunk: String?
+
+    /// Does this passage belong to the section?
+    public func contains(_ chunk: Chunk) -> Bool {
+        guard chunk.file == file else { return false }
+        if let anchorChunk { return chunk.id == anchorChunk }
+        return chunk.headings.starts(with: path)
+    }
 
     public var fileName: String { (file as NSString).lastPathComponent }
     public var breadcrumb: String { ([fileName] + parents).joined(separator: " › ") }
@@ -42,7 +53,7 @@ extension CorpusIndex {
             if m.headings != lastHeadings, m.headings.count > path.count {
                 // Re-insert sub-headings so the section reads as it does in the document.
                 for (i, h) in m.headings.enumerated() where i >= path.count && (i >= lastHeadings.count || lastHeadings[i] != h) {
-                    text += (text.isEmpty ? "" : "\n\n") + String(repeating: "#", count: min(6, i - path.count + 3)) + " " + h
+                    text += (text.isEmpty ? "" : "\n\n") + String(repeating: "#", count: min(6, i - path.count + (path.isEmpty ? 1 : 3))) + " " + h
                 }
             }
             lastHeadings = m.headings
@@ -51,7 +62,7 @@ extension CorpusIndex {
         }
         let q = members.first(where: { $0.headings == path })?.question
         return Section(id: file + "#" + path.joined(separator: "›"), file: file, title: path.last ?? "",
-                       parents: Array(path.dropLast()), text: text, question: q)
+                       parents: Array(path.dropLast()), text: text, question: q, path: path)
     }
 
     /// The section a passage belongs to, at the heading level that best fits the question:
@@ -59,12 +70,14 @@ extension CorpusIndex {
     /// A document's top title is never chosen when there's anything below it.
     public func section(containing chunk: Chunk, for question: String = "") -> Section {
         if let q = chunk.question, chunk.headings.last != q {
-            return Section(id: chunk.id, file: chunk.file, title: q, parents: chunk.headings, text: chunk.text, question: q)
+            return Section(id: chunk.id, file: chunk.file, title: q, parents: chunk.headings, text: chunk.text, question: q,
+                           path: chunk.headings, anchorChunk: chunk.id)
         }
         let headings = chunk.headings
         guard !headings.isEmpty else {
             let first = Lexicon.sentences(chunk.text).first ?? chunk.fileName
-            return Section(id: chunk.id, file: chunk.file, title: String(first.prefix(90)), parents: [], text: chunk.text)
+            return Section(id: chunk.id, file: chunk.file, title: String(first.prefix(90)), parents: [], text: chunk.text,
+                           anchorChunk: chunk.id)
         }
         var depth = headings.count
         let q = Set(Lexicon.terms(question))
@@ -120,5 +133,42 @@ extension CorpusIndex {
             }
         }
         return scored.sorted { $0.1 > $1.1 }.prefix(limit).map(\.0)
+    }
+
+    /// Sections whose heading (or prepared question) says what the question asks, like "Copilot adoption" for
+    /// "How would you increase the adoption of a copilot?". Most of the heading's words must be in the question.
+    public func titleMatches(_ question: String, limit: Int = 3) -> [SectionMatch] {
+        let q = Set(Lexicon.terms(question))
+        guard q.count >= 1 else { return [] }
+        var best: [(SectionMatch, Double)] = []
+        for m in similarSections(to: question, limit: 40) {
+            let t = Set(Lexicon.terms(m.section.title))
+            guard !t.isEmpty else { continue }
+            let shared = Double(q.intersection(t).count)
+            let ofTitle = shared / Double(t.count)
+            guard shared >= min(2, Double(t.count)), ofTitle >= 0.66 else { continue }
+            best.append((m, ofTitle + shared / 10))
+        }
+        return best.sorted { $0.1 > $1.1 }.prefix(limit).map(\.0)
+    }
+
+    /// The whole document a section comes from, as Markdown blocks tagged with the passage they came from,
+    /// in order, headings re-inserted.
+    public func documentParts(file: String) -> [(headings: [String], chunk: Chunk?, text: String)] {
+        var out: [(headings: [String], chunk: Chunk?, text: String)] = []
+        var last: [String] = []
+        for c in chunks.filter({ $0.file == file }).sorted(by: { $0.ordinal < $1.ordinal }) {
+            if c.headings != last {
+                // Headings from the first one that changed onward.
+                var common = 0
+                while common < min(last.count, c.headings.count), last[common] == c.headings[common] { common += 1 }
+                for i in common..<c.headings.count {
+                    out.append((Array(c.headings.prefix(i + 1)), nil, String(repeating: "#", count: min(6, i + 1)) + " " + c.headings[i]))
+                }
+                last = c.headings
+            }
+            out.append((c.headings, c, c.text))
+        }
+        return out
     }
 }
