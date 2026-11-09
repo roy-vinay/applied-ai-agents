@@ -337,7 +337,7 @@ struct GateResultSheet: View {
 struct SettingsSheet: View {
     @EnvironmentObject var model: AppModel
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("engine") private var engine = Settings.Engine.apple.rawValue
+    @AppStorage("engine") private var engine = Settings.Engine.analyzer.rawValue
     @AppStorage("embeddingChoice") private var embedding = Models.EmbeddingChoice.ollama.rawValue
     @AppStorage("qualityModel") private var quality = "qwen3:8b"
     @AppStorage("embeddingModel") private var embedModel = "embeddinggemma"

@@ -3,17 +3,30 @@ import SecondChairCore
 
 enum Settings {
     enum Engine: String, CaseIterable {
-        case apple, whisper
-        var title: String { self == .apple ? "Apple on-device speech" : "whisper.cpp server (local)" }
+        /// Raw value kept as "apple" so earlier settings carry over to the new default.
+        case analyzer = "apple"
+        case legacy = "appleLegacy"
+        case whisper
+        var title: String {
+            switch self {
+            case .analyzer: return "Apple on-device speech (macOS 26, recommended)"
+            case .legacy: return "Apple speech recognizer (older)"
+            case .whisper: return "whisper.cpp server (local)"
+            }
+        }
     }
 
     static var engine: Engine {
-        get { Engine(rawValue: UserDefaults.standard.string(forKey: "engine") ?? "") ?? .apple }
+        get { Engine(rawValue: UserDefaults.standard.string(forKey: "engine") ?? "") ?? .analyzer }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: "engine") }
     }
 
     static func makeEngine() -> SpeechEngine {
-        engine == .whisper ? WhisperServerEngine() : AppleSpeechEngine()
+        switch engine {
+        case .analyzer: return AnalyzerEngine()
+        case .legacy: return AppleSpeechEngine()
+        case .whisper: return WhisperServerEngine()
+        }
     }
 }
 

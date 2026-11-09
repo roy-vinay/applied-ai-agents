@@ -17,6 +17,10 @@ final class SessionController: NSObject {
     var onPartial: ((Channel, String) -> Void)?
     var onChange: (() -> Void)?
     var onWarning: ((String, String) -> Void)?
+    var onHeard: ((Utterance) -> Void)?
+    var onLevel: ((Channel, Float) -> Void)?
+    var onStatus: ((String) -> Void)?
+    private var loudest: [Channel: Float] = [:]
     var isActive: Bool { gate != nil }
 
     var hearing: [String] {
@@ -38,21 +42,56 @@ final class SessionController: NSObject {
         gate = consent
         log = SessionLog()
         started = Date()
+        loudest = [:]
         Task { @MainActor in
-            if consent.mode != .off, let problem = await MicCapture.requestPermissions() {
-                self.onWarning?("Can't listen", problem)
+            if consent.mode != .off {
+                if let problem = await MicCapture.requestPermissions() {
+                    self.onWarning?("Can't listen", problem)
+                    return
+                }
+                guard await self.prepareEngine() else { return }
             }
             if consent.mayListenContinuously { self.startMic() }
             if consent.mayCaptureSystemAudio { await self.startSystemAudio() }
+            self.onStatus?(consent.mayListenContinuously ? "Listening" : consent.mode == .myVoiceOnly ? "Press Dictate (⌃⌥D) and say the question" : "Not listening")
             self.onChange?()
+            self.watchForSilence()
         }
         onChange?()
+    }
+
+    /// Gets the speech engine ready, downloading Apple's model the first time. False if it can't run.
+    @MainActor private func prepareEngine() async -> Bool {
+        guard Settings.engine == .analyzer else { return true }
+        onStatus?("Getting speech recognition ready…")
+        if let problem = await AnalyzerEngine.prepare(status: { [weak self] s in DispatchQueue.main.async { self?.onStatus?(s) } }) {
+            onWarning?("Speech recognition isn't ready", problem)
+            onStatus?("Speech recognition isn't ready")
+            return false
+        }
+        return true
+    }
+
+    /// If the microphone is on but nothing comes through, say so instead of staying silent.
+    private func watchForSilence() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in
+            guard let self, self.isActive, self.mic?.running == true else { return }
+            if (self.loudest[.you] ?? 0) < 0.02 {
+                self.onWarning?("No sound from the microphone",
+                                "Second Chair is listening but the microphone is silent. Check System Settings › Sound › Input (the right microphone, input volume up) and System Settings › Privacy & Security › Microphone.")
+            }
+        }
     }
 
     private func makeListener(_ channel: Channel) -> ChannelListener {
         let l = ChannelListener(channel: channel, engine: Settings.makeEngine())
         l.onPartial = { [weak self] c, t in self?.onPartial?(c, t) }
         l.onUtterance = { [weak self] u in self?.heard(u) }
+        l.onLevel = { [weak self] c, v in
+            guard let self else { return }
+            self.loudest[c] = max(self.loudest[c] ?? 0, v)
+            self.onLevel?(c, v)
+        }
         return l
     }
 
@@ -101,6 +140,7 @@ final class SessionController: NSObject {
     private func heard(_ u: Utterance) {
         guard let gate else { return }
         log.add(u)
+        onHeard?(u)
         if dictating && !gate.mayListenContinuously {
             onQuestion?(u.text)  // your own paraphrase: always ask it
         } else if gate.detectsQuestions(on: u.channel), QuestionDetector.isQuestion(u.text) {
@@ -120,6 +160,8 @@ final class SessionController: NSObject {
                     self.onChange?()
                     return
                 }
+                guard await self.prepareEngine() else { self.dictating = false; self.onChange?(); return }
+                self.onStatus?("Dictating: say the question, then press Dictate again")
                 self.startMic()
             }
         } else {

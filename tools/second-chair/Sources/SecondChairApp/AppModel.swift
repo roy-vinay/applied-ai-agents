@@ -45,6 +45,11 @@ final class AppModel: ObservableObject {
     /// What the overlay shows: the latest question from any source.
     @Published var overlayItem: Asked?
     @Published var heardPartial = ""
+    /// The live transcript, newest last. Kept only for the session; deleted with it.
+    @Published var transcript: [Utterance] = []
+    @Published var partials: [Channel: String] = [:]
+    @Published var levels: [Channel: Float] = [:]
+    @Published var listenStatus = ""
 
     @Published var sessionActive = false
     @Published var sessionStatus = ""
@@ -68,7 +73,19 @@ final class AppModel: ObservableObject {
     init() {
         Library.shared.onChange = { [weak self] in Task { @MainActor in self?.syncLibrary() } }
         session.onQuestion = { [weak self] q in Task { @MainActor in self?.ask(q, fromSession: true) } }
-        session.onPartial = { [weak self] _, t in Task { @MainActor in self?.heardPartial = String(t.suffix(160)) } }
+        session.onPartial = { [weak self] c, t in Task { @MainActor in
+            self?.heardPartial = String(t.suffix(160))
+            self?.partials[c] = t
+        } }
+        session.onHeard = { [weak self] u in Task { @MainActor in
+            guard let self else { return }
+            self.partials[u.channel] = nil
+            self.heardPartial = ""
+            self.transcript.append(u)
+            if self.transcript.count > 200 { self.transcript.removeFirst() }
+        } }
+        session.onLevel = { [weak self] c, v in Task { @MainActor in self?.levels[c] = v } }
+        session.onStatus = { [weak self] t in Task { @MainActor in self?.listenStatus = t } }
         session.onChange = { [weak self] in Task { @MainActor in self?.syncSession() } }
         session.onWarning = { [weak self] t, x in Task { @MainActor in self?.warning = (t, x) } }
     }
@@ -207,6 +224,10 @@ final class AppModel: ObservableObject {
     // MARK: Sessions
 
     func startSession(_ consent: ConsentGate, primary: String?) {
+        transcript = []
+        partials = [:]
+        levels = [:]
+        listenStatus = ""
         Library.shared.primaryFolder = primary
         syncLibrary()
         session.start(consent)
@@ -215,6 +236,9 @@ final class AppModel: ObservableObject {
 
     func endSession() {
         if let log = session.end() { review = log }
+        transcript = []
+        partials = [:]
+        levels = [:]
         syncSession()
     }
 

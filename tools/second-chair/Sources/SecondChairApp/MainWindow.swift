@@ -63,6 +63,18 @@ struct TopBar: View {
                 }
                 .padding(.horizontal, 10).padding(.vertical, 6)
                 .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+                if let gate = model.session.gate, gate.mayDictate, !gate.mayListenContinuously {
+                    Button { model.session.toggleDictation() } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: model.dictating ? "stop.circle.fill" : "mic.fill")
+                            Text(model.dictating ? "Stop Dictating" : "Dictate Question")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(model.dictating ? .red : .accentColor)
+                    .controlSize(.large)
+                    .help("⌃⌥D from any app")
+                }
                 Button("End and Review") { model.endSession() }
                     .controlSize(.large)
             } else {
@@ -310,6 +322,8 @@ struct AskView: View {
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .strokeBorder(focused ? Color.accentColor.opacity(0.7) : Color.secondary.opacity(0.25), lineWidth: focused ? 2 : 1))
 
+                if model.sessionActive { LivePanel() }
+
                 if let item = model.current {
                     AnswerView(item: item)
                 } else {
@@ -482,6 +496,75 @@ struct SourceCard: View {
         .background(Color(nsColor: .textBackgroundColor).opacity(0.6), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(alignment: .leading) {
             RoundedRectangle(cornerRadius: 2).fill(dim ? Color.gray.opacity(0.4) : Color.accentColor.opacity(0.7)).frame(width: 3).padding(.vertical, 10)
+        }
+    }
+}
+
+// MARK: Live transcript
+
+/// What it hears, as it hears it: a level meter per channel, the transcript, and words in progress.
+struct LivePanel: View {
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 14) {
+                Text("LIVE").font(.system(size: 10.5, weight: .bold)).tracking(0.6).foregroundStyle(.red)
+                meter(.you, "You")
+                if model.sessionHearing.contains("Them") { meter(.them, "Them") }
+                Spacer()
+                if !model.listenStatus.isEmpty {
+                    Text(model.listenStatus).font(.system(size: 11.5)).foregroundStyle(.secondary).lineLimit(1)
+                }
+            }
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 6) {
+                        if model.transcript.isEmpty && model.partials.isEmpty {
+                            Text(model.sessionHearing.isEmpty ? "Not listening right now." : "Start talking. What it hears shows up here as you speak.")
+                                .font(.system(size: 13)).foregroundStyle(.tertiary)
+                        }
+                        ForEach(Array(model.transcript.suffix(40).enumerated()), id: \.offset) { _, u in
+                            line(u.channel, u.text, live: false)
+                        }
+                        ForEach([Channel.them, Channel.you], id: \.self) { c in
+                            if let p = model.partials[c], !p.isEmpty { line(c, p, live: true) }
+                        }
+                        Color.clear.frame(height: 1).id("end")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(height: 130)
+                .onChange(of: model.transcript.count) { proxy.scrollTo("end", anchor: .bottom) }
+                .onChange(of: model.partials) { proxy.scrollTo("end", anchor: .bottom) }
+            }
+        }
+        .padding(14)
+        .background(Color.red.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.red.opacity(0.18)))
+    }
+
+    func meter(_ c: Channel, _ name: String) -> some View {
+        let level = CGFloat(model.levels[c] ?? 0)
+        return HStack(spacing: 6) {
+            Image(systemName: c == .you ? "mic.fill" : "speaker.wave.2.fill").font(.system(size: 11)).foregroundStyle(.secondary)
+            Text(name).font(.system(size: 11.5, weight: .medium))
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.secondary.opacity(0.15))
+                Capsule().fill(level > 0.05 ? Color.green : Color.secondary.opacity(0.4)).frame(width: max(3, 70 * level))
+            }
+            .frame(width: 70, height: 6)
+            .animation(.linear(duration: 0.1), value: level)
+        }
+    }
+
+    func line(_ c: Channel, _ text: String, live: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(c.rawValue.uppercased()).font(.system(size: 9.5, weight: .bold)).tracking(0.4)
+                .foregroundStyle(c == .them ? Color.accentColor : Color.secondary)
+                .frame(width: 36, alignment: .leading)
+            Text(text).font(.system(size: 13.5)).foregroundStyle(live ? .secondary : .primary).italic(live)
+                .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
         }
     }
 }
