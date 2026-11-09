@@ -149,6 +149,7 @@ final class PreparedAnswerTests: XCTestCase {
         let prepared = chunks.filter { $0.question != nil }
         XCTAssertEqual(prepared.map(\.question), ["Why are you looking for a new job?", "What's your management style?", "How do you handle conflict?"])
         XCTAssertEqual(prepared.map(\.text), ["I want a bigger canvas.", "Outcomes over tasks.", "I find the missing fact."])
+        XCTAssertEqual(prepared.map(\.headings), [["Prep", "Why are you looking for a new job?"], ["Prep"], ["Prep"]])
         XCTAssertTrue(chunks.contains { $0.question == nil && $0.text.contains("Where does product sit?") },
                       "a bulleted list of questions to ask is not a set of prepared answers")
     }

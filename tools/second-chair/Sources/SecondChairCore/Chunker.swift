@@ -76,6 +76,8 @@ public enum Chunker {
             // "Q: ...\nA: ..." in one paragraph, or a question line on its own.
             if let (q, rest) = questionLead(p) {
                 flush()
+                // A new question ends the previous question heading's section.
+                if let last = headings.last, isQuestion(last) { headings.removeLast(); levels.removeLast() }
                 question = q
                 p = rest
                 guard !p.isEmpty else { return }
