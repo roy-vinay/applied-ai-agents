@@ -51,14 +51,6 @@ jobs:
           if kill -0 $PID 2>/dev/null; then echo "App is running"; kill $PID; else echo "::error title=Launch failed::The app exited within 8 seconds"; exit 1; fi
       - name: The overlay is excluded from screen capture
         run: '"./build/Second Chair.app/Contents/MacOS/SecondChair" --window-check'
-      - name: Live transcription (report only; CI runners can't grant speech permission or download speech models)
-        continue-on-error: true
-        timeout-minutes: 3
-        run: |
-          set -o pipefail
-          say -o question.aiff "Tell me about a time you disagreed with your CEO."
-          "./build/Second Chair.app/Contents/MacOS/SecondChair" --transcribe question.aiff | tee transcribe.log
-          grep -qi "disagree" transcribe.log || { echo "::error title=Transcription::expected the spoken question to come back as text"; exit 1; }
       - name: Screenshots of the main states (for design review)
         run: |
           "./build/Second Chair.app/Contents/MacOS/SecondChair" --screenshots "$PWD/shots" --corpus "$PWD/examples/prep-pack" &
