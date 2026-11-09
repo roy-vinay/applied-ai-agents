@@ -247,7 +247,14 @@ final class AppModel: ObservableObject {
 
     /// A section whose heading says what was asked goes first, even when its body uses other words.
     nonisolated static func withTitleMatches(_ index: CorpusIndex, _ question: String, _ results: [SectionMatch]) -> [SectionMatch] {
-        let titled = index.titleMatches(question)
+        var titled = index.titleMatches(question)
+        // Keep what search found inside a titled section, so its answer sentences stay marked.
+        for i in titled.indices {
+            if let found = results.first(where: { $0.id == titled[i].id }) {
+                titled[i].matched = found.matched
+                titled[i].primary = found.primary
+            }
+        }
         let ids = Set(titled.map(\.id))
         return titled + results.filter { !ids.contains($0.id) }
     }
