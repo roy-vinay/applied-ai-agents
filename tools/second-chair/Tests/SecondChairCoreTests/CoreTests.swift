@@ -107,7 +107,8 @@ final class AnsweringTests: XCTestCase {
         let q = "How much did revenue grow at Lumen?"
         let hits = await r.retrieve(q)
         let card = await Answerer(fast: FakeModel(name: "fast", reply: "NOT_COVERED")).answer(q, hits: hits)
-        XCTAssertEqual(card.label, .notInDocs)
+        XCTAssertEqual(card.label, .grounded, "a strong match in your doc outranks the model's doubt")
+        XCTAssertEqual(card.answeredBy, "extract")
     }
 
     func testFollowUpCarriesContext() async {
