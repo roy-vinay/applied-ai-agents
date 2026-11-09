@@ -397,7 +397,9 @@ struct AnswerView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 10) {
                             LabelPill(label: card.label)
-                            Text(card.matchedQuestion != nil ? "You wrote this answer. Shown as written." : card.label.explanation)
+                            Text(card.matchedQuestion != nil ? "You wrote this answer. Shown as written."
+                                 : card.label == .notInDocs && !card.candidates.isEmpty ? "No single passage answers this directly. The closest possibilities are below."
+                                 : card.label.explanation)
                                 .font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(2)
                             Spacer()
                         }

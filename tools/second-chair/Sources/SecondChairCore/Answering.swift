@@ -125,7 +125,7 @@ public struct Answerer: Sendable {
         }
         let closest = isWorthShowing
         if let top = hits.first, top.via == .prepared { return (.grounded, [top]) }
-        if let top = hits.first, strong(top) { return (.grounded, [top]) }
+        if let best = hits.filter(strong).max(by: { $0.strength < $1.strength }) { return (.grounded, [best]) }
         let supporting = hits.filter(support)
         if supporting.count >= 2 { return (.synthesized, Array(supporting.prefix(3))) }
         if let near = hits.first(where: closest) { return (.notInDocs, [near]) }

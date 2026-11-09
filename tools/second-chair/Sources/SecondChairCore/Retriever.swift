@@ -147,7 +147,9 @@ public struct Retriever: Sendable {
                     seen.insert(h.chunk.id)
                     if hits.count >= settings.maxHits { break }
                 }
-                hits.sort { $0.strength * ($0.primary ? 1.15 : 1) > $1.strength * ($1.primary ? 1.15 : 1) }
+                // Exact word matches are more trustworthy than meaning matches, so they rank a step higher.
+                func rank(_ h: Hit) -> Double { (h.via == .keyword ? h.coverage + 0.15 : h.strength) * (h.primary ? 1.15 : 1) }
+                hits.sort { rank($0) > rank($1) }
             }
         }
         return Array(hits.prefix(settings.maxHits))
