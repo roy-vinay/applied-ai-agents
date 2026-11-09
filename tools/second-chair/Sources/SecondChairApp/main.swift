@@ -1,5 +1,6 @@
 import AppKit
 import AVFoundation
+import Speech
 import SecondChairCore
 
 /// Command-line modes, for CI and for running the gate from a terminal:
@@ -50,6 +51,10 @@ enum CLI {
                 Settings.engine = .legacy
             }
             print("Engine: \(Settings.engine.title)")
+            if Settings.engine == .legacy {
+                let auth = await withCheckedContinuation { c in SFSpeechRecognizer.requestAuthorization { c.resume(returning: $0) } }
+                print("Speech recognition permission: \(auth == .authorized ? "granted" : "NOT granted (\(auth.rawValue))"); on-device model: \(AppleSpeechEngine.supportsOnDevice ? "yes" : "no")")
+            }
             guard let file = try? AVAudioFile(forReading: URL(fileURLWithPath: path)) else { box.problem = "can't read \(path)"; done.signal(); return }
             let listener = ChannelListener(channel: .them, engine: Settings.makeEngine())
             listener.onUtterance = { u in box.lines.append(u.text); print("heard: \(u.text)") }

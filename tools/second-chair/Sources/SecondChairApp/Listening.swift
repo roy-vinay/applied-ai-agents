@@ -70,8 +70,13 @@ final class AppleSpeechEngine: SpeechEngine {
                         self.onPartial?(text)
                     }
                 }
-            } else if error != nil {
-                DispatchQueue.main.async { delivered = true }
+            } else if let error {
+                DispatchQueue.main.async {
+                    delivered = true
+                    let code = (error as NSError).code
+                    // 1110 is "no speech detected": normal for a cough or a click.
+                    if code != 1110 { self.onPartial?("[Speech recognizer error: \(error.localizedDescription)]") }
+                }
             }
         }
     }
@@ -90,7 +95,7 @@ final class AppleSpeechEngine: SpeechEngine {
 final class AnalyzerEngine: SpeechEngine {
     var onFinal: ((String) -> Void)?
     var onPartial: ((String) -> Void)?
-    static let locale = Locale(identifier: "en-US")
+    nonisolated(unsafe) static var locale = Locale(identifier: "en-US")
     nonisolated(unsafe) static var format: AVAudioFormat?
     private var input: AsyncStream<AnalyzerInput>.Continuation?
     private var analyzer: SpeechAnalyzer?
@@ -104,11 +109,18 @@ final class AnalyzerEngine: SpeechEngine {
     /// Makes sure the speech model is on this Mac (downloading it if needed) and picks the audio format.
     /// Returns a problem to show, or nil when ready.
     static func prepare(status: @escaping (String) -> Void) async -> String? {
+        // Use the locale exactly as the speech system names it, or reservation silently misses.
+        guard let supported = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: "en-US")) else {
+            return "Apple's on-device speech doesn't support English on this Mac."
+        }
+        locale = supported
         let transcriber = makeTranscriber()
         do {
-            // The app has to reserve a language before the system will download or use its model.
-            if !(await AssetInventory.reservedLocales).contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) {
-                _ = try await AssetInventory.reserve(locale: locale)
+            let reserved = await AssetInventory.reservedLocales
+            if !reserved.contains(where: { $0.identifier(.bcp47) == supported.identifier(.bcp47) }) {
+                let ok = try await AssetInventory.reserve(locale: supported)
+                NSLog("Second Chair: reserve \(supported.identifier(.bcp47)) -> \(ok)")
+                if !ok { return "macOS wouldn't reserve the English speech model for Second Chair." }
             }
             if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
                 status("Downloading Apple's on-device speech model (one time)…")
@@ -117,7 +129,7 @@ final class AnalyzerEngine: SpeechEngine {
             format = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber])
             return nil
         } catch {
-            return "Apple's on-device speech model isn't available: \(error.localizedDescription). Try Settings › Transcription › Apple speech recognizer (older)."
+            return "Apple's on-device speech model isn't available: \(error.localizedDescription)"
         }
     }
 
