@@ -44,6 +44,9 @@ public struct LabelThresholds: Sendable {
     /// Below this, even the closest passage isn't worth showing.
     public var closestCoverage = 0.25
     public var closestSimilarity = 0.45
+    /// A lower bar for listing other possible answers beneath the main one.
+    public var alternativeCoverage = 0.2
+    public var alternativeSimilarity = 0.4
     public init() {}
 }
 
@@ -104,6 +107,15 @@ public struct Answerer: Sendable {
         }
     }
 
+    /// Related enough to list as another possible answer.
+    public func isAlternative(_ h: Hit) -> Bool {
+        switch h.via {
+        case .prepared: return true
+        case .keyword: return h.coverage >= thresholds.alternativeCoverage
+        case .embedding: return h.similarity >= thresholds.alternativeSimilarity
+        }
+    }
+
     public func label(_ hits: [Hit]) -> (AnswerLabel, [Hit]) {
         func strong(_ h: Hit) -> Bool {
             h.via == .keyword ? h.coverage >= thresholds.groundedCoverage : h.strength >= thresholds.groundedSimilarity
@@ -126,7 +138,7 @@ public struct Answerer: Sendable {
         let (label, passages) = label(hits)
         var card = AnswerCard(question: question, label: label, passages: passages)
         var seen = Set<String>()
-        card.candidates = hits.filter { isWorthShowing($0) && seen.insert($0.chunk.id).inserted }
+        card.candidates = hits.filter { isAlternative($0) && seen.insert($0.chunk.id).inserted }
         card.sourceLatency = Date().timeIntervalSince(started)
         onSource(card)
         guard label != .notInDocs else { return card }
