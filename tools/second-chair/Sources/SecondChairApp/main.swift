@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import SecondChairCore
 
 /// Command-line modes, for CI and for running the gate from a terminal:
@@ -21,6 +22,7 @@ enum CLI {
             print("overlay sharingType: \(hidden ? "none (excluded from capture)" : "VISIBLE TO CAPTURE")")
             return hidden ? 0 : 1
         }
+        if let path = value("--transcribe") { return transcribe(path) }
         guard a.contains("--gate") || a.contains("--ask") else { return nil }
         guard let corpus = value("--corpus") else { print("--corpus <folder> is required"); return 2 }
         final class Box: @unchecked Sendable { var code: Int32 = 0 }
@@ -32,6 +34,39 @@ enum CLI {
         }
         done.wait()
         return box.code
+    }
+
+    /// Plays an audio file through the same listening pipeline a session uses (voice detection, then the
+    /// configured speech engine) and prints each utterance. For CI and for checking a Mac's setup.
+    static func transcribe(_ path: String) -> Int32 {
+        final class Box: @unchecked Sendable { var lines: [String] = []; var problem: String? }
+        let box = Box()
+        let done = DispatchSemaphore(value: 0)
+        Task.detached {
+            if Settings.engine == .analyzer, let p = await AnalyzerEngine.prepare(status: { print($0) }) { box.problem = p; done.signal(); return }
+            guard let file = try? AVAudioFile(forReading: URL(fileURLWithPath: path)) else { box.problem = "can't read \(path)"; done.signal(); return }
+            let listener = ChannelListener(channel: .them, engine: Settings.makeEngine())
+            listener.onUtterance = { u in box.lines.append(u.text); print("heard: \(u.text)") }
+            listener.onPartial = { _, t in print("partial: \(t)") }
+            let format = file.processingFormat
+            while file.framePosition < file.length {
+                guard let buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4096), (try? file.read(into: buf)) != nil else { break }
+                listener.append(buf)
+                try? await Task.sleep(nanoseconds: UInt64(Double(buf.frameLength) / format.sampleRate * 1_000_000_000))
+            }
+            // A second of silence ends the utterance, as a pause would.
+            if let silence = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(format.sampleRate / 10)) {
+                silence.frameLength = silence.frameCapacity
+                for _ in 0..<12 { listener.append(silence); try? await Task.sleep(nanoseconds: 100_000_000) }
+            }
+            try? await Task.sleep(nanoseconds: 6_000_000_000)
+            done.signal()
+        }
+        // Main-queue callbacks need the run loop turning while we wait.
+        while done.wait(timeout: .now()) == .timedOut { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
+        if let p = box.problem { print("Problem: \(p)"); return 1 }
+        print("Transcript: \(box.lines.joined(separator: " "))")
+        return box.lines.isEmpty ? 1 : 0
     }
 
     static func run(corpus: String) async -> Int32 {
