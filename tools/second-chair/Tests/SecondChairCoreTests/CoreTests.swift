@@ -13,6 +13,8 @@ final class TextTests: XCTestCase {
 
     func testTermsDropStopwordsAndStem() {
         XCTAssertEqual(Lexicon.terms("Tell me about the launches you shipped"), ["launch", "ship"])
+        XCTAssertEqual(Lexicon.terms("AgentEngineer"), ["agentengineer", "agent", "engineer"])
+        XCTAssertEqual(Lexicon.terms("RTL VSO.ai"), ["rtl", "vso", "ai"])
     }
 
     func testNamesSkipSentenceStarts() {
@@ -402,5 +404,39 @@ final class SpokenQuestionTests: XCTestCase {
         let hits = await Retriever(index: index).retrieve("What do you know about Synopsys?")
         let sections = index.titleMatches("What do you know about Synopsys?") + index.sections(for: hits, question: "What do you know about Synopsys?")
         XCTAssertEqual(sections.first?.section.title, "What is Synopsys")
+    }
+}
+
+final class CompoundWordTests: XCTestCase {
+    /// From the real Synopsys prep doc: "agent pilot" was spoken; the doc says AgentEngineer and Autopilot.
+    func testSpokenAgentPilotFindsAutopilot() async {
+        let md = """
+        # Synopsys
+        ## So what does AI actually do?
+        Copilot: AI helps engineers use the tools faster.
+
+        AgentEngineer (on the Autopilot Platform): 7 long-horizon agents that orchestrate task agents.
+        ## Interview answers
+        ### 30-60-90 days
+        Days 60 to 90: deliver. Run pricing pilots with design partners. Set up metrics per agent.
+        """
+        let index = CorpusIndex(chunks: Chunker.chunk(text: md, file: "/p/S.docx", folder: "/p", markdown: true))
+        let hits = await Retriever(index: index).retrieve("What do you know about agent pilot, what is the expectation?")
+        XCTAssertTrue(hits.first?.chunk.text.contains("Autopilot") ?? false, hits.first?.chunk.text ?? "no hit")
+    }
+
+    func testTableOfContentsIsSkipped() {
+        let doc = """
+        <w:document xmlns:w="w"><w:body>
+        <w:sdt><w:sdtPr><w:docPartObj><w:docPartGallery w:val="Table of Contents"/></w:docPartObj></w:sdtPr><w:sdtContent>
+        <w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Interview answers38</w:t></w:r></w:p>
+        </w:sdtContent></w:sdt>
+        <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Interview answers</w:t></w:r></w:p>
+        <w:p><w:r><w:t>Real content.</w:t></w:r></w:p>
+        </w:body></w:document>
+        """
+        let md = DocxMarkdown.convert(document: Data(doc.utf8))
+        XCTAssertFalse(md.contains("38"))
+        XCTAssertTrue(md.hasPrefix("# Interview answers"))
     }
 }

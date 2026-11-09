@@ -17,16 +17,42 @@ public enum Lexicon {
 
     /// Lowercased words and numbers, without stopwords, lightly stemmed.
     public static func terms(_ text: String) -> [String] {
-        words(text).compactMap { w in
-            var lower = w.lowercased().replacingOccurrences(of: "\u{2019}", with: "'")
-            for contraction in ["'s", "'re", "'ve", "'ll", "'d", "'m", "n't"] where lower.hasSuffix(contraction) {
-                lower.removeLast(contraction.count)
-                break
-            }
-            if stopwords.contains(lower) { return nil }
-            if lower.count < 2, !lower.allSatisfy(\.isNumber) { return nil }
-            return stem(lower)
+        words(text).flatMap { w -> [String] in
+            // A compound written as one word ("AgentEngineer") also counts as its parts ("agent", "engineer").
+            let parts = camelParts(w)
+            return ([w] + (parts.count > 1 ? parts : [])).compactMap(term)
         }
+    }
+
+    static func term(_ w: String) -> String? {
+        var lower = w.lowercased().replacingOccurrences(of: "\u{2019}", with: "'")
+        for contraction in ["'s", "'re", "'ve", "'ll", "'d", "'m", "n't"] where lower.hasSuffix(contraction) {
+            lower.removeLast(contraction.count)
+            break
+        }
+        lower = lower.trimmingCharacters(in: CharacterSet(charactersIn: "'"))
+        if stopwords.contains(lower) { return nil }
+        if lower.count < 2, !lower.allSatisfy(\.isNumber) { return nil }
+        return stem(lower)
+    }
+
+    /// "AgentEngineer" -> ["Agent", "Engineer"]; "VSO.ai" and "RTL" stay whole.
+    static func camelParts(_ w: String) -> [String] {
+        var parts: [String] = []
+        var current = ""
+        let chars = Array(w)
+        for (i, c) in chars.enumerated() {
+            let prev: Character? = i > 0 ? chars[i - 1] : nil
+            let next: Character? = i + 1 < chars.count ? chars[i + 1] : nil
+            // A new part starts at a capital after a lowercase letter, or at the last capital of a run before lowercase.
+            if c.isUppercase, let p = prev, p.isLowercase || (p.isUppercase && next?.isLowercase == true), !current.isEmpty {
+                parts.append(current)
+                current = ""
+            }
+            current.append(c)
+        }
+        if !current.isEmpty { parts.append(current) }
+        return parts.filter { $0.count >= 2 }
     }
 
     /// Raw words, keeping digits joined to decimal points, percent and currency signs.

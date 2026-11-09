@@ -134,7 +134,7 @@ final class Library {
             }
         }
         // The reader version is part of it, so a better reader rebuilds existing indexes once.
-        return "reader2|\(folders.joined(separator: "|"))#\(count)#\(newest.timeIntervalSince1970)"
+        return "reader3|\(folders.joined(separator: "|"))#\(count)#\(newest.timeIntervalSince1970)"
     }
 
     func checkFreshness() {
