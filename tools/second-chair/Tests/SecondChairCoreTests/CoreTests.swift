@@ -3,20 +3,20 @@ import XCTest
 
 final class TextTests: XCTestCase {
     func testNumbersNormalise() {
-        XCTAssertEqual(Text.numbers("Revenue grew to $31M"), ["31m"])
-        XCTAssertEqual(Text.numbers("31 million dollars"), ["31m"])
-        XCTAssertEqual(Text.numbers("margin hit 61 percent"), ["61%"])
-        XCTAssertEqual(Text.numbers("margin hit 61%"), ["61%"])
-        XCTAssertEqual(Text.numbers("1,200 users and 2.30 hours"), ["1200", "2.3"])
-        XCTAssertTrue(Text.numbers("no figures here").isEmpty)
+        XCTAssertEqual(Lexicon.numbers("Revenue grew to $31M"), ["31m"])
+        XCTAssertEqual(Lexicon.numbers("31 million dollars"), ["31m"])
+        XCTAssertEqual(Lexicon.numbers("margin hit 61 percent"), ["61%"])
+        XCTAssertEqual(Lexicon.numbers("margin hit 61%"), ["61%"])
+        XCTAssertEqual(Lexicon.numbers("1,200 users and 2.30 hours"), ["1200", "2.3"])
+        XCTAssertTrue(Lexicon.numbers("no figures here").isEmpty)
     }
 
     func testTermsDropStopwordsAndStem() {
-        XCTAssertEqual(Text.terms("Tell me about the launches you shipped"), ["launch", "ship"])
+        XCTAssertEqual(Lexicon.terms("Tell me about the launches you shipped"), ["launch", "ship"])
     }
 
     func testNamesSkipSentenceStarts() {
-        XCTAssertEqual(Text.names("We grew at Lumen Freight. Then Tailspin copied us."), ["Lumen", "Freight", "Tailspin"])
+        XCTAssertEqual(Lexicon.names("We grew at Lumen Freight. Then Tailspin copied us."), ["Lumen", "Freight", "Tailspin"])
     }
 }
 
@@ -124,6 +124,14 @@ final class AnsweringTests: XCTestCase {
         let r = Retriever(index: CorpusIndex(chunks: chunks), primaryFolder: "/pack")
         let hits = await r.retrieve("How much did revenue grow at Lumen?")
         XCTAssertEqual(hits.first?.chunk.folder, "/pack")
+    }
+}
+
+final class ExtractTests: XCTestCase {
+    func testBulletsAreSeparateSentences() {
+        let passage = "- Revenue grew from $12M to $31M ARR over two years.\n- Team: 6 product managers, 4 designers."
+        XCTAssertEqual(Answerer.extract("How much did revenue grow?", from: passage),
+                       "Revenue grew from $12M to $31M ARR over two years.")
     }
 }
 

@@ -100,7 +100,7 @@ public enum Chunker {
         guard body.count > hardLimit else { return [body] }
         var out: [String] = []
         var current = ""
-        for sentence in Text.sentences(body) {
+        for sentence in Lexicon.sentences(body) {
             if !current.isEmpty, current.count + sentence.count + 1 > target {
                 out.append(current)
                 current = ""

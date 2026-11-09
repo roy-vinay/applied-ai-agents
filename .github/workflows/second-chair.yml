@@ -17,6 +17,9 @@ jobs:
         working-directory: tools/second-chair
     steps:
       - uses: actions/checkout@v5
+        with:
+          # On a pull request, the branch itself, so screenshots can be committed back to it.
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
       - name: Reuse compiled files from earlier runs
         uses: actions/cache@v4
         with:
@@ -48,6 +51,23 @@ jobs:
           if kill -0 $PID 2>/dev/null; then echo "App is running"; kill $PID; else echo "::error title=Launch failed::The app exited within 8 seconds"; exit 1; fi
       - name: The overlay is excluded from screen capture
         run: '"./build/Second Chair.app/Contents/MacOS/SecondChair" --window-check'
+      - name: Screenshots of the main states (for design review)
+        run: |
+          "./build/Second Chair.app/Contents/MacOS/SecondChair" --screenshots "$PWD/shots" --corpus "$PWD/examples/prep-pack" &
+          PID=$!
+          for i in $(seq 1 90); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          kill $PID 2>/dev/null || true
+          ls -la shots || true
+      - name: Commit screenshots to the branch (not main)
+        if: github.event_name == 'pull_request'
+        run: |
+          mkdir -p docs/img && cp shots/*.png docs/img/ 2>/dev/null || true
+          git config user.name "Vinay Roy"
+          git config user.email "roy-vinay@users.noreply.github.com"
+          git add docs/img/*.png
+          if git diff --cached --quiet; then echo "No screenshot changes"; exit 0; fi
+          git commit -m "Second Chair docs: app screenshots"
+          git push origin "HEAD:$GITHUB_HEAD_REF"
       - name: Gate on the sample prep pack, keyword only, no models (deterministic)
         run: |
           set -o pipefail

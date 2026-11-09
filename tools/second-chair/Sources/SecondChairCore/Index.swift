@@ -46,7 +46,7 @@ public struct CorpusIndex: Codable, Sendable {
         lengths = []
         for (i, chunk) in chunks.enumerated() {
             // Headings and file names are part of what a passage is about.
-            let terms = Text.terms(chunk.text + " " + chunk.headings.joined(separator: " ") + " "
+            let terms = Lexicon.terms(chunk.text + " " + chunk.headings.joined(separator: " ") + " "
                                    + (chunk.fileName as NSString).deletingPathExtension.replacingOccurrences(of: "-", with: " "))
             lengths.append(terms.count)
             for t in terms { postings[t, default: [:]][i, default: 0] += 1 }

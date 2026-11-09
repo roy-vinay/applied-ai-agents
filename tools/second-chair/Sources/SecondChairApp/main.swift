@@ -17,9 +17,9 @@ enum CLI {
         let a = CommandLine.arguments
         if a.contains("--window-check") {
             _ = NSApplication.shared
-            let o = Overlay()
-            print("overlay sharingType: \(o.panel.sharingType == .none ? "none (excluded from capture)" : "VISIBLE TO CAPTURE")")
-            return o.panel.sharingType == .none ? 0 : 1
+            let hidden = MainActor.assumeIsolated { Overlay(model: AppModel.shared).panel.sharingType == .none }
+            print("overlay sharingType: \(hidden ? "none (excluded from capture)" : "VISIBLE TO CAPTURE")")
+            return hidden ? 0 : 1
         }
         guard a.contains("--gate") || a.contains("--ask") else { return nil }
         guard let corpus = value("--corpus") else { print("--corpus <folder> is required"); return 2 }
@@ -77,8 +77,10 @@ enum CLI {
 
 if let code = CLI.runIfRequested() { exit(code) }
 
-let app = NSApplication.shared
-let delegate = AppDelegate()
-app.delegate = delegate
-app.setActivationPolicy(.accessory)
-app.run()
+MainActor.assumeIsolated {
+    let app = NSApplication.shared
+    let delegate = AppDelegate()
+    app.delegate = delegate
+    app.setActivationPolicy(.regular)
+    withExtendedLifetime(delegate) { app.run() }
+}

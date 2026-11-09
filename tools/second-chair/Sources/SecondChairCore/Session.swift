@@ -15,10 +15,10 @@ public enum QuestionDetector {
 
     public static func isQuestion(_ utterance: String) -> Bool {
         let s = utterance.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard Text.words(s).count >= 3 else { return false }
+        guard Lexicon.words(s).count >= 3 else { return false }
         if s.hasSuffix("?") { return true }
         // Speech recognizers often drop the question mark; look at how the last sentence opens.
-        let last = Text.sentences(s).last ?? s
+        let last = Lexicon.sentences(s).last ?? s
         if openers.contains(where: { last.hasPrefix($0 + " ") }) { return true }
         return inner.contains(where: { last.contains($0) })
     }
@@ -131,7 +131,7 @@ public struct Utterance: Codable, Sendable {
 /// One question the tool handled, for the review after the session.
 public struct ReviewItem: Codable, Sendable {
     public var question: String
-    public var label: Label
+    public var label: AnswerLabel
     public var source: String?
     public var answer: String?
     public var withheld: String?

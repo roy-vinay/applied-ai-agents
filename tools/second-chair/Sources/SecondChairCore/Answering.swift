@@ -1,7 +1,7 @@
 import Foundation
 
 /// Which kind of help you're looking at. Never blended silently.
-public enum Label: String, Codable, Sendable {
+public enum AnswerLabel: String, Codable, Sendable {
     case grounded = "GROUNDED"
     case synthesized = "SYNTHESIZED"
     case notInDocs = "NOT IN YOUR DOCS"
@@ -16,7 +16,7 @@ public protocol ModelClient: Sendable {
 /// What the overlay shows: the question as heard, the source first, the sayable answer second.
 public struct AnswerCard: Sendable {
     public var question: String
-    public var label: Label
+    public var label: AnswerLabel
     /// Passages shown verbatim: one for GROUNDED, every passage used for SYNTHESIZED,
     /// the closest one (if worth seeing) for NOT IN YOUR DOCS.
     public var passages: [Hit]
@@ -59,10 +59,10 @@ public enum Grounding {
 
     public static func check(_ answer: String, against passages: [String], question: String = "") -> Result {
         let source = passages.joined(separator: "\n")
-        let sourceNumbers = Text.numbers(source).union(Text.numbers(question))
-        let numbers = Text.numbers(answer).filter { !sourceNumbers.contains($0) }.sorted()
+        let sourceNumbers = Lexicon.numbers(source).union(Lexicon.numbers(question))
+        let numbers = Lexicon.numbers(answer).filter { !sourceNumbers.contains($0) }.sorted()
         let haystack = (source + "\n" + question).lowercased()
-        let names = Text.names(answer).filter { !haystack.contains($0.lowercased()) }.sorted()
+        let names = Lexicon.names(answer).filter { !haystack.contains($0.lowercased()) }.sorted()
         return Result(unsupportedNumbers: numbers, unsupportedNames: names)
     }
 }
@@ -89,7 +89,7 @@ public struct Answerer: Sendable {
         passages. If the passages do not answer the question, reply with exactly \(notCovered) and nothing else.
         """
 
-    public func label(_ hits: [Hit]) -> (Label, [Hit]) {
+    public func label(_ hits: [Hit]) -> (AnswerLabel, [Hit]) {
         func strong(_ h: Hit) -> Bool {
             h.via == .keyword ? h.coverage >= thresholds.groundedCoverage : h.similarity >= thresholds.groundedSimilarity
         }
@@ -166,18 +166,24 @@ public struct Answerer: Sendable {
         for prefix in ["Answer:", "Candidate:", "You could say:"] where s.hasPrefix(prefix) {
             s = String(s.dropFirst(prefix.count)).trimmingCharacters(in: .whitespaces)
         }
-        let sentences = Text.sentences(s.replacingOccurrences(of: "\n", with: " "))
+        let sentences = Lexicon.sentences(s.replacingOccurrences(of: "\n", with: " "))
         return sentences.prefix(3).joined(separator: " ")
     }
 
-    /// Up to two sentences from the passage that share the most terms with the question, in passage order.
+    /// The sentence (or bullet) that shares the most terms with the question, plus the next best one
+    /// only when it's nearly as relevant. Kept in passage order.
     public static func extract(_ question: String, from passage: String) -> String {
-        let q = Set(Text.terms(question))
-        let sentences = Text.sentences(passage.replacingOccurrences(of: "\n", with: " "))
-            .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "-*• ")) }
+        let q = Set(Lexicon.terms(question))
+        let sentences = passage.components(separatedBy: "\n")
+            .flatMap { Lexicon.sentences($0) }
+            .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "-*•> ").union(.whitespaces)) }
             .filter { !$0.isEmpty }
-        let scored = sentences.enumerated().map { i, s in (i, Set(Text.terms(s)).intersection(q).count) }
-        let picked = scored.sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0 < $1.0 }.prefix(2).map(\.0).sorted()
-        return picked.map { sentences[$0] }.joined(separator: " ")
+        guard !sentences.isEmpty else { return passage }
+        let scored = sentences.enumerated().map { i, s in (i, Set(Lexicon.terms(s)).intersection(q).count) }
+        let ranked = scored.sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0 < $1.0 }
+        let best = ranked[0]
+        var picked = [best.0]
+        if ranked.count > 1, ranked[1].1 >= max(1, Int((Double(best.1) * 0.75).rounded())) { picked.append(ranked[1].0) }
+        return picked.sorted().map { sentences[$0] }.joined(separator: " ")
     }
 }
