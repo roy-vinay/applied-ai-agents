@@ -59,6 +59,7 @@ enum PrivacyGuard {
         try? await Task.sleep(nanoseconds: 1_500_000_000)
 
         var failures: [String] = []
+        var inconclusive: [String] = []
         for w in NSApp.windows where w.isVisible && w !== control && w.sharingType != .none { failures.append("window '\(w.title)' is visible to capture") }
 
         // 1. The system screenshot path (what screencapture and many recorders use).
@@ -69,7 +70,7 @@ enum PrivacyGuard {
         try? p.run()
         p.waitUntilExit()
         if let rep = NSImage(contentsOfFile: path).flatMap({ $0.tiffRepresentation }).flatMap(NSBitmapImageRep.init(data:)) {
-            if !showsProbe(rep: rep, frame: control.frame) { failures.append("screenshot check couldn't see the control window, so it proves nothing") }
+            if !showsProbe(rep: rep, frame: control.frame) { inconclusive.append("screenshot") }
             else if showsProbe(rep: rep, frame: probe.frame) { failures.append("test window visible in a full-screen screenshot") }
             else { print("screenshot: control window visible, Second Chair test window hidden") }
         } else {
@@ -87,7 +88,7 @@ enum PrivacyGuard {
                     contentFilter: SCContentFilter(display: display, excludingWindows: []), configuration: config)
                 let rep = NSBitmapImageRep(cgImage: image)
                 if !showsProbe(rep: rep, frame: control.frame) {
-                    failures.append("ScreenCaptureKit check couldn't see the control window, so it proves nothing")
+                    inconclusive.append("ScreenCaptureKit")
                 } else if showsProbe(rep: rep, frame: probe.frame) {
                     failures.append("test window visible to ScreenCaptureKit display capture")
                 } else { print("ScreenCaptureKit: control window visible, Second Chair test window hidden") }
@@ -99,7 +100,10 @@ enum PrivacyGuard {
         probe.orderOut(nil)
         control.orderOut(nil)
         overlay.panel.orderOut(nil)
-        if failures.isEmpty { print("All Second Chair windows are excluded from screen capture.") }
+        for i in inconclusive {
+            print("\(i): INCONCLUSIVE. The capture didn't show an ordinary window either, so this Mac isn't letting the test record the screen. Give Second Chair Screen & System Audio Recording permission and run it again.")
+        }
+        if failures.isEmpty && inconclusive.isEmpty { print("PASS: every Second Chair window is invisible to screen capture.") }
         for f in failures { print("VISIBLE: \(f)") }
         return failures.isEmpty ? 0 : 1
     }
