@@ -117,7 +117,7 @@ struct OverlayAnswer: View {
                     VStack(alignment: .leading, spacing: 10) {
                         answerText(card)
                         ForEach(Array(card.passages.enumerated()), id: \.offset) { _, hit in
-                            passage(hit, card: card)
+                            if hit.via != .prepared { passage(hit, card: card) }
                         }
                     }
                 }

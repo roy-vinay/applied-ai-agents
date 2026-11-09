@@ -383,7 +383,8 @@ struct AnswerView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 10) {
                             LabelPill(label: card.label)
-                            Text(card.label.explanation).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(2)
+                            Text(card.matchedQuestion != nil ? "You wrote this answer. Shown as written." : card.label.explanation)
+                                .font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(2)
                             Spacer()
                         }
                         if let asked = card.matchedQuestion {
@@ -417,7 +418,8 @@ struct AnswerView: View {
                         .font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
                         .padding(.top, 4)
                     ForEach(Array(card.passages.enumerated()), id: \.offset) { _, hit in
-                        SourceCard(hit: hit, question: item.question, dim: card.label == .notInDocs)
+                        SourceCard(hit: hit, question: item.question, dim: card.label == .notInDocs,
+                                   headerOnly: hit.via == .prepared)
                     }
                 }
             } else {
@@ -443,6 +445,7 @@ struct SourceCard: View {
     var hit: Hit
     var question: String
     var dim = false
+    var headerOnly = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -465,12 +468,14 @@ struct SourceCard: View {
                 .buttonStyle(.borderless)
                 .help("Open the document")
             }
+            if !headerOnly {
             Text(Highlight.passage(hit.chunk.text, question: question))
                 .font(.system(size: 14))
                 .lineSpacing(3)
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
                 .opacity(dim ? 0.7 : 1)
+            }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
