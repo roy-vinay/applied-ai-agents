@@ -97,8 +97,14 @@ public struct CorpusIndex: Codable, Sendable {
         }
         // A question word that appears nowhere in your documents is usually paraphrase ("biggest", "wrong"),
         // so it counts half against coverage. Off-topic questions still score near zero: nothing matches.
-        let total = weighted.reduce(0.0) { $0 + (postings[$1.key] == nil ? $1.value * 0.5 : $1.value) }
-        return scores.map { ($0.key, $0.value, (matched[$0.key] ?? 0) / total) }.sorted { $0.1 > $1.1 }
+        // Coverage counts only the question's own words; words carried over from a previous question
+        // help ranking but never make a match look weaker. With no own words, everything counts.
+        let own = weighted.filter { $0.value >= 1 }
+        let basis = own.isEmpty ? weighted : own
+        var ownMatched: [Int: Double] = [:]
+        for (term, weight) in basis { for doc in (postings[term] ?? [:]).keys { ownMatched[doc, default: 0] += weight } }
+        let total = basis.reduce(0.0) { $0 + (postings[$1.key] == nil ? $1.value * 0.5 : $1.value) }
+        return scores.map { ($0.key, $0.value, min(1, (ownMatched[$0.key] ?? 0) / max(total, 0.0001))) }.sorted { $0.1 > $1.1 }
     }
 }
 

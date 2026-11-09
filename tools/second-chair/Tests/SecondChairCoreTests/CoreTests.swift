@@ -114,6 +114,7 @@ final class AnsweringTests: XCTestCase {
     func testFollowUpCarriesContext() async {
         let r = Retriever(index: index)
         XCTAssertTrue(Retriever.isFollowUp("And why was that?"))
+        XCTAssertFalse(Retriever.isFollowUp("What would you do in your first 90 days?"))
         let w = r.weightedTerms("And why was that?", previous: ["How did gross margin change?"])
         XCTAssertEqual(w["margin"], 0.5)
     }
