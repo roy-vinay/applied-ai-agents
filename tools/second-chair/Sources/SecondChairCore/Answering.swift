@@ -20,6 +20,8 @@ public struct AnswerCard: Sendable {
     /// Passages shown verbatim: one for GROUNDED, every passage used for SYNTHESIZED,
     /// the closest one (if worth seeing) for NOT IN YOUR DOCS.
     public var passages: [Hit]
+    /// Every place in your documents that could answer this, best first, so you can pick.
+    public var candidates: [Hit] = []
     /// Two or three sentences, or nil while it's being written, or when withheld.
     public var answer: String?
     /// Which path wrote the answer: a model name, or "extract" for sentences lifted from the passage.
@@ -42,6 +44,9 @@ public struct LabelThresholds: Sendable {
     /// Below this, even the closest passage isn't worth showing.
     public var closestCoverage = 0.25
     public var closestSimilarity = 0.45
+    /// A lower bar for listing other possible answers beneath the main one.
+    public var alternativeCoverage = 0.2
+    public var alternativeSimilarity = 0.4
     public init() {}
 }
 
@@ -93,6 +98,24 @@ public struct Answerer: Sendable {
         passages. If the passages do not answer the question, reply with exactly \(notCovered) and nothing else.
         """
 
+    /// Close enough to the question to be worth showing as a possible answer.
+    public func isWorthShowing(_ h: Hit) -> Bool {
+        switch h.via {
+        case .prepared: return true
+        case .keyword: return h.coverage >= thresholds.closestCoverage
+        case .embedding: return h.similarity >= thresholds.closestSimilarity
+        }
+    }
+
+    /// Related enough to list as another possible answer.
+    public func isAlternative(_ h: Hit) -> Bool {
+        switch h.via {
+        case .prepared: return true
+        case .keyword: return h.coverage >= thresholds.alternativeCoverage
+        case .embedding: return h.similarity >= thresholds.alternativeSimilarity
+        }
+    }
+
     public func label(_ hits: [Hit]) -> (AnswerLabel, [Hit]) {
         func strong(_ h: Hit) -> Bool {
             h.via == .keyword ? h.coverage >= thresholds.groundedCoverage : h.strength >= thresholds.groundedSimilarity
@@ -100,11 +123,9 @@ public struct Answerer: Sendable {
         func support(_ h: Hit) -> Bool {
             h.via == .keyword ? h.coverage >= thresholds.supportCoverage : h.strength >= thresholds.supportSimilarity
         }
-        func closest(_ h: Hit) -> Bool {
-            h.via == .keyword ? h.coverage >= thresholds.closestCoverage : h.strength >= thresholds.closestSimilarity
-        }
+        let closest = isWorthShowing
         if let top = hits.first, top.via == .prepared { return (.grounded, [top]) }
-        if let top = hits.first, strong(top) { return (.grounded, [top]) }
+        if let best = hits.filter(strong).max(by: { $0.strength < $1.strength }) { return (.grounded, [best]) }
         let supporting = hits.filter(support)
         if supporting.count >= 2 { return (.synthesized, Array(supporting.prefix(3))) }
         if let near = hits.first(where: closest) { return (.notInDocs, [near]) }
@@ -116,6 +137,8 @@ public struct Answerer: Sendable {
                        onSource: @Sendable (AnswerCard) -> Void = { _ in }) async -> AnswerCard {
         let (label, passages) = label(hits)
         var card = AnswerCard(question: question, label: label, passages: passages)
+        var seen = Set<String>()
+        card.candidates = hits.filter { isAlternative($0) && seen.insert($0.chunk.id).inserted }
         card.sourceLatency = Date().timeIntervalSince(started)
         onSource(card)
         guard label != .notInDocs else { return card }

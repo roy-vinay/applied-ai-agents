@@ -166,6 +166,24 @@ final class PreparedAnswerTests: XCTestCase {
         XCTAssertEqual(card.matchedQuestion, "What's your management style?")
     }
 
+    func testAllPossibleAnswersAreListed() async {
+        let md = """
+        # Stories
+        ## Support
+        I cut support response time from 41 hours to 3 hours with AI triage.
+        ## Launch
+        Our dispatch launch broke for two accounts; I now ship to 10 percent first.
+        ## Pricing
+        I talked the CEO out of a custom pricing engine.
+        """
+        let index = CorpusIndex(chunks: Chunker.chunk(text: md, file: "/p/s.md", folder: "/p", markdown: true))
+        let q = "Tell me about a time you used AI to cut response time on a launch"
+        let hits = await Retriever(index: index).retrieve(q)
+        let card = await Answerer().answer(q, hits: hits)
+        XCTAssertGreaterThanOrEqual(card.candidates.count, 2, "support and launch both relate")
+        XCTAssertEqual(Set(card.candidates.map(\.chunk.id)).count, card.candidates.count, "no duplicates")
+    }
+
     func testUnmatchedQuestionFallsBackToModel() async {
         let index = CorpusIndex(chunks: Chunker.chunk(text: doc, file: "/p/q.md", folder: "/p", markdown: true))
         let hits = await Retriever(index: index).retrieve("What is your salary expectation?")

@@ -33,7 +33,8 @@ public struct RetrievalSettings: Sendable {
     public var primaryBoost = 1.6
     /// Weight of terms carried over from the previous question in a follow-up.
     public var followUpWeight = 0.5
-    public var maxHits = 4
+    /// How many possible answers to look for. The label uses the best few; the rest are shown as alternatives.
+    public var maxHits = 8
     /// A question you wrote counts as the same question when it shares this much of its wording...
     public var preparedOverlap = 0.6
     /// ...or means this nearly the same (embedding similarity, question to question).
@@ -74,10 +75,10 @@ public struct Retriever: Sendable {
         return weights
     }
 
-    /// The question you wrote an answer to that matches this one best, if it's close enough.
-    public func matchPrepared(_ question: String) async -> Hit? {
+    /// Every question you wrote an answer to that matches this one, best first.
+    public func matchPreparedAll(_ question: String) async -> [Hit] {
         let asked = index.chunks.filter { $0.question != nil }
-        guard !asked.isEmpty else { return nil }
+        guard !asked.isEmpty else { return [] }
         let incoming = Set(Lexicon.terms(question))
         var sims: [String: Double] = [:]
         if let embedder, !index.questionVectors.isEmpty, index.embedderName == embedder.name,
@@ -85,7 +86,7 @@ public struct Retriever: Sendable {
             let q = Vector.normalized(qv)
             for chunk in asked { if let v = index.questionVectors[chunk.id] { sims[chunk.id] = Double(max(0, Vector.dot(q, v))) } }
         }
-        var best: Hit?
+        var found: [Hit] = []
         for chunk in asked {
             let stored = Set(Lexicon.terms(chunk.question ?? ""))
             let overlap = incoming.isEmpty || stored.isEmpty ? 0
@@ -93,20 +94,24 @@ public struct Retriever: Sendable {
             let sim = sims[chunk.id] ?? 0
             guard overlap >= settings.preparedOverlap || sim >= settings.preparedSimilarity else { continue }
             let primary = chunk.folder == primaryFolder
-            let hit = Hit(chunk: chunk, coverage: overlap, similarity: sim,
-                          score: max(overlap, sim) * (primary ? settings.primaryBoost : 1), via: .prepared, primary: primary)
-            if best == nil || hit.score > best!.score { best = hit }
+            found.append(Hit(chunk: chunk, coverage: overlap, similarity: sim,
+                             score: max(overlap, sim) * (primary ? settings.primaryBoost : 1), via: .prepared, primary: primary))
         }
-        return best
+        return found.sorted { $0.score > $1.score }
+    }
+
+    /// The question you wrote an answer to that matches this one best, if it's close enough.
+    public func matchPrepared(_ question: String) async -> Hit? {
+        await matchPreparedAll(question).first
     }
 
     public func retrieve(_ question: String, previous: [String] = []) async -> [Hit] {
-        // Your own written answer to this question comes first; passages follow as context.
-        if let prepared = await matchPrepared(question) {
-            let rest = await retrievePassages(question, previous: previous).filter { $0.chunk.id != prepared.chunk.id }
-            return [prepared] + rest.prefix(settings.maxHits - 1)
-        }
-        return await retrievePassages(question, previous: previous)
+        // Your own written answers to this question come first; other passages follow as alternatives.
+        let prepared = await matchPreparedAll(question)
+        guard !prepared.isEmpty else { return await retrievePassages(question, previous: previous) }
+        let ids = Set(prepared.map(\.chunk.id))
+        let rest = await retrievePassages(question, previous: previous).filter { !ids.contains($0.chunk.id) }
+        return Array((prepared + rest).prefix(settings.maxHits))
     }
 
     public func retrievePassages(_ question: String, previous: [String] = []) async -> [Hit] {
@@ -142,7 +147,9 @@ public struct Retriever: Sendable {
                     seen.insert(h.chunk.id)
                     if hits.count >= settings.maxHits { break }
                 }
-                hits.sort { $0.strength * ($0.primary ? 1.15 : 1) > $1.strength * ($1.primary ? 1.15 : 1) }
+                // Exact word matches are more trustworthy than meaning matches, so they rank a step higher.
+                func rank(_ h: Hit) -> Double { (h.via == .keyword ? h.coverage + 0.15 : h.strength) * (h.primary ? 1.15 : 1) }
+                hits.sort { rank($0) > rank($1) }
             }
         }
         return Array(hits.prefix(settings.maxHits))
