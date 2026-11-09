@@ -427,14 +427,20 @@ struct AnswerView: View {
                     }
                 }
 
-                if !card.passages.isEmpty {
-                    Text(card.label == .notInDocs ? "Closest passage (doesn't answer it)" : card.passages.count > 1 ? "From \(card.passages.count) passages in your documents" : "From your documents")
-                        .font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
-                        .padding(.top, 4)
-                    ForEach(Array(card.passages.enumerated()), id: \.offset) { _, hit in
-                        SourceCard(hit: hit, question: item.question, dim: card.label == .notInDocs,
-                                   headerOnly: hit.via == .prepared)
+                let options = card.candidates.filter { $0.chunk.text != card.answer }
+                if !options.isEmpty {
+                    HStack {
+                        Text(options.count == 1 ? "Possible answer in your documents" : "\(options.count) possible answers in your documents")
+                            .font(.system(size: 13, weight: .semibold))
+                        Spacer()
+                        Text("Best first · answer sentences in bold").font(.system(size: 11)).foregroundStyle(.tertiary)
                     }
+                    .padding(.top, 4)
+                    ForEach(Array(options.enumerated()), id: \.element.chunk.id) { i, hit in
+                        CandidateCard(rank: i + 1, hit: hit, question: item.question)
+                    }
+                } else if card.label == .notInDocs {
+                    Text("Nothing in your documents comes close.").font(.system(size: 13)).foregroundStyle(.secondary)
                 }
             } else {
                 HStack(spacing: 8) {
@@ -455,20 +461,21 @@ struct AnswerView: View {
     }
 }
 
-struct SourceCard: View {
+/// One possible answer, shown in place: the whole passage, with the sentences that answer the question in bold.
+struct CandidateCard: View {
+    var rank: Int
     var hit: Hit
     var question: String
-    var dim = false
-    var headerOnly = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Image(systemName: "doc.text").foregroundStyle(.secondary)
-                Text(hit.chunk.fileName).font(.system(size: 12.5, weight: .semibold))
+                Text("\(rank)").font(.system(size: 11, weight: .bold)).foregroundStyle(.white)
+                    .frame(width: 18, height: 18).background(Color.accentColor.opacity(rank == 1 ? 1 : 0.55), in: Circle())
+                Text(hit.chunk.fileName).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
                 if !hit.chunk.headings.isEmpty {
                     Text("›").foregroundStyle(.tertiary)
-                    Text(hit.chunk.headingPath).font(.system(size: 12.5)).foregroundStyle(.secondary).lineLimit(1)
+                    Text(hit.chunk.headingPath).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1)
                 }
                 if hit.primary {
                     Text("PRIMARY").font(.system(size: 9, weight: .bold)).foregroundStyle(.orange)
@@ -482,21 +489,19 @@ struct SourceCard: View {
                 .buttonStyle(.borderless)
                 .help("Open the document")
             }
-            if !headerOnly {
-            Text(Highlight.passage(hit.chunk.text, question: question))
-                .font(.system(size: 14))
+            if let q = hit.chunk.question {
+                Text("You wrote this for: \u{201C}\(q)\u{201D}").font(.system(size: 12, weight: .medium)).foregroundStyle(.green)
+            }
+            Text(hit.via == .prepared ? AttributedString(hit.chunk.text) : Highlight.inPlace(hit.chunk.text, question: question, size: 15))
+                .font(.system(size: 15))
                 .lineSpacing(3)
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
-                .opacity(dim ? 0.7 : 1)
-            }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .textBackgroundColor).opacity(0.6), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(alignment: .leading) {
-            RoundedRectangle(cornerRadius: 2).fill(dim ? Color.gray.opacity(0.4) : Color.accentColor.opacity(0.7)).frame(width: 3).padding(.vertical, 10)
-        }
+        .background(Color(nsColor: .textBackgroundColor).opacity(rank == 1 ? 0.9 : 0.55), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.secondary.opacity(rank == 1 ? 0.3 : 0.15)))
     }
 }
 

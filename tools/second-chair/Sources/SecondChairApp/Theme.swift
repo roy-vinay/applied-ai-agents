@@ -91,6 +91,22 @@ enum Highlight {
     }
 }
 
+extension Highlight {
+    /// The whole passage with the sentences that answer the question in bold, so the answer is read in place.
+    static func inPlace(_ text: String, question: String, size: CGFloat = 15) -> AttributedString {
+        var out = passage(text, question: question, size: size)
+        let answer = Answerer.extract(question, from: text)
+        for sentence in Lexicon.sentences(answer) {
+            let needle = sentence.trimmingCharacters(in: .whitespaces)
+            guard needle.count > 3, let r = out.range(of: needle) else { continue }
+            out[r].font = .system(size: size, weight: .bold)
+            out[r].foregroundColor = Color.primary
+            out[r].backgroundColor = Color.yellow.opacity(0.22)
+        }
+        return out
+    }
+}
+
 struct Card<Content: View>: View {
     @ViewBuilder var content: Content
     var body: some View {

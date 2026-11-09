@@ -116,8 +116,13 @@ struct OverlayAnswer: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 10) {
                         answerText(card)
-                        ForEach(Array(card.passages.enumerated()), id: \.offset) { _, hit in
-                            if hit.via != .prepared { passage(hit, card: card) }
+                        let options = card.candidates.filter { $0.chunk.text != card.answer }
+                        if !options.isEmpty {
+                            Text(options.count == 1 ? "POSSIBLE ANSWER" : "\(options.count) POSSIBLE ANSWERS")
+                                .font(.system(size: 9.5, weight: .bold)).tracking(0.5).foregroundStyle(.secondary)
+                        }
+                        ForEach(Array(options.enumerated()), id: \.element.chunk.id) { _, hit in
+                            passage(hit, card: card)
                         }
                     }
                 }
@@ -146,12 +151,11 @@ struct OverlayAnswer: View {
 
     func passage(_ hit: Hit, card: AnswerCard) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            if card.passages.count > 1 {
-                Text(hit.chunk.sourceLine).font(.system(size: 10.5, weight: .semibold)).foregroundStyle(.secondary)
+            if true {
+                Text(hit.chunk.question.map { "You wrote this for: \($0)" } ?? hit.chunk.sourceLine).font(.system(size: 10.5, weight: .semibold)).foregroundStyle(.secondary)
             }
-            Text(Highlight.passage(hit.chunk.text, question: item.question, size: 13))
+            Text(hit.via == .prepared ? AttributedString(hit.chunk.text) : Highlight.inPlace(hit.chunk.text, question: item.question, size: 13))
                 .font(.system(size: 13)).lineSpacing(2)
-                .opacity(card.label == .notInDocs ? 0.65 : 1)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(10)
