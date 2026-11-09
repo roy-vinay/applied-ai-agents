@@ -29,7 +29,7 @@ Every model answer goes through a **grounding check**: a figure or name that isn
 | ⌃⌥A | Ask about the last exchange |
 | ⌃⌥D | Dictate your paraphrase of the question (My Voice Only) |
 
-The window floats above everything and is **always excluded from screen capture and screen sharing**. There is no setting to change that.
+**Invisible on screen share.** Every Second Chair window (the main window, the floating window, sheets and alerts) is excluded from screenshots, recordings and screen sharing in Zoom, Meet, Teams and the rest. People on the call see what's behind it. While an interview runs, the Dock icon and the menu bar chair are hidden too, since a full-screen share shows those. CI checks this on every build by capturing the screen both ways sharing apps do and failing if a test window shows up.
 
 ## Setup
 

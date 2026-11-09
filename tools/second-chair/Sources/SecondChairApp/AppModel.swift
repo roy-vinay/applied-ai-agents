@@ -74,6 +74,7 @@ final class AppModel: ObservableObject {
     @Published var showSettings = false
 
     let session = SessionController()
+    var statusItem: NSStatusItem?
     private var askTask: Task<Void, Never>?
 
     init() {
@@ -326,6 +327,7 @@ final class AppModel: ObservableObject {
     }
 
     func syncSession() {
+        if sessionActive != session.isActive { PrivacyGuard.setDiscreet(session.isActive, statusItem: statusItem) }
         sessionActive = session.isActive
         sessionStatus = session.statusLine
         sessionHearing = session.hearing
