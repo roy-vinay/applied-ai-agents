@@ -7,6 +7,7 @@ import SecondChairCore
 /// utterance has ended, which is when retrieval starts.
 final class EnergyVAD {
     private var floor: Float = 0.002
+    private(set) var lastRMS: Float = 0
     var pause: TimeInterval = 0.7
 
     func isSpeech(_ buffer: AVAudioPCMBuffer) -> Bool {
@@ -15,6 +16,7 @@ final class EnergyVAD {
         var sum: Float = 0
         for i in 0..<n { sum += data[0][i] * data[0][i] }
         let rms = (sum / Float(n)).squareRoot()
+        lastRMS = rms
         let speech = rms > max(0.006, floor * 3)
         // The floor follows quiet stretches slowly, so a fan or hum doesn't count as speech.
         if !speech { floor = floor * 0.98 + rms * 0.02 }
@@ -44,7 +46,10 @@ final class AppleSpeechEngine: SpeechEngine {
     static var supportsOnDevice: Bool { SFSpeechRecognizer(locale: Locale(identifier: "en-US"))?.supportsOnDeviceRecognition == true }
 
     func begin() {
-        guard let recognizer, recognizer.supportsOnDeviceRecognition else { return }
+        guard let recognizer, recognizer.supportsOnDeviceRecognition else {
+            DispatchQueue.main.async { self.onPartial?("[This Mac has no on-device model for the older recognizer. Turn on Dictation in System Settings › Keyboard, or switch Transcription back to Apple on-device speech.]") }
+            return
+        }
         generation += 1
         let mine = generation
         let request = SFSpeechAudioBufferRecognitionRequest()
@@ -65,8 +70,13 @@ final class AppleSpeechEngine: SpeechEngine {
                         self.onPartial?(text)
                     }
                 }
-            } else if error != nil {
-                DispatchQueue.main.async { delivered = true }
+            } else if let error {
+                DispatchQueue.main.async {
+                    delivered = true
+                    let code = (error as NSError).code
+                    // 1110 is "no speech detected": normal for a cough or a click.
+                    if code != 1110 { self.onPartial?("[Speech recognizer error: \(error.localizedDescription)]") }
+                }
             }
         }
     }
@@ -77,6 +87,109 @@ final class AppleSpeechEngine: SpeechEngine {
         request?.endAudio()
         request = nil
         task = nil
+    }
+}
+
+/// Apple's macOS 26 speech-to-text (SpeechAnalyzer). Always on the device; its model downloads
+/// once through the system, and then nothing leaves the Mac.
+final class AnalyzerEngine: SpeechEngine {
+    var onFinal: ((String) -> Void)?
+    var onPartial: ((String) -> Void)?
+    nonisolated(unsafe) static var locale = Locale(identifier: "en-US")
+    nonisolated(unsafe) static var format: AVAudioFormat?
+    private var input: AsyncStream<AnalyzerInput>.Continuation?
+    private var analyzer: SpeechAnalyzer?
+    private var results: Task<Void, Never>?
+    private var converter: AVAudioConverter?
+
+    static func makeTranscriber() -> SpeechTranscriber {
+        SpeechTranscriber(locale: locale, transcriptionOptions: [], reportingOptions: [.volatileResults], attributeOptions: [])
+    }
+
+    /// Makes sure the speech model is on this Mac (downloading it if needed) and picks the audio format.
+    /// Returns a problem to show, or nil when ready.
+    static func prepare(status: @escaping (String) -> Void) async -> String? {
+        // Use the locale exactly as the speech system names it, or reservation silently misses.
+        guard let supported = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: "en-US")) else {
+            return "Apple's on-device speech doesn't support English on this Mac."
+        }
+        locale = supported
+        let transcriber = makeTranscriber()
+        do {
+            let reserved = await AssetInventory.reservedLocales
+            if !reserved.contains(where: { $0.identifier(.bcp47) == supported.identifier(.bcp47) }) {
+                let ok = try await AssetInventory.reserve(locale: supported)
+                NSLog("Second Chair: reserve \(supported.identifier(.bcp47)) -> \(ok)")
+                if !ok { return "macOS wouldn't reserve the English speech model for Second Chair." }
+            }
+            if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
+                status("Downloading Apple's on-device speech model (one time)…")
+                try await request.downloadAndInstall()
+            }
+            format = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber])
+            return nil
+        } catch {
+            return "Apple's on-device speech model isn't available: \(error.localizedDescription)"
+        }
+    }
+
+    func begin() {
+        let transcriber = Self.makeTranscriber()
+        let analyzer = SpeechAnalyzer(modules: [transcriber])
+        let (stream, continuation) = AsyncStream<AnalyzerInput>.makeStream()
+        self.analyzer = analyzer
+        input = continuation
+        let onPartial = self.onPartial, onFinal = self.onFinal
+        results = Task {
+            var finals: [String] = []
+            do {
+                try await analyzer.start(inputSequence: stream)
+                for try await result in transcriber.results {
+                    let text = String(result.text.characters).trimmingCharacters(in: .whitespaces)
+                    if result.isFinal {
+                        if !text.isEmpty { finals.append(text) }
+                        let sofar = finals.joined(separator: " ")
+                        DispatchQueue.main.async { onPartial?(sofar) }
+                    } else {
+                        let live = (finals + [text]).joined(separator: " ")
+                        DispatchQueue.main.async { onPartial?(live) }
+                    }
+                }
+            } catch {
+                NSLog("Second Chair: transcription error \(error)")
+            }
+            let all = finals.joined(separator: " ").trimmingCharacters(in: .whitespaces)
+            if !all.isEmpty { DispatchQueue.main.async { onFinal?(all) } }
+        }
+    }
+
+    func feed(_ buffer: AVAudioPCMBuffer) {
+        guard let input else { return }
+        if let target = Self.format, target != buffer.format {
+            if converter == nil || converter?.inputFormat != buffer.format { converter = AVAudioConverter(from: buffer.format, to: target) }
+            guard let converter else { return }
+            let capacity = AVAudioFrameCount(Double(buffer.frameLength) * target.sampleRate / buffer.format.sampleRate) + 64
+            guard let out = AVAudioPCMBuffer(pcmFormat: target, frameCapacity: capacity) else { return }
+            var fed = false
+            var error: NSError?
+            converter.convert(to: out, error: &error) { _, status in
+                if fed { status.pointee = .noDataNow; return nil }
+                fed = true
+                status.pointee = .haveData
+                return buffer
+            }
+            if out.frameLength > 0 { input.yield(AnalyzerInput(buffer: out)) }
+        } else {
+            input.yield(AnalyzerInput(buffer: buffer))
+        }
+    }
+
+    func end() {
+        input?.finish()
+        input = nil
+        let analyzer = self.analyzer
+        self.analyzer = nil
+        Task { try? await analyzer?.finalizeAndFinishThroughEndOfInput() }
     }
 }
 
@@ -162,11 +275,16 @@ final class ChannelListener {
     let channel: Channel
     var onUtterance: ((Utterance) -> Void)?
     var onPartial: ((Channel, String) -> Void)?
+    /// Input loudness 0...1, about ten times a second, so you can see it hears you.
+    var onLevel: ((Channel, Float) -> Void)?
     private let engine: SpeechEngine
     private let vad = EnergyVAD()
     private var open = false
     private var heardSpeech = false
     private var lastSpeech = Date()
+    private var lastLevel = Date.distantPast
+    /// The last moment of audio before speech is detected, so the first word isn't clipped.
+    private var preroll: [AVAudioPCMBuffer] = []
     private let queue = DispatchQueue(label: "secondchair.listener")
 
     init(channel: Channel, engine: SpeechEngine) {
@@ -185,12 +303,28 @@ final class ChannelListener {
     func append(_ buffer: AVAudioPCMBuffer) {
         queue.async { [self] in
             let speech = vad.isSpeech(buffer)
+            if Date().timeIntervalSince(lastLevel) > 0.1 {
+                lastLevel = Date()
+                let level = min(1, vad.lastRMS * 12)
+                let ch = channel
+                DispatchQueue.main.async { self.onLevel?(ch, level) }
+            }
             if speech {
-                if !open { engine.begin(); open = true; heardSpeech = false }
+                if !open {
+                    engine.begin()
+                    open = true
+                    heardSpeech = false
+                    for b in preroll { engine.feed(b) }
+                    preroll.removeAll()
+                }
                 heardSpeech = true
                 lastSpeech = Date()
             }
-            guard open else { return }
+            guard open else {
+                preroll.append(buffer)
+                if preroll.count > 6 { preroll.removeFirst() }
+                return
+            }
             engine.feed(buffer)
             if heardSpeech, !speech, Date().timeIntervalSince(lastSpeech) > vad.pause { close() }
         }
@@ -214,7 +348,7 @@ final class MicCapture {
     static func requestPermissions() async -> String? {
         if !(await AVCaptureDevice.requestAccess(for: .audio)) { return "Microphone access is off for Second Chair in System Settings › Privacy & Security." }
         let speech = await withCheckedContinuation { c in SFSpeechRecognizer.requestAuthorization { c.resume(returning: $0) } }
-        if speech != .authorized, Settings.engine == .apple { return "Speech Recognition access is off for Second Chair in System Settings › Privacy & Security." }
+        if speech != .authorized, Settings.engine == .legacy { return "Speech Recognition access is off for Second Chair in System Settings › Privacy & Security." }
         return nil
     }
 
@@ -222,7 +356,10 @@ final class MicCapture {
         guard !running else { return }
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
-        input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in self?.onBuffer?(buffer) }
+        input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
+            // The engine reuses this buffer after the callback returns; keep our own copy.
+            if let copy = buffer.copy() as? AVAudioPCMBuffer { self?.onBuffer?(copy) }
+        }
         engine.prepare()
         try engine.start()
         running = true
