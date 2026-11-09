@@ -369,3 +369,38 @@ final class DocumentViewTests: XCTestCase {
         for c in chunks { for line in c.text.components(separatedBy: "\n") { XCTAssertTrue(line.first?.isNumber ?? false, line) } }
     }
 }
+
+final class SpokenQuestionTests: XCTestCase {
+    func testTheTwoQuestionsFromTheDemo() {
+        XCTAssertTrue(QuestionDetector.isQuestion("Tell me something about yourself."))
+        XCTAssertTrue(QuestionDetector.isQuestion("What do you know about Synopsys?"))
+        XCTAssertTrue(QuestionDetector.isQuestion("what do you know about synopsys"), "no question mark from speech")
+    }
+
+    func testYourOwnQuestionsGetAnsweredInEveryListeningMode() {
+        var remote = ConsentGate(kind: .remote, mode: .announced)
+        remote.attest(saidIt: true, objection: false)
+        XCTAssertTrue(remote.answersQuestions(on: .you))
+        XCTAssertTrue(remote.answersQuestions(on: .them))
+        XCTAssertTrue(ConsentGate(kind: .remote, mode: .myVoiceOnly).answersQuestions(on: .you))
+        XCTAssertFalse(ConsentGate(kind: .remote, mode: .myVoiceOnly).answersQuestions(on: .them))
+        XCTAssertFalse(ConsentGate(kind: .remote, mode: .off).answersQuestions(on: .you))
+    }
+
+    func testShortQuestionsFindTheirSection() async {
+        let md = """
+        # Prep
+        ## Tell me about yourself
+        I'm a product leader who builds AI systems that earn trust.
+        ## What is Synopsys
+        Synopsys makes the software chips are designed with.
+        ## Pricing
+        Price on engine hours.
+        """
+        let index = CorpusIndex(chunks: Chunker.chunk(text: md, file: "/p/S.docx", folder: "/p", markdown: true))
+        XCTAssertEqual(index.titleMatches("Tell me something about yourself.").first?.section.title, "Tell me about yourself")
+        let hits = await Retriever(index: index).retrieve("What do you know about Synopsys?")
+        let sections = index.titleMatches("What do you know about Synopsys?") + index.sections(for: hits, question: "What do you know about Synopsys?")
+        XCTAssertEqual(sections.first?.section.title, "What is Synopsys")
+    }
+}

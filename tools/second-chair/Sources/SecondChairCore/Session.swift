@@ -102,6 +102,12 @@ public struct ConsentGate: Sendable {
     /// The microphone, only while you hold dictation on, to say your own paraphrase of the question.
     public var mayDictate: Bool { mode != .off }
 
+    /// Which channel's finished utterances are checked for questions. Your own microphone always counts while
+    /// it's on: it's your voice, and saying the question aloud (or practising alone) should get an answer.
+    public func answersQuestions(on channel: Channel) -> Bool {
+        channel == .you ? (mode != .off) : detectsQuestions(on: .them)
+    }
+
     /// Which channel's finished utterances are checked for questions.
     public func detectsQuestions(on channel: Channel) -> Bool {
         switch (kind, channel) {

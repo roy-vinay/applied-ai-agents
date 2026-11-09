@@ -219,7 +219,8 @@ final class AppModel: ObservableObject {
         guard sessionActive, Date() > holdLiveUntil,
               force || Date().timeIntervalSince(lastLiveLookup) > 2.5 else { return }
         let window = conversationWindow
-        guard Lexicon.terms(window).count >= 3, window != lastLiveWindow else { return }
+        // One meaningful word is enough ("...about Synopsys"): headings and prepared questions are short too.
+        guard Lexicon.terms(window).count >= 1, window != lastLiveWindow else { return }
         lastLiveLookup = Date()
         lastLiveWindow = window
         let lib = Library.shared
@@ -234,7 +235,13 @@ final class AppModel: ObservableObject {
                 let r = Self.withTitleMatches(index, window, index.sections(for: hits.filter { answerer.isAlternative($0) }, question: window))
                 return (r, index.similarSections(to: window, excluding: Set(r.map(\.id)), limit: 8))
             }.value
-            guard !Task.isCancelled, !results.isEmpty else { return }
+            guard !Task.isCancelled else { return }
+            guard !results.isEmpty else {
+                // Say so instead of staying silent; keep the last suggestion on screen.
+                self.live.listenStatus = "Nothing in your docs for \u{201C}\(window.suffix(60))\u{201D}"
+                return
+            }
+            self.live.listenStatus = "Listening"
             let card = await answerer.answer(window, hits: hits)
             var item = Asked(question: window)
             item.live = true

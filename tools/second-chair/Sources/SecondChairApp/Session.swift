@@ -165,7 +165,7 @@ final class SessionController: NSObject {
         onHeard?(u)
         if dictating && !gate.mayListenContinuously {
             onQuestion?(u.text)  // your own paraphrase: always ask it
-        } else if gate.detectsQuestions(on: u.channel), QuestionDetector.isQuestion(u.text) {
+        } else if gate.answersQuestions(on: u.channel), QuestionDetector.isQuestion(u.text) {
             onQuestion?(u.text)
         }
     }
