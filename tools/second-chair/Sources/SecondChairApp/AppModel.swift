@@ -5,13 +5,15 @@ import SecondChairCore
 
 /// One question and what came back, for the answer view and its history.
 struct Asked: Identifiable {
-    let id = UUID()
+    var id = UUID()
     var question: String
     var card: AnswerCard?
     var answering = true
     var askedAt = Date()
     /// Whole sections that answer it, best first, each with the passages that matched.
     var results: [SectionMatch] = []
+    /// Looked up from the conversation as it happens, not asked as a question.
+    var live = false
     /// Other sections and questions in your documents that resemble it.
     var similar: [SectionMatch] = []
 }
@@ -80,12 +82,14 @@ final class AppModel: ObservableObject {
         session.onPartial = { [weak self] c, t in Task { @MainActor in
             self?.heardPartial = String(t.suffix(160))
             self?.partials[c] = t
+            self?.suggestFromConversation()
         } }
         session.onHeard = { [weak self] u in Task { @MainActor in
             guard let self else { return }
             self.partials[u.channel] = nil
             self.heardPartial = ""
             self.transcript.append(u)
+            self.suggestFromConversation(force: true)
             if self.transcript.count > 200 { self.transcript.removeFirst() }
         } }
         session.onRetract = { [weak self] u in Task { @MainActor in
@@ -186,9 +190,64 @@ final class AppModel: ObservableObject {
 
     // MARK: Asking
 
+    // MARK: Live suggestions
+
+    private var lastLiveLookup = Date.distantPast
+    private var lastLiveWindow = ""
+    /// After you ask or pick something yourself, live suggestions hold off so they don't replace it.
+    private var holdLiveUntil = Date.distantPast
+    private var liveTask: Task<Void, Never>?
+
+    /// The last few sentences of the conversation, newest last, preferring what they said.
+    private var conversationWindow: String {
+        let recentThem = transcript.suffix(4).filter { $0.channel == .them && Date().timeIntervalSince($0.at) < 30 }
+        let source: [String]
+        if !recentThem.isEmpty || partials[.them]?.isEmpty == false {
+            source = recentThem.map(\.text) + [partials[.them] ?? ""]
+        } else {
+            source = transcript.suffix(3).filter { Date().timeIntervalSince($0.at) < 30 }.map(\.text) + [partials[.you] ?? ""]
+        }
+        return Lexicon.words(source.joined(separator: " ")).suffix(35).joined(separator: " ")
+    }
+
+    /// While people talk, look up what they're talking about every couple of seconds, no question needed.
+    func suggestFromConversation(force: Bool = false) {
+        guard sessionActive, Date() > holdLiveUntil,
+              force || Date().timeIntervalSince(lastLiveLookup) > 2.5 else { return }
+        let window = conversationWindow
+        guard Lexicon.terms(window).count >= 3, window != lastLiveWindow else { return }
+        lastLiveLookup = Date()
+        lastLiveWindow = window
+        let lib = Library.shared
+        let retriever = Retriever(index: lib.index, primaryFolder: lib.primaryFolder, embedder: AppState.shared.models.embedder)
+        let answerer = Answerer()  // no model: suggestions must keep up with speech
+        liveTask?.cancel()
+        liveTask = Task { @MainActor in
+            let hits = await retriever.retrieve(window)
+            guard !Task.isCancelled, Date() > self.holdLiveUntil else { return }
+            let results = lib.index.sections(for: hits.filter { answerer.isAlternative($0) }, question: window)
+            guard !results.isEmpty else { return }
+            let card = await answerer.answer(window, hits: hits)
+            var item = Asked(question: window)
+            item.live = true
+            item.answering = false
+            item.card = card
+            item.results = results
+            item.similar = lib.index.similarSections(to: window, excluding: Set(results.map(\.id)), limit: 8)
+            // Keep the same item while the top match is unchanged, so the view doesn't jump.
+            if let cur = self.current, cur.live, cur.results.first?.id == results.first?.id { item.id = cur.id }
+            self.current = item
+            self.overlayItem = item
+        }
+    }
+
+    func holdLiveSuggestions(_ seconds: TimeInterval = 20) { holdLiveUntil = Date().addingTimeInterval(seconds) }
+
     func ask(_ question: String, fromSession: Bool = false) {
         let q = question.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { return }
+        liveTask?.cancel()
+        holdLiveSuggestions(fromSession ? 12 : 20)
         let lib = Library.shared
         let models = AppState.shared.models
         let retriever = Retriever(index: lib.index, primaryFolder: lib.primaryFolder, embedder: models.embedder)

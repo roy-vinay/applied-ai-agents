@@ -440,7 +440,7 @@ struct ResultsView: View {
 
     func row(_ m: SectionMatch) -> some View {
         let isShown = shown?.id == m.id
-        return Button { selected = m.id } label: {
+        return Button { selected = m.id; model.holdLiveSuggestions(30) } label: {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 5) {
                     if m.prepared { Text("ANSWER").font(.system(size: 9.5, weight: .bold, design: .monospaced)).foregroundStyle(.green) }
@@ -474,7 +474,12 @@ struct AnswerStrip: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            if let card = item.card {
+            if item.live {
+                Text("FROM THE CONVERSATION").font(.system(size: 10, weight: .bold)).tracking(0.5)
+                    .foregroundStyle(.white).padding(.horizontal, 8).padding(.vertical, 4)
+                    .background(Color.red.opacity(0.8), in: Capsule())
+                Text("\u{2026}" + item.question).font(.system(size: 12.5)).foregroundStyle(.secondary).lineLimit(2)
+            } else if let card = item.card {
                 LabelPill(label: card.label, compact: true)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(item.question).font(.system(size: 13, weight: .medium)).foregroundStyle(.secondary).lineLimit(2)
@@ -587,7 +592,7 @@ struct LivePanel: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(height: 130)
+                .frame(height: 96)
                 .onChange(of: model.transcript.count) { proxy.scrollTo("end", anchor: .bottom) }
                 .onChange(of: model.partials) { proxy.scrollTo("end", anchor: .bottom) }
             }
