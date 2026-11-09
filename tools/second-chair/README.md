@@ -33,7 +33,10 @@ The window floats above everything and is **always excluded from screen capture 
 
 ## Setup
 
-1. Download `SecondChair-macOS.zip` from the [latest release](https://github.com/roy-vinay/applied-ai-agents/releases/tag/second-chair-latest), unzip, move **Second Chair** to Applications. It isn't notarized yet: the first time, right-click it and choose **Open**.
+1. Install or update with one command in Terminal:
+   ```
+   curl -fsSL https://raw.githubusercontent.com/roy-vinay/applied-ai-agents/main/tools/second-chair/install.sh | bash
+   ```
 2. Menu bar chair icon › **Folders › Add Folder…**. Add your Obsidian vault and one folder per interview prep pack. Nothing else on the Mac is read.
 3. Optional, for better answers (both free, both local):
    ```
