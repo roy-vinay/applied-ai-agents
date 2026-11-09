@@ -63,7 +63,7 @@ Every model answer goes through a **grounding check**: a figure or name that isn
 2. **Otherwise, passages.** Keyword search first, meaning search when keywords are thin, the primary prep pack ranked first. A short follow-up borrows the previous question's terms.
 3. **Only then a model.** Apple Intelligence on the device compresses one strong passage into speaking length; Qwen3 8B through Ollama on `127.0.0.1` builds answers from several passages. Every model answer passes the grounding check, or it's withheld.
 
-**What you see:** matches on the left, with tabs for **Matches**, **Similar** questions and sections in your documents, and **Earlier** questions. On the right is the whole matching section as it reads in your document (headings, lists, bold), with the sentences that answer the question marked in yellow and the question's words underlined.
+**What you see:** matches on the left, with tabs for **Matches**, **Similar** questions and sections in your documents, and **Earlier** questions. On the right is the whole matching section as it reads in your document (headings, lists, bold), with the sentences that answer the question marked in yellow and the question's words underlined. The rest of the document stays visible around it, so you can read on and say more than was asked.
 
 Formats: Markdown and text, then PDF and Word converted on the Mac. Word files keep their headings, bulleted and numbered lists, and bold. Scans and images are counted as skipped, never silently included. The index updates when folders change between sessions, never mid-interview.
 
