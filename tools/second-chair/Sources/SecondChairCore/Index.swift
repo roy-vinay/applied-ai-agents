@@ -191,9 +191,11 @@ public struct CorpusIndex: Codable, Sendable {
                 credit[doc, default: [:]][e.source] = 0.6 * sw
             }
         }
+        // A word found only through a near-match counts against coverage at that near-match's weight, never more.
         let total = basis.reduce(0.0) { sum, kv in
-            let present = postings[kv.key] != nil || expanded.values.contains { $0.source == kv.key }
-            return sum + (present ? kv.value : kv.value * 0.5)
+            if postings[kv.key] != nil { return sum + kv.value }
+            let near = expanded.values.filter { $0.source == kv.key }.map { $0.weight / kv.value }.max() ?? 0
+            return sum + kv.value * max(0.5, min(near, 0.6))
         }
         return scores.map { doc, score in
             (doc, score, min(1, (credit[doc]?.values.reduce(0, +) ?? 0) / max(total, 0.0001)))
