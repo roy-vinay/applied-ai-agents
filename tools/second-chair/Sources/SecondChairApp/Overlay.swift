@@ -9,6 +9,7 @@ final class OverlayPanel: NSPanel {
 }
 
 /// The interview window. Always excluded from screen capture and screen sharing; there is no setting to change that.
+@MainActor
 final class Overlay {
     let panel: OverlayPanel
 
