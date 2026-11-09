@@ -108,31 +108,39 @@ extension CorpusIndex {
     }
 
     /// Section titles and questions you wrote that resemble this question, for browsing nearby answers.
+    /// Titles are scored first; only the ones kept are built into sections.
     public func similarSections(to question: String, excluding: Set<String> = [], limit: Int = 12) -> [SectionMatch] {
         let q = Set(Lexicon.terms(question))
         guard !q.isEmpty else { return [] }
+        struct Candidate { var key: String; var score: Double; var prepared: Bool; var chunk: Chunk; var path: [String]? }
         var seen = Set<String>()
-        var scored: [(SectionMatch, Double)] = []
-        func consider(_ key: String, _ title: String, _ make: () -> Section, prepared: Bool) {
+        var found: [Candidate] = []
+        func consider(_ key: String, _ title: String, _ c: Candidate) {
             guard !excluding.contains(key), seen.insert(key).inserted else { return }
             let t = Set(Lexicon.terms(title))
             guard !t.isEmpty else { return }
             let overlap = Double(q.intersection(t).count) / Double(min(q.count, t.count))
             guard overlap > 0 else { return }
-            scored.append((SectionMatch(section: make(), matched: [], prepared: prepared, primary: false), overlap))
+            var c = c
+            c.score = overlap
+            found.append(c)
         }
         for chunk in chunks {
             if let question = chunk.question, chunk.headings.last != question {
-                consider(chunk.id, question, { section(containing: chunk) }, prepared: true)
+                consider(chunk.id, question, Candidate(key: chunk.id, score: 0, prepared: true, chunk: chunk, path: nil))
             }
             let h = chunk.headings
-            for depth in 1...max(1, h.count) where !h.isEmpty && !(depth == 1 && h.count > 1) {
+            guard !h.isEmpty else { continue }
+            for depth in 1...h.count where !(depth == 1 && h.count > 1) {
                 let path = Array(h.prefix(depth))
-                consider(chunk.file + "#" + path.joined(separator: "›"), path.last!, { section(file: chunk.file, path: path) },
-                         prepared: depth == h.count && chunk.question != nil)
+                consider(chunk.file + "#" + path.joined(separator: "›"), path.last!,
+                         Candidate(key: "", score: 0, prepared: depth == h.count && chunk.question != nil, chunk: chunk, path: path))
             }
         }
-        return scored.sorted { $0.1 > $1.1 }.prefix(limit).map(\.0)
+        return found.sorted { $0.score > $1.score }.prefix(limit).map { c in
+            let s = c.path.map { section(file: c.chunk.file, path: $0) } ?? section(containing: c.chunk)
+            return SectionMatch(section: s, matched: [], prepared: c.prepared, primary: false)
+        }
     }
 
     /// Sections whose heading (or prepared question) says what the question asks, like "Copilot adoption" for

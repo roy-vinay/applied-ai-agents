@@ -3,7 +3,28 @@ import SecondChairCore
 
 /// The whole document a match comes from, as it reads there, scrolled to the match. The matched section sits
 /// on a tinted band and its answer sentences are yellow, so you can read around it and say more than was asked.
-struct DocumentDetail: View {
+/// Each document's blocks, built once per index rather than on every redraw.
+@MainActor
+enum DocumentCache {
+    struct Part { var headings: [String]; var chunk: Chunk?; var blocks: [SectionText.Block] }
+    private static var built: Date = .distantPast
+    private static var parts: [String: [Part]] = [:]
+
+    static func parts(_ file: String) -> [Part] {
+        let index = Library.shared.index
+        if index.builtAt != built { parts = [:]; built = index.builtAt }
+        if let cached = parts[file] { return cached }
+        let made = index.documentParts(file: file).map { Part(headings: $0.headings, chunk: $0.chunk, blocks: SectionText.blocks($0.text)) }
+        parts[file] = made
+        return made
+    }
+}
+
+struct DocumentDetail: View, Equatable {
+    nonisolated static func == (a: DocumentDetail, b: DocumentDetail) -> Bool {
+        a.match == b.match && a.question == b.question && a.size == b.size && a.compact == b.compact
+    }
+
     var match: SectionMatch
     var question: String
     var size: CGFloat = 16
@@ -18,7 +39,7 @@ struct DocumentDetail: View {
     var rows: [Row] {
         let section = match.section
         var out: [Row] = []
-        for part in Library.shared.index.documentParts(file: section.file) {
+        for part in DocumentCache.parts(section.file) {
             let inSection: Bool
             if let chunk = part.chunk {
                 inSection = section.contains(chunk)
@@ -26,7 +47,7 @@ struct DocumentDetail: View {
                 // A heading row: inside when it is the section's own heading or one beneath it.
                 inSection = section.anchorChunk == nil && !section.path.isEmpty && part.headings.starts(with: section.path)
             }
-            for block in SectionText.blocks(part.text) { out.append(Row(block: block, inSection: inSection)) }
+            for block in part.blocks { out.append(Row(block: block, inSection: inSection)) }
         }
         if out.isEmpty { out = SectionText.blocks(section.text).map { Row(block: $0, inSection: true) } }
         return out
@@ -58,7 +79,7 @@ struct DocumentDetail: View {
             .padding(.bottom, compact ? 6 : 10)
             ScrollViewReader { proxy in
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
+                    LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
                             SectionText.view(row.block, marked: row.inSection ? marked : [], question: row.inSection ? question : "", size: size)
                                 .frame(maxWidth: .infinity, alignment: .leading)

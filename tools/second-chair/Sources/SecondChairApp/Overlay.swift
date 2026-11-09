@@ -29,7 +29,7 @@ final class Overlay {
         panel.minSize = NSSize(width: 340, height: 260)
         panel.backgroundColor = .clear
         panel.isOpaque = false
-        panel.contentView = NSHostingView(rootView: OverlayView().environmentObject(model))
+        panel.contentView = NSHostingView(rootView: OverlayView().environmentObject(model).environmentObject(model.live))
         if !panel.setFrameUsingName("SecondChairOverlay2"), let screen = NSScreen.main?.visibleFrame {
             panel.setFrameOrigin(NSPoint(x: screen.maxX - 460, y: screen.maxY - 440))
         }
@@ -64,9 +64,7 @@ struct OverlayView: View {
             }
             .padding(.top, 4)
 
-            if !model.heardPartial.isEmpty {
-                Text("… " + model.heardPartial).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(2)
-            }
+            HeardLine()
 
             if let item = model.overlayItem {
                 OverlayAnswer(item: item)
@@ -121,7 +119,7 @@ struct OverlayAnswer: View {
                 Text(a).font(.system(size: 15, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
             }
             if let m = shown {
-                DocumentDetail(match: m, question: item.question, size: 13.5, compact: true)
+                DocumentDetail(match: m, question: item.question, size: 13.5, compact: true).equatable()
                 .id(m.id)
                 let others = (item.results + item.similar).filter { $0.id != m.id }.prefix(6)
                 if !others.isEmpty {
@@ -147,5 +145,15 @@ struct OverlayAnswer: View {
             }
         }
         .onChange(of: item.id) { selected = nil }
+    }
+}
+
+/// Words in progress, observed on their own so they don't redraw the answer.
+struct HeardLine: View {
+    @EnvironmentObject var live: LiveState
+    var body: some View {
+        if !live.heardPartial.isEmpty {
+            Text("… " + live.heardPartial).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(2)
+        }
     }
 }
