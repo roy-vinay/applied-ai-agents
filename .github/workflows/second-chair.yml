@@ -49,7 +49,7 @@ jobs:
           PID=$!
           sleep 8
           if kill -0 $PID 2>/dev/null; then echo "App is running"; kill $PID; else echo "::error title=Launch failed::The app exited within 8 seconds"; exit 1; fi
-      - name: The overlay is excluded from screen capture
+      - name: Every window is invisible to screen capture (real capture, both methods)
         run: '"./build/Second Chair.app/Contents/MacOS/SecondChair" --window-check'
       - name: Screenshots of the main states (for design review)
         run: |

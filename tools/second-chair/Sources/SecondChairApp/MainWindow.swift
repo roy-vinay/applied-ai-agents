@@ -416,7 +416,7 @@ struct ResultsView: View {
                 .frame(width: 300)
 
                 if let m = shown {
-                    SectionDetail(match: m, question: item.question)
+                    DocumentDetail(match: m, question: item.question)
                         .id(m.id)
                 } else {
                     VStack {
@@ -501,60 +501,6 @@ struct AnswerStrip: View {
             }
             Spacer()
         }
-    }
-}
-
-/// One section, shown whole and formatted as in the document, with the answer sentences marked.
-struct SectionDetail: View {
-    var match: SectionMatch
-    var question: String
-    @State private var copied = false
-
-    var body: some View {
-        let blocks = SectionText.blocks(match.section.text)
-        let marked = SectionText.answerSentences(match: match, question: question)
-        let firstMarked = blocks.firstIndex { SectionText.isMarked($0.text, marked) }
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(match.section.breadcrumb).font(.system(size: 11.5, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1)
-                Spacer()
-                Button(copied ? "Copied" : "Copy answer") {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(match.section.title + "\n\n" + match.section.text.replacingOccurrences(of: "**", with: ""), forType: .string)
-                    copied = true
-                }
-                .controlSize(.small)
-                Button { NSWorkspace.shared.open(URL(fileURLWithPath: match.section.file)) } label: { Image(systemName: "arrow.up.forward.square") }
-                    .buttonStyle(.borderless).help("Open the document")
-            }
-            .padding(.bottom, 10)
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 10) {
-                        if match.prepared {
-                            Text("YOUR PREPARED ANSWER").font(.system(size: 10, weight: .bold)).tracking(0.5).foregroundStyle(.green)
-                        }
-                        Text(match.section.title).font(.system(size: 26, weight: .bold)).textSelection(.enabled)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.bottom, 4)
-                        ForEach(Array(blocks.enumerated()), id: \.offset) { i, block in
-                            SectionText.view(block, marked: marked, question: question, size: 16).id(i)
-                        }
-                    }
-                    .padding(.trailing, 8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .onAppear {
-                    if let i = firstMarked, i > 2 {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { withAnimation { proxy.scrollTo(i, anchor: .top) } }
-                    }
-                }
-            }
-        }
-        .padding(20)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(.background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.separator.opacity(0.6)))
     }
 }
 

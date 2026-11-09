@@ -74,6 +74,7 @@ final class AppModel: ObservableObject {
     @Published var showSettings = false
 
     let session = SessionController()
+    var statusItem: NSStatusItem?
     private var askTask: Task<Void, Never>?
 
     init() {
@@ -198,16 +199,19 @@ final class AppModel: ObservableObject {
     private var holdLiveUntil = Date.distantPast
     private var liveTask: Task<Void, Never>?
 
-    /// The last few sentences of the conversation, newest last, preferring what they said.
+    /// What's being said right now: the line in progress, or the last finished line. One line, so an earlier
+    /// topic doesn't drown out a new question. Their side first when they've just spoken.
     private var conversationWindow: String {
-        let recentThem = transcript.suffix(4).filter { $0.channel == .them && Date().timeIntervalSince($0.at) < 30 }
-        let source: [String]
-        if !recentThem.isEmpty || partials[.them]?.isEmpty == false {
-            source = recentThem.map(\.text) + [partials[.them] ?? ""]
-        } else {
-            source = transcript.suffix(3).filter { Date().timeIntervalSince($0.at) < 30 }.map(\.text) + [partials[.you] ?? ""]
+        func latest(_ c: Channel) -> String? {
+            if let p = partials[c], Lexicon.terms(p).count >= 3 { return p }
+            if let u = transcript.last(where: { $0.channel == c }), Date().timeIntervalSince(u.at) < 20 { return u.text }
+            return nil
         }
-        return Lexicon.words(source.joined(separator: " ")).suffix(35).joined(separator: " ")
+        let line = latest(.them) ?? latest(.you) ?? ""
+        // Within a long line, the most recent sentence or two.
+        let sentences = Lexicon.sentences(line)
+        let recent = sentences.suffix(2).joined(separator: " ")
+        return Lexicon.words(Lexicon.terms(recent).count >= 3 ? recent : line).suffix(30).joined(separator: " ")
     }
 
     /// While people talk, look up what they're talking about every couple of seconds, no question needed.
@@ -225,7 +229,7 @@ final class AppModel: ObservableObject {
         liveTask = Task { @MainActor in
             let hits = await retriever.retrieve(window)
             guard !Task.isCancelled, Date() > self.holdLiveUntil else { return }
-            let results = lib.index.sections(for: hits.filter { answerer.isAlternative($0) }, question: window)
+            let results = Self.withTitleMatches(lib.index, window, lib.index.sections(for: hits.filter { answerer.isAlternative($0) }, question: window))
             guard !results.isEmpty else { return }
             let card = await answerer.answer(window, hits: hits)
             var item = Asked(question: window)
@@ -239,6 +243,20 @@ final class AppModel: ObservableObject {
             self.current = item
             self.overlayItem = item
         }
+    }
+
+    /// A section whose heading says what was asked goes first, even when its body uses other words.
+    nonisolated static func withTitleMatches(_ index: CorpusIndex, _ question: String, _ results: [SectionMatch]) -> [SectionMatch] {
+        var titled = index.titleMatches(question)
+        // Keep what search found inside a titled section, so its answer sentences stay marked.
+        for i in titled.indices {
+            if let found = results.first(where: { $0.id == titled[i].id }) {
+                titled[i].matched = found.matched
+                titled[i].primary = found.primary
+            }
+        }
+        let ids = Set(titled.map(\.id))
+        return titled + results.filter { !ids.contains($0.id) }
     }
 
     func holdLiveSuggestions(_ seconds: TimeInterval = 20) { holdLiveUntil = Date().addingTimeInterval(seconds) }
@@ -263,7 +281,7 @@ final class AppModel: ObservableObject {
         askTask = Task { @MainActor in
             let hits = await retriever.retrieve(q, previous: previous)
             let index = lib.index
-            let results = index.sections(for: hits.filter { answerer.isAlternative($0) }, question: q)
+            let results = Self.withTitleMatches(index, q, index.sections(for: hits.filter { answerer.isAlternative($0) }, question: q))
             let similar = index.similarSections(to: q, excluding: Set(results.map(\.id)))
             let card = await answerer.answer(q, hits: hits, started: started) { source in
                 Task { @MainActor in
@@ -326,6 +344,7 @@ final class AppModel: ObservableObject {
     }
 
     func syncSession() {
+        if sessionActive != session.isActive { PrivacyGuard.setDiscreet(session.isActive, statusItem: statusItem) }
         sessionActive = session.isActive
         sessionStatus = session.statusLine
         sessionHearing = session.hearing

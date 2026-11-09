@@ -7,7 +7,7 @@ import SecondChairCore
 ///   SecondChair --gate questions.json --corpus folder [--primary folder] [--report out.md]
 ///               [--embeddings none|apple|ollama] [--models none|local]
 ///   SecondChair --ask "question" --corpus folder [same options]
-///   SecondChair --window-check     prints whether the overlay is excluded from screen capture
+///   SecondChair --window-check     captures the screen and fails if any Second Chair window shows up
 enum CLI {
     static func value(_ flag: String) -> String? {
         let a = CommandLine.arguments
@@ -18,10 +18,16 @@ enum CLI {
     static func runIfRequested() -> Int32? {
         let a = CommandLine.arguments
         if a.contains("--window-check") {
-            _ = NSApplication.shared
-            let hidden = MainActor.assumeIsolated { Overlay(model: AppModel.shared).panel.sharingType == .none }
-            print("overlay sharingType: \(hidden ? "none (excluded from capture)" : "VISIBLE TO CAPTURE")")
-            return hidden ? 0 : 1
+            let app = NSApplication.shared
+            app.setActivationPolicy(.accessory)
+            final class Box: @unchecked Sendable { var code: Int32 = 1; var done = false }
+            let box = Box()
+            Task { @MainActor in
+                box.code = await PrivacyGuard.selfTest()
+                box.done = true
+            }
+            while !box.done { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
+            return box.code
         }
         if let path = value("--transcribe") { return transcribe(path) }
         guard a.contains("--gate") || a.contains("--ask") else { return nil }

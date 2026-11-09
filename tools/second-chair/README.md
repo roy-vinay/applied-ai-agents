@@ -29,7 +29,7 @@ Every model answer goes through a **grounding check**: a figure or name that isn
 | ⌃⌥A | Ask about the last exchange |
 | ⌃⌥D | Dictate your paraphrase of the question (My Voice Only) |
 
-The window floats above everything and is **always excluded from screen capture and screen sharing**. There is no setting to change that.
+**Invisible on screen share.** Every Second Chair window (the main window, the floating window, sheets and alerts) is excluded from screenshots, recordings and screen sharing in Zoom, Meet, Teams and the rest. People on the call see what's behind it. While an interview runs, the Dock icon and the menu bar chair are hidden too, since a full-screen share shows those. CI checks this on every build by capturing the screen both ways sharing apps do and failing if a test window shows up.
 
 ## Setup
 
@@ -63,7 +63,7 @@ The window floats above everything and is **always excluded from screen capture 
 2. **Otherwise, passages.** Keyword search first, meaning search when keywords are thin, the primary prep pack ranked first. A short follow-up borrows the previous question's terms.
 3. **Only then a model.** Apple Intelligence on the device compresses one strong passage into speaking length; Qwen3 8B through Ollama on `127.0.0.1` builds answers from several passages. Every model answer passes the grounding check, or it's withheld.
 
-**What you see:** matches on the left, with tabs for **Matches**, **Similar** questions and sections in your documents, and **Earlier** questions. On the right is the whole matching section as it reads in your document (headings, lists, bold), with the sentences that answer the question marked in yellow and the question's words underlined.
+**What you see:** matches on the left, with tabs for **Matches**, **Similar** questions and sections in your documents, and **Earlier** questions. On the right is the whole matching section as it reads in your document (headings, lists, bold), with the sentences that answer the question marked in yellow and the question's words underlined. The rest of the document stays visible around it, so you can read on and say more than was asked.
 
 Formats: Markdown and text, then PDF and Word converted on the Mac. Word files keep their headings, bulleted and numbered lists, and bold. Scans and images are counted as skipped, never silently included. The index updates when folders change between sessions, never mid-interview.
 

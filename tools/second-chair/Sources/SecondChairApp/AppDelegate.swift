@@ -29,11 +29,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         window.contentViewController = NSHostingController(rootView: RootView().environmentObject(model))
         window.setContentSize(NSSize(width: 1120, height: 760))
         window.isReleasedWhenClosed = false
+        window.sharingType = .none
         if !window.setFrameUsingName("SecondChairMain") { window.center() }
         window.setFrameAutosaveName("SecondChairMain")
 
+        PrivacyGuard.start()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.button?.image = NSImage(systemSymbolName: "chair", accessibilityDescription: "Second Chair")
+        model.statusItem = statusItem
         let menu = NSMenu()
         menu.delegate = self
         statusItem.menu = menu
