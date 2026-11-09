@@ -1,0 +1,79 @@
+name: second-chair
+# Pull requests are tested; main packages and publishes the code its pull request already tested.
+on:
+  push:
+    branches: [main]
+    paths: ["tools/second-chair/**", ".github/workflows/second-chair.yml"]
+  pull_request:
+    paths: ["tools/second-chair/**", ".github/workflows/second-chair.yml"]
+jobs:
+  app:
+    # macOS 26: the SDK for Apple's on-device model, and the app's minimum macOS.
+    runs-on: macos-26
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: tools/second-chair
+    steps:
+      - uses: actions/checkout@v5
+      - name: Reuse compiled files from earlier runs
+        uses: actions/cache@v4
+        with:
+          path: tools/second-chair/.build
+          key: second-chair-build-${{ runner.os }}-${{ hashFiles('tools/second-chair/Package.swift', 'tools/second-chair/Sources/**', 'tools/second-chair/Tests/**') }}
+          restore-keys: second-chair-build-${{ runner.os }}-
+      - name: Build and test
+        run: |
+          set -o pipefail
+          report() {
+            grep -E "error:|XCTAssert|failed \\(" "$1" | grep -v "emit-module command failed" | sort -u | head -25 | while IFS= read -r line; do
+              if [[ "$line" =~ ^(/[^:]+):([0-9]+):([0-9]+):\ (error|warning):\ (.*)$ ]]; then
+                f="${BASH_REMATCH[1]#$GITHUB_WORKSPACE/}"
+                echo "::error file=$f,line=${BASH_REMATCH[2]},col=${BASH_REMATCH[3]}::${BASH_REMATCH[5]}"
+              else
+                echo "::error::${line//%/%25}"
+              fi
+            done
+          }
+          swift build 2>&1 | tee build.log || { report build.log; exit 1; }
+          swift test 2>&1 | tee test.log || { report test.log; exit 1; }
+      - name: Package the app
+        run: ./scripts/build-app.sh
+      - name: Launch smoke test
+        run: |
+          "./build/Second Chair.app/Contents/MacOS/SecondChair" &
+          PID=$!
+          sleep 8
+          if kill -0 $PID 2>/dev/null; then echo "App is running"; kill $PID; else echo "::error title=Launch failed::The app exited within 8 seconds"; exit 1; fi
+      - name: The overlay is excluded from screen capture
+        run: '"./build/Second Chair.app/Contents/MacOS/SecondChair" --window-check'
+      - name: Gate on the sample prep pack, keyword only, no models (deterministic)
+        run: |
+          set -o pipefail
+          "./build/Second Chair.app/Contents/MacOS/SecondChair" --gate examples/gate-questions.json --corpus examples/prep-pack --report gate-keyword.md | tee gate.log
+          cat gate-keyword.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Gate with Apple sentence embeddings (reported, not required)
+        continue-on-error: true
+        run: |
+          "./build/Second Chair.app/Contents/MacOS/SecondChair" --gate examples/gate-questions.json --corpus examples/prep-pack --embeddings apple --report gate-apple.md || true
+          { echo; echo "### With Apple sentence embeddings"; cat gate-apple.md; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish the latest build as a release (main only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=second-chair-latest
+          VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Info.plist)
+          NOTES="Latest Second Chair build from main, version $VERSION ($(git rev-parse --short HEAD)). Apple silicon, macOS 26 or later. Download SecondChair-macOS.zip, double-click it, and move Second Chair.app to Applications. Not notarized yet: the first time, right-click it and choose Open."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --notes "$NOTES" --target "$GITHUB_SHA" --prerelease=false
+            git push -f origin "HEAD:refs/tags/$TAG"
+          else
+            gh release create "$TAG" --title "Second Chair (latest build)" --notes "$NOTES" --target "$GITHUB_SHA"
+          fi
+          gh release upload "$TAG" build/SecondChair-macOS.zip --clobber
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SecondChair-macOS
+          path: tools/second-chair/build/SecondChair-macOS.zip
