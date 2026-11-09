@@ -2,7 +2,7 @@ import Foundation
 
 /// Turning text into search terms, sentences and numbers. Deliberately simple and predictable,
 /// so a miss can be explained by looking at the words.
-public enum Text {
+public enum Lexicon {
     static let stopwords: Set<String> = [
         "a", "an", "and", "are", "as", "at", "be", "been", "but", "by", "can", "could", "did", "do", "does",
         "for", "from", "had", "has", "have", "how", "i", "if", "in", "into", "is", "it", "its", "me", "my",

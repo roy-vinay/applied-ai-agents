@@ -19,7 +19,7 @@ public struct GateResult: Codable, Sendable {
     public struct Row: Codable, Sendable {
         public var question: String
         public var covered: Bool
-        public var label: Label
+        public var label: AnswerLabel
         public var source: String?
         public var answer: String?
         public var correctSource: Bool

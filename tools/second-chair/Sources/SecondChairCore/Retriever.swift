@@ -47,15 +47,15 @@ public struct Retriever: Sendable {
 
     /// Is this a follow-up that leans on the previous question ("why was that?", "what happened next")?
     public static func isFollowUp(_ question: String) -> Bool {
-        let words = Text.words(question.lowercased())
-        return Text.terms(question).count <= 3 || (words.count <= 8 && words.contains(where: followUpCues.contains))
+        let words = Lexicon.words(question.lowercased())
+        return Lexicon.terms(question).count <= 3 || (words.count <= 8 && words.contains(where: followUpCues.contains))
     }
 
     public func weightedTerms(_ question: String, previous: [String]) -> [String: Double] {
         var weights: [String: Double] = [:]
-        for t in Text.terms(question) { weights[t] = 1 }
+        for t in Lexicon.terms(question) { weights[t] = 1 }
         if Self.isFollowUp(question), let last = previous.last {
-            for t in Text.terms(last) where weights[t] == nil { weights[t] = settings.followUpWeight }
+            for t in Lexicon.terms(last) where weights[t] == nil { weights[t] = settings.followUpWeight }
         }
         return weights
     }

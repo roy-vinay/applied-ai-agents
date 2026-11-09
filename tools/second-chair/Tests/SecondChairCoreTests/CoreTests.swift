@@ -3,20 +3,20 @@ import XCTest
 
 final class TextTests: XCTestCase {
     func testNumbersNormalise() {
-        XCTAssertEqual(Text.numbers("Revenue grew to $31M"), ["31m"])
-        XCTAssertEqual(Text.numbers("31 million dollars"), ["31m"])
-        XCTAssertEqual(Text.numbers("margin hit 61 percent"), ["61%"])
-        XCTAssertEqual(Text.numbers("margin hit 61%"), ["61%"])
-        XCTAssertEqual(Text.numbers("1,200 users and 2.30 hours"), ["1200", "2.3"])
-        XCTAssertTrue(Text.numbers("no figures here").isEmpty)
+        XCTAssertEqual(Lexicon.numbers("Revenue grew to $31M"), ["31m"])
+        XCTAssertEqual(Lexicon.numbers("31 million dollars"), ["31m"])
+        XCTAssertEqual(Lexicon.numbers("margin hit 61 percent"), ["61%"])
+        XCTAssertEqual(Lexicon.numbers("margin hit 61%"), ["61%"])
+        XCTAssertEqual(Lexicon.numbers("1,200 users and 2.30 hours"), ["1200", "2.3"])
+        XCTAssertTrue(Lexicon.numbers("no figures here").isEmpty)
     }
 
     func testTermsDropStopwordsAndStem() {
-        XCTAssertEqual(Text.terms("Tell me about the launches you shipped"), ["launch", "ship"])
+        XCTAssertEqual(Lexicon.terms("Tell me about the launches you shipped"), ["launch", "ship"])
     }
 
     func testNamesSkipSentenceStarts() {
-        XCTAssertEqual(Text.names("We grew at Lumen Freight. Then Tailspin copied us."), ["Lumen", "Freight", "Tailspin"])
+        XCTAssertEqual(Lexicon.names("We grew at Lumen Freight. Then Tailspin copied us."), ["Lumen", "Freight", "Tailspin"])
     }
 }
 

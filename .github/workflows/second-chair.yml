@@ -48,6 +48,18 @@ jobs:
           if kill -0 $PID 2>/dev/null; then echo "App is running"; kill $PID; else echo "::error title=Launch failed::The app exited within 8 seconds"; exit 1; fi
       - name: The overlay is excluded from screen capture
         run: '"./build/Second Chair.app/Contents/MacOS/SecondChair" --window-check'
+      - name: Screenshots of the main states (for design review)
+        run: |
+          "./build/Second Chair.app/Contents/MacOS/SecondChair" --screenshots "$PWD/shots" --corpus "$PWD/examples/prep-pack" &
+          PID=$!
+          for i in $(seq 1 90); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          kill $PID 2>/dev/null || true
+          ls -la shots || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SecondChair-screenshots
+          path: tools/second-chair/shots
+          if-no-files-found: warn
       - name: Gate on the sample prep pack, keyword only, no models (deterministic)
         run: |
           set -o pipefail
