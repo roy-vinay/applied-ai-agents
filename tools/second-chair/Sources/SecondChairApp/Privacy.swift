@@ -46,13 +46,20 @@ enum PrivacyGuard {
         probe.backgroundColor = magenta
         probe.level = .floating
         probe.orderFrontRegardless()
+        // A control window that is NOT hidden: the capture must show it, or the check proves nothing.
+        let control = NSWindow(contentRect: NSRect(x: 700, y: 220, width: 360, height: 260), styleMask: [.borderless],
+                               backing: .buffered, defer: false)
+        control.backgroundColor = magenta
+        control.level = .floating
+        control.orderFrontRegardless()
         let overlay = Overlay(model: AppModel.shared)
         overlay.panel.orderFrontRegardless()
         apply()
+        control.sharingType = .readOnly
         try? await Task.sleep(nanoseconds: 1_500_000_000)
 
         var failures: [String] = []
-        for w in NSApp.windows where w.isVisible && w.sharingType != .none { failures.append("window '\(w.title)' is visible to capture") }
+        for w in NSApp.windows where w.isVisible && w !== control && w.sharingType != .none { failures.append("window '\(w.title)' is visible to capture") }
 
         // 1. The system screenshot path (what screencapture and many recorders use).
         let path = NSTemporaryDirectory() + "secondchair-capture.png"
@@ -62,8 +69,9 @@ enum PrivacyGuard {
         try? p.run()
         p.waitUntilExit()
         if let rep = NSImage(contentsOfFile: path).flatMap({ $0.tiffRepresentation }).flatMap(NSBitmapImageRep.init(data:)) {
-            if showsProbe(rep: rep, frame: probe.frame) { failures.append("test window visible in a full-screen screenshot") }
-            else { print("screenshot: test window hidden") }
+            if !showsProbe(rep: rep, frame: control.frame) { failures.append("screenshot check couldn't see the control window, so it proves nothing") }
+            else if showsProbe(rep: rep, frame: probe.frame) { failures.append("test window visible in a full-screen screenshot") }
+            else { print("screenshot: control window visible, Second Chair test window hidden") }
         } else {
             print("screenshot: not available here (no Screen Recording permission)")
         }
@@ -77,15 +85,19 @@ enum PrivacyGuard {
                 config.height = display.height * 2
                 let image = try await SCScreenshotManager.captureImage(
                     contentFilter: SCContentFilter(display: display, excludingWindows: []), configuration: config)
-                if showsProbe(rep: NSBitmapImageRep(cgImage: image), frame: probe.frame) {
+                let rep = NSBitmapImageRep(cgImage: image)
+                if !showsProbe(rep: rep, frame: control.frame) {
+                    failures.append("ScreenCaptureKit check couldn't see the control window, so it proves nothing")
+                } else if showsProbe(rep: rep, frame: probe.frame) {
                     failures.append("test window visible to ScreenCaptureKit display capture")
-                } else { print("ScreenCaptureKit: test window hidden") }
+                } else { print("ScreenCaptureKit: control window visible, Second Chair test window hidden") }
             }
         } catch {
             print("ScreenCaptureKit: not available here (\(error.localizedDescription))")
         }
 
         probe.orderOut(nil)
+        control.orderOut(nil)
         overlay.panel.orderOut(nil)
         if failures.isEmpty { print("All Second Chair windows are excluded from screen capture.") }
         for f in failures { print("VISIBLE: \(f)") }
