@@ -111,7 +111,10 @@ struct OverlayAnswer: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                if let card = item.card { LabelPill(label: card.label, compact: true) }
+                if item.live {
+                    Text("FROM THE CONVERSATION").font(.system(size: 9, weight: .bold)).foregroundStyle(.white)
+                        .padding(.horizontal, 6).padding(.vertical, 3).background(Color.red.opacity(0.8), in: Capsule())
+                } else if let card = item.card { LabelPill(label: card.label, compact: true) }
                 Text(item.question).font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary).lineLimit(2)
             }
             if let card = item.card, let a = card.answer, let by = card.answeredBy, by != "extract", by != Answerer.preparedAnswer {

@@ -282,6 +282,9 @@ final class ChannelListener {
     private var open = false
     private var heardSpeech = false
     private var lastSpeech = Date()
+    private var openedAt = Date()
+    /// Continuous talk is cut into lines this long, so questions inside a monologue still get caught.
+    var maxUtterance: TimeInterval = 12
     private var lastLevel = Date.distantPast
     /// The last moment of audio before speech is detected, so the first word isn't clipped.
     private var preroll: [AVAudioPCMBuffer] = []
@@ -313,6 +316,7 @@ final class ChannelListener {
                 if !open {
                     engine.begin()
                     open = true
+                    openedAt = Date()
                     heardSpeech = false
                     for b in preroll { engine.feed(b) }
                     preroll.removeAll()
@@ -327,6 +331,8 @@ final class ChannelListener {
             }
             engine.feed(buffer)
             if heardSpeech, !speech, Date().timeIntervalSince(lastSpeech) > vad.pause { close() }
+            // No pause for a long time: end the line at the next quieter moment, or force it.
+            else if Date().timeIntervalSince(openedAt) > maxUtterance, !speech || Date().timeIntervalSince(openedAt) > maxUtterance + 4 { close() }
         }
     }
 
