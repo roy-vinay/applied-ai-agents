@@ -140,18 +140,15 @@ public struct Retriever: Sendable {
                                score: sim * (primary ? settings.primaryBoost : 1), via: .embedding, primary: primary)
                 }
                 semantic.sort { $0.score > $1.score }
-                // Keep keyword hits that are still decent, then fill with the best semantic ones.
-                let kept = hits.filter { $0.coverage >= settings.thinCoverage * 0.6 }
+                // Meaning search only adds: keyword matches keep their order and come first, then the closest
+                // meaning matches fill the remaining places. A loosely related passage can't jump a real word match.
+                let kept = hits.filter { $0.coverage >= 0.2 }
                 var seen = Set(kept.map(\.chunk.id))
                 hits = kept
-                for h in semantic where !seen.contains(h.chunk.id) {
+                for h in semantic where !seen.contains(h.chunk.id) && hits.count < settings.maxHits {
                     hits.append(h)
                     seen.insert(h.chunk.id)
-                    if hits.count >= settings.maxHits { break }
                 }
-                // Exact word matches are more trustworthy than meaning matches, so they rank a step higher.
-                func rank(_ h: Hit) -> Double { (h.via == .keyword ? h.coverage + 0.15 : h.strength) * (h.primary ? 1.15 : 1) }
-                hits.sort { rank($0) > rank($1) }
             }
         }
         return Array(hits.prefix(settings.maxHits))

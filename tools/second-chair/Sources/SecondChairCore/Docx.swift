@@ -8,10 +8,13 @@ import FoundationXML
 /// and table rows. Plain text conversion loses all of that, and with it every section boundary.
 public enum DocxMarkdown {
     /// `document` is word/document.xml; `styles` and `numbering` are word/styles.xml and word/numbering.xml.
-    public static func convert(document: Data, styles: Data? = nil, numbering: Data? = nil) -> String {
+    /// `relationships` is word/_rels/document.xml.rels; pictures become `![description](docx-media:media/imageN.png)`,
+    /// which the app points at the extracted file.
+    public static func convert(document: Data, styles: Data? = nil, numbering: Data? = nil, relationships: Data? = nil) -> String {
         let headingStyles = styles.map(StyleParser.parse) ?? [:]
         let numberFormats = numbering.map(NumberingParser.parse) ?? [:]
         let p = DocumentParser(headingStyles: headingStyles, numberFormats: numberFormats)
+        p.relationships = relationships.map(RelationshipParser.parse) ?? [:]
         let parser = XMLParser(data: document)
         parser.delegate = p
         parser.parse()
@@ -127,6 +130,12 @@ final class DocumentParser: NSObject, XMLParserDelegate {
     private var counters: [String: [Int: Int]] = [:]
     private var lastWasList = false
     private var lastHeadingLevel = 1
+    /// Bold lines that read as headings sit one level below the last real (styled) heading, side by side,
+    /// rather than each nesting under the one before.
+    private var lastStyledLevel = 1
+    var relationships: [String: String] = [:]
+    private var pictures: [(description: String, target: String)] = []
+    private var pictureDescription = ""
 
     init(headingStyles: [String: Int], numberFormats: [String: [Int: String]]) {
         self.headingStyles = headingStyles
@@ -135,7 +144,10 @@ final class DocumentParser: NSObject, XMLParserDelegate {
 
     func parser(_ parser: XMLParser, didStartElement e: String, namespaceURI: String?, qualifiedName: String?, attributes a: [String: String] = [:]) {
         switch e {
-        case "w:p": inParagraph = true; style = nil; numID = nil; ilvl = 0; runs = []
+        case "w:p": inParagraph = true; style = nil; numID = nil; ilvl = 0; runs = []; pictures = []
+        case "wp:docPr": pictureDescription = a["descr"] ?? a["title"] ?? ""
+        case "a:blip":
+            if let id = a["r:embed"], let target = relationships[id] { pictures.append((pictureDescription, target)) }
         case "w:pStyle" where inParagraph && !inRun: style = a["w:val"]
         case "w:numId" where inParagraph: numID = a["w:val"]; if numID == "0" { numID = nil }
         case "w:ilvl" where inParagraph: ilvl = a["w:val"].flatMap(Int.init) ?? 0
@@ -180,6 +192,13 @@ final class DocumentParser: NSObject, XMLParserDelegate {
     private func endParagraph() {
         inParagraph = false
         let plain = runs.map(\.text).joined().trimmingCharacters(in: .whitespaces)
+        if !inTOC, tableDepth == 0 {
+            for pic in pictures {
+                let alt = pic.description.isEmpty ? "Diagram" : pic.description.replacingOccurrences(of: "]", with: ")")
+                emit("![\(alt)](docx-media:\(pic.target))", list: false)
+            }
+        }
+        pictures = []
         guard !plain.isEmpty, !inTOC, !(style?.uppercased().hasPrefix("TOC") ?? false) else { return }
         if tableDepth > 0 { cell.append(inline()); return }
 
@@ -187,8 +206,8 @@ final class DocumentParser: NSObject, XMLParserDelegate {
         // A short paragraph that's entirely bold and isn't a sentence reads as a heading.
         if level == nil, numID == nil, runs.allSatisfy({ $0.bold || $0.text.trimmingCharacters(in: .whitespaces).isEmpty }),
            plain.count <= 100, !plain.hasSuffix("."), !plain.hasSuffix(",") {
-            level = min(6, lastHeadingLevel + 1)
-        }
+            level = min(6, lastStyledLevel + 1)
+        } else if let level { lastStyledLevel = level }
         if let level {
             lastHeadingLevel = level
             counters = [:]
@@ -235,5 +254,20 @@ final class DocumentParser: NSObject, XMLParserDelegate {
         if !(list && lastWasList), !output.isEmpty { output.append("") }
         output.append(line)
         lastWasList = list
+    }
+}
+
+/// rId -> target ("media/image3.png") from word/_rels/document.xml.rels.
+final class RelationshipParser: NSObject, XMLParserDelegate {
+    var targets: [String: String] = [:]
+    static func parse(_ data: Data) -> [String: String] {
+        let p = RelationshipParser()
+        let x = XMLParser(data: data)
+        x.delegate = p
+        x.parse()
+        return p.targets
+    }
+    func parser(_ parser: XMLParser, didStartElement e: String, namespaceURI: String?, qualifiedName: String?, attributes a: [String: String] = [:]) {
+        if e == "Relationship", let id = a["Id"], let target = a["Target"] { targets[id] = target }
     }
 }

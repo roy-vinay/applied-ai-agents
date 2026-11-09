@@ -34,6 +34,8 @@ struct DocumentDetail: View, Equatable {
     struct Row {
         var block: SectionText.Block
         var inSection: Bool
+        var headings: [String]
+        var isHeadingRow: Bool
     }
 
     var rows: [Row] {
@@ -47,9 +49,20 @@ struct DocumentDetail: View, Equatable {
                 // A heading row: inside when it is the section's own heading or one beneath it.
                 inSection = section.anchorChunk == nil && !section.path.isEmpty && part.headings.starts(with: section.path)
             }
-            for block in part.blocks { out.append(Row(block: block, inSection: inSection)) }
+            for block in part.blocks { out.append(Row(block: block, inSection: inSection, headings: part.headings, isHeadingRow: part.chunk == nil)) }
         }
-        if out.isEmpty { out = SectionText.blocks(section.text).map { Row(block: $0, inSection: true) } }
+        if out.isEmpty { out = SectionText.blocks(section.text).map { Row(block: $0, inSection: true, headings: [], isHeadingRow: false) } }
+        // A sub-section whose parent opens with a picture (an architecture diagram above "AgentEngineers" and
+        // "Task agents"): include the parent's heading and opening in the match, so the picture is in view.
+        let parent = Array(section.path.dropLast())
+        if section.anchorChunk == nil, parent.count >= 1,
+           let start = out.firstIndex(where: { $0.isHeadingRow && $0.headings == parent }) {
+            var end = start + 1
+            while end < out.count, out[end].headings == parent, !(out[end].isHeadingRow && end > start) { end += 1 }
+            if out[(start + 1)..<end].contains(where: { if case .image = $0.block.kind { return true } else { return false } }) {
+                for i in start..<end { out[i].inSection = true }
+            }
+        }
         return out
     }
 
@@ -58,7 +71,9 @@ struct DocumentDetail: View, Equatable {
         let marked = SectionText.answerSentences(match: match, question: question)
         let start = rows.firstIndex(where: \.inSection) ?? 0
         let firstMarked = rows.indices.first { rows[$0].inSection && SectionText.isMarked(rows[$0].block.text, marked) }
-        let target = firstMarked.map { $0 - start > 6 ? $0 - 1 : start } ?? start
+        // Open on a picture at the top of the match; otherwise on the answer sentences if they're far down.
+        let opensWithPicture = rows[start..<min(rows.count, start + 4)].contains { if case .image = $0.block.kind { return true } else { return false } }
+        let target = opensWithPicture ? start : (firstMarked.map { $0 - start > 6 ? $0 - 1 : start } ?? start)
 
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -68,7 +83,9 @@ struct DocumentDetail: View, Equatable {
                 if !compact {
                     Button(copied ? "Copied" : "Copy section") {
                         NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(match.section.title + "\n\n" + match.section.text.replacingOccurrences(of: "**", with: ""), forType: .string)
+                        NSPasteboard.general.setString(match.section.title + "\n\n" + match.section.text
+                            .replacingOccurrences(of: #"!\[[^\]]*\]\([^)]*\)\n*"#, with: "", options: .regularExpression)
+                            .replacingOccurrences(of: "**", with: ""), forType: .string)
                         copied = true
                     }
                     .controlSize(.small)
